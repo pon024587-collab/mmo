@@ -3,6 +3,7 @@ import { useAuth } from './hooks/useAuth.js'
 import LoginPage from './pages/LoginPage.js'
 import RegisterPage from './pages/RegisterPage.js'
 import GamePage from './pages/GamePage.js'
+import AdminPage from './pages/AdminPage.js'
 
 export default function App() {
   const { token } = useAuth()
@@ -11,6 +12,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/admin" element={<AdminPage />} />
       <Route
         path="/game"
         element={token ? <GamePage /> : <Navigate to="/login" replace />}
