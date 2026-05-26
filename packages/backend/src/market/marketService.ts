@@ -14,18 +14,21 @@ export interface MarketItem {
 
 /**
  * 市場価格計算（Property 7: 基準価格の50%〜200%の範囲）
+ * 需要のない村では安くなる
  */
 export function calculateMarketPrice(
   basePrice: number,
   stockQuantity: number,
-  recentSales: number
+  recentSales: number,
+  villageDevelopmentLevel: number = 5
 ): number {
   // 在庫が多いほど価格低下、売れるほど価格上昇
   const supplyFactor = stockQuantity > 0 ? Math.max(0.5, 1 - stockQuantity / 200) : 1.5
   const demandFactor = 1 + recentSales / 100
+  // 発展度が低い村では需要が少なく安くなる
+  const developmentFactor = 0.7 + (villageDevelopmentLevel / 10) * 0.6
 
-  const price = Math.round(basePrice * supplyFactor * demandFactor)
-  // 必ず50%〜200%の範囲に収める
+  const price = Math.round(basePrice * supplyFactor * demandFactor * developmentFactor)
   return Math.max(Math.ceil(basePrice * 0.5), Math.min(Math.floor(basePrice * 2.0), price))
 }
 
