@@ -7,7 +7,7 @@ import { sql } from '../db/client.js'
 import { getCharacterStatus } from '../character/characterService.js'
 import { registerAction, getPendingResults } from '../action/actionService.js'
 import { startPlow, startSow, startWater, startHarvest } from '../farming/farmingService.js'
-import { startCombat } from '../combat/combatService.js'
+import { startCombat, canEquip } from '../combat/combatService.js'
 import { getMarketListings, sellItem, buyItem } from '../market/marketService.js'
 import { talkToNpc } from '../npc/npcService.js'
 import { eat, drink, sleep, nap } from '../survival/survivalService.js'
@@ -304,6 +304,68 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
       ORDER BY it.category, it.name
     `
     return reply.send({ success: true, items, count: items.length, max: 50 })
+  })
+
+  app.get('/api/game/equipment', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+
+    const eq = await sql<{
+      equippedWeaponId: string | null;
+      equippedArmorId: string | null;
+      equippedAccessoryId: string | null;
+    }[]>`SELECT equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${char.id} LIMIT 1`
+
+    return reply.send({ success: true, equipment: eq[0] || {} })
+  })
+
+  app.post('/api/game/equip', async (request, reply) => {
+    const body = z.object({ itemId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false, message: '入力が正しくありません。' })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+
+    const item = await sql<{ id: string; category: string; templateId: string; name: string }[]>`
+      SELECT i.id, it.category, it.id as template_id, it.name
+      FROM items i JOIN item_templates it ON i.item_template_id = it.id
+      WHERE i.id = ${body.data.itemId} AND i.owner_character_id = ${char.id} LIMIT 1
+    `
+    if (!item[0]) return reply.send({ success: false, message: 'アイテムが見つかりません。' })
+
+    const { category, templateId, name } = item[0]
+    if (category !== 'WEAPON' && category !== 'ARMOR') {
+      return reply.send({ success: false, message: 'このアイテムは装備できません。' })
+    }
+
+    const equipCheck = await canEquip(char.id, templateId)
+    if (!equipCheck.canEquip) {
+      return reply.send({ success: false, message: equipCheck.reason })
+    }
+
+    if (category === 'WEAPON') {
+      await sql`UPDATE characters SET equipped_weapon_id = ${item[0].id} WHERE id = ${char.id}`
+    } else if (category === 'ARMOR') {
+      if (name.includes('指輪') || name.includes('首飾り')) {
+        await sql`UPDATE characters SET equipped_accessory_id = ${item[0].id} WHERE id = ${char.id}`
+      } else {
+        await sql`UPDATE characters SET equipped_armor_id = ${item[0].id} WHERE id = ${char.id}`
+      }
+    }
+
+    return reply.send({ success: true, message: `${name}を装備しました。` })
+  })
+
+  app.post('/api/game/unequip', async (request, reply) => {
+    const body = z.object({ slot: z.enum(['WEAPON', 'ARMOR', 'ACCESSORY']) }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+
+    if (body.data.slot === 'WEAPON') await sql`UPDATE characters SET equipped_weapon_id = NULL WHERE id = ${char.id}`
+    if (body.data.slot === 'ARMOR') await sql`UPDATE characters SET equipped_armor_id = NULL WHERE id = ${char.id}`
+    if (body.data.slot === 'ACCESSORY') await sql`UPDATE characters SET equipped_accessory_id = NULL WHERE id = ${char.id}`
+
+    return reply.send({ success: true, message: '装備を外しました。' })
   })
 
   // ---- 世界情報 ----
