@@ -2,6 +2,7 @@
  * 税金・借金システム
  */
 import { sql } from '../db/client.js'
+import { addBounty } from '../pvp/pvpService.js'
 
 /** 税金を徴収する（World_Tickで168時間ごとに呼び出す） */
 export async function collectTaxes(): Promise<void> {
@@ -27,7 +28,7 @@ export async function collectTaxes(): Promise<void> {
         WHERE id = ${char.id}
       `
     } else {
-      // 所持金不足 → 負債として記録
+      // 所持金不足 → 負債として記録し、賞金首（脱税）にする
       const shortage = taxAmount - char.gold
       await sql`
         UPDATE characters SET gold = 0, updated_at = NOW() WHERE id = ${char.id}
@@ -38,6 +39,9 @@ export async function collectTaxes(): Promise<void> {
         ON CONFLICT (character_id, nation_id)
         DO UPDATE SET amount = tax_debts.amount + ${shortage}
       `
+      
+      // 脱税による賞金首化（最低50G）
+      await addBounty(char.id, Math.max(50, shortage), '脱税')
     }
   }
 }
