@@ -167,7 +167,7 @@ export async function completeAction(
     resultText = await completeCook(characterId, params.recipeType)
   } else if (actionType === 'DUNGEON_EXPLORE') {
     const { completeDungeonFloor } = await import('../social/dungeonService.js')
-    resultText = await completeDungeonFloor(characterId, params.dungeonId)
+    resultText = await completeDungeonFloor(characterId, params.dungeonId, params.floor || 1)
   } else if (actionType === 'MOVE') {
     const { completeMove } = await import('../social/dungeonService.js')
     resultText = await completeMove(characterId, params.targetVillageId, params.tradeItemIds)

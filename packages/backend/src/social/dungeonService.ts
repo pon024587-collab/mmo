@@ -9,37 +9,82 @@ import type { RegisterActionResult } from '../action/actionService.js'
 
 export async function exploreDungeon(
   characterId: string,
-  dungeonId: string
+  dungeonId: string,
+  floor: number = 1
 ): Promise<RegisterActionResult> {
   return registerAction({
     characterId,
     actionType: 'DUNGEON_EXPLORE',
-    parameters: { dungeonId },
+    parameters: { dungeonId, floor },
     durationOverrideMinutes: 30,
   })
 }
 
 export async function completeDungeonFloor(
   characterId: string,
-  dungeonId: string
+  dungeonId: string,
+  floor: number = 1
 ): Promise<string> {
-  const events = ['魔物と遭遇した！なんとか倒した。', '宝箱を発見した。', '罠にかかったが軽傷で済んだ。', '何もなかった。次の階へ進む。']
-  const event = events[Math.floor(Math.random() * events.length)]!
+  // 1. キャラクターのステータス取得
+  const charRows = await sql<{ hp: number; hpMax: number; mp: number; mpMax: number; level: number }[]>`
+    SELECT hp, hp_max, mp, mp_max, level FROM characters WHERE id = ${characterId} LIMIT 1
+  `
+  if (!charRows[0]) return 'キャラクターが見つかりません。'
+  let { hp, hpMax, level } = charRows[0]
 
-  // 宝箱の場合アイテムを付与
-  if (event.includes('宝箱')) {
-    const templates = await sql<{ id: string }[]>`
-      SELECT id FROM item_templates ORDER BY RANDOM() LIMIT 1
-    `
-    if (templates[0]) {
-      await sql`
-        INSERT INTO items (owner_character_id, item_template_id, quantity)
-        VALUES (${characterId}, ${templates[0].id}, 1)
-      `
+  // 2. 簡易戦闘シミュレーション（3回）
+  let battleCount = 0
+  for (let i = 0; i < 3; i++) {
+    // 敵の強さは階層(floor)に大きく依存
+    const enemyHp = 50 + (floor * 30) + (level * 5)
+    const enemyAtk = 10 + (floor * 5)
+    
+    // プレイヤーの簡易火力
+    const playerAtk = 15 + (level * 2)
+
+    // お互いに攻撃し合う簡易計算（何ターンで倒せるか）
+    const turnsToKill = Math.ceil(enemyHp / playerAtk)
+    const damageTaken = turnsToKill * enemyAtk
+
+    hp -= damageTaken
+    if (hp <= 0) {
+      break // 死亡・撤退
     }
+    battleCount++
   }
 
-  return event
+  // ステータス保存
+  await sql`UPDATE characters SET hp = ${Math.max(0, hp)} WHERE id = ${characterId}`
+
+  if (battleCount < 3) {
+    return `第${floor}層の魔物に敗北し、逃げ帰った。（HPが尽きた）`
+  }
+
+  // 3. 3連勝できたら宝箱（クリスタル）を獲得
+  const templates = await sql<{ id: string }[]>`
+    SELECT id FROM item_templates WHERE name = 'CRYSTAL' LIMIT 1
+  `
+  if (templates[0]) {
+    // ランダムなサブパラメータを生成
+    // 例: ATK, DEF, HP, MP などのうち1つ
+    const bonusTypes = ['ATK', 'DEF', 'HP', 'MP', 'FIRE_RES', 'WATER_RES']
+    const selectedBonus = bonusTypes[Math.floor(Math.random() * bonusTypes.length)]!
+    
+    // 階層が高いほど数値が高い
+    const baseValue = Math.floor(Math.random() * 5) + 1
+    const bonusValue = baseValue * floor
+
+    const metadata = { bonus: { [selectedBonus]: bonusValue } }
+
+    await sql`
+      INSERT INTO items (owner_character_id, item_template_id, quantity, metadata)
+      VALUES (${characterId}, ${templates[0].id}, 1, ${metadata}::jsonb)
+    `
+    
+    return `第${floor}層を突破し、宝箱から「クリスタル（${selectedBonus}+${bonusValue}）」を手に入れた！`
+  }
+
+  return `第${floor}層を突破したが、宝箱は空だった。`
 }
 
 // ---- 料理 ----

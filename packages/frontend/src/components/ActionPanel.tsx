@@ -59,7 +59,6 @@ const ACTION_GROUPS: ActionGroup[] = [
     actions: [
       { label: '神殿に参拝（30分）', endpoint: '/game/pray', body: { deityType: 'HARVEST' } },
       { label: '治療を受ける（2時間）', endpoint: '/game/treat' },
-      { label: 'ダンジョン探索（30分）', endpoint: '/game/dungeon', confirm: 'ダンジョンに潜ります。危险ですが宝著のチャンスもあります。行きますか？' },
     ],
   },
 ]
@@ -70,6 +69,7 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
   const [monsters, setMonsters] = useState<{ id: string; name: string; basePower: number; minCount: number; maxCount: number; elements: string[] }[]>([])
   const [selectedMonster, setSelectedMonster] = useState('')
   const [selectedCrop, setSelectedCrop] = useState('POTATO')
+  const [dungeonFloor, setDungeonFloor] = useState(1)
 
   useEffect(() => {
     api.get<{ success: boolean; monsters?: any[] }>('/game/monsters').then(res => {
@@ -194,6 +194,34 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
           <button onClick={() => handleAction('/game/farm/sow', { cropType: selectedCrop })} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">種をまく（1時間）</button>
           <button onClick={() => handleAction('/game/farm/water')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">水やり（30分）</button>
           <button onClick={() => handleAction('/game/farm/harvest')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">収穫（1時間）</button>
+        </div>
+      </div>
+
+      {/* ダンジョン探索セクション */}
+      <div className="bg-stone-900 border border-purple-900/50 rounded-lg p-4">
+        <h3 className="text-purple-400 font-bold mb-3">🏰 ダンジョン探索</h3>
+        <p className="text-xs text-stone-400 mb-3">
+          深層ほど敵が強力になりますが、宝箱から良いクリスタルが手に入る確率が上がります。<br/>
+          （3連戦のオートバトルが行われます。HPに注意してください）
+        </p>
+        <div className="flex gap-2">
+          <select
+            value={dungeonFloor}
+            onChange={e => setDungeonFloor(Number(e.target.value))}
+            disabled={isBusy || loading}
+            className="flex-1 bg-stone-950 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200"
+          >
+            {[1, 2, 3, 4, 5].map(f => (
+              <option key={f} value={f}>第{f}層（推奨レベル: {f * 5}〜）</option>
+            ))}
+          </select>
+          <button
+            onClick={() => handleAction('/game/dungeon', { floor: dungeonFloor }, `第${dungeonFloor}層に潜ります。強力な敵が出現する可能性があります。本当に行きますか？`)}
+            disabled={isBusy || loading}
+            className="bg-purple-900 hover:bg-purple-800 text-purple-100 px-4 py-2 rounded font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            探索へ向かう（30分）
+          </button>
         </div>
       </div>
 

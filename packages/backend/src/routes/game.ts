@@ -247,10 +247,13 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
   // ---- ダンジョン探索 ----
 
   app.post('/api/game/dungeon', async (request, reply) => {
+    const body = z.object({ floor: z.number().min(1).max(5).optional() }).safeParse(request.body || {})
+    const floor = body.success && body.data.floor ? body.data.floor : 1
+
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
     const dungeonId = char.villageId // 現在の村のダンジョンを探索
-    return reply.send(await exploreDungeon(char.id, dungeonId))
+    return reply.send(await exploreDungeon(char.id, dungeonId, floor))
   })
 
 
