@@ -55,7 +55,7 @@ export async function drink(characterId: string, hasWaterSource: boolean, itemId
     const waterItem = await sql<{ id: string }[]>`
       SELECT i.id FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
-      WHERE i.owner_character_id = ${characterId} AND it.name = 'WATER' LIMIT 1
+      WHERE i.owner_character_id = ${characterId} AND (it.name = 'WATER' OR it.name = '水') LIMIT 1
     `
     if (!waterItem[0]) {
       return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '近くに水源がなく、水も持っていません。' }

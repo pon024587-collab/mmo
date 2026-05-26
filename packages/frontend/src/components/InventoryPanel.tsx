@@ -79,8 +79,8 @@ export default function InventoryPanel() {
   }
 
   const handleUse = async (item: InventoryItem) => {
-    if (item.category === 'FOOD' || item.category === 'WATER') {
-      const endpoint = item.category === 'WATER' ? '/game/drink' : '/game/eat'
+    if (item.category === 'FOOD' || item.category === 'WATER' || item.category === 'CONSUMABLE') {
+      const endpoint = item.name === '水' || item.name === 'WATER' ? '/game/drink' : '/game/eat'
       const res = await api.post<{ success: boolean; message?: string }>(endpoint, { itemId: item.id })
       setMessage(res.message ?? (res.success ? '使用しました。' : '使用できませんでした。'))
       if (res.success) fetchInventory()
@@ -141,12 +141,12 @@ export default function InventoryPanel() {
                         装備
                       </button>
                     )}
-                    {item.category === 'FOOD' && (
+                    {(item.category === 'FOOD' || item.category === 'CONSUMABLE') && (
                       <button
                         onClick={() => handleUse(item)}
                         className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded"
                       >
-                        食べる
+                        {item.name === '水' || item.name === 'WATER' ? '飲む' : '食べる'}
                       </button>
                     )}
                   </div>
