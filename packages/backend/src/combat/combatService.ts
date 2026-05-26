@@ -404,10 +404,15 @@ export async function completeCombat(
     }
 
     battleLog += `\n【戦闘終了】 ${generateVictoryText(skill, monster.name, countText)}`
+
+    // 自動で剥ぎ取りを実行
+    const skinningResult = await completeSkinning(characterId, monsterType)
+    battleLog += `\n💀 剥ぎ取り: ${skinningResult}`
+
     return {
       resultText: battleLog,
       victory: true,
-      canSkin: true, // 剥ぎ取り可能
+      canSkin: false, // 自動で実行したため不要
     }
   } else {
     await sql`UPDATE characters SET health = 0, updated_at = NOW() WHERE id = ${characterId}`
