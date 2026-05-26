@@ -223,6 +223,26 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await startGather(char.id, body.data.gatherType as GatherType))
   })
 
+  // ---- 料理 ----
+
+  app.post('/api/game/cook', async (request, reply) => {
+    const body = z.object({ recipeType: z.enum(['BREAD', 'STEW', 'HERBAL_TEA']) }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false, message: 'レシピタイプが正しくありません。' })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await cook(char.id, body.data.recipeType))
+  })
+
+  // ---- ダンジョン探索 ----
+
+  app.post('/api/game/dungeon', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const dungeonId = char.villageId // 現在の村のダンジョンを探索
+    return reply.send(await exploreDungeon(char.id, dungeonId))
+  })
+
+
   // ---- 魔法 ----
 
 

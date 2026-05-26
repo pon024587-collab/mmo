@@ -54,10 +54,19 @@ const ACTION_GROUPS: ActionGroup[] = [
     ],
   },
   {
+    label: '🍽️ 料理',
+    actions: [
+      { label: 'パンを作る（1時間）', endpoint: '/game/cook', body: { recipeType: 'BREAD' } },
+      { label: 'シチューを作る（1時間）', endpoint: '/game/cook', body: { recipeType: 'STEW' } },
+      { label: '薬草茶を作る（1時間）', endpoint: '/game/cook', body: { recipeType: 'HERBAL_TEA' } },
+    ],
+  },
+  {
     label: '🙏 その他',
     actions: [
       { label: '神殿に参拝（30分）', endpoint: '/game/pray', body: { deityType: 'HARVEST' } },
       { label: '治療を受ける（2時間）', endpoint: '/game/treat' },
+      { label: 'ダンジョン探索（30分）', endpoint: '/game/dungeon', confirm: 'ダンジョンに潜ります。危险ですが宝著のチャンスもあります。行きますか？' },
     ],
   },
 ]
