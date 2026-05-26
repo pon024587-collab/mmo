@@ -9,9 +9,6 @@ export const sql = postgres(config.databaseUrl, {
   idle_timeout: 30,
   connect_timeout: 10,
   transform: {
-    // snake_case → camelCase の自動変換
-    column: {
-      from: postgres.camel,
-    },
+    column: (col: string) => col.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()),
   },
 })

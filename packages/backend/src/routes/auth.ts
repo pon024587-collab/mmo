@@ -39,7 +39,12 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const ipAddress = request.ip
-    const result = await register({ ...body.data, ipAddress })
+    const result = await register({
+      email: body.data.email,
+      password: body.data.password,
+      fingerprintSignals: body.data.fingerprintSignals,
+      ipAddress,
+    })
 
     if (!result.success) {
       return reply.status(409).send(result)
@@ -68,7 +73,12 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const ipAddress = request.ip
-    const result = await login({ ...body.data, ipAddress })
+    const result = await login({
+      email: body.data.email,
+      password: body.data.password,
+      fingerprintSignals: body.data.fingerprintSignals,
+      ipAddress,
+    })
 
     if (!result.success) {
       if (result.requiresVerification) {
