@@ -159,11 +159,12 @@ export async function getPendingResults(
   characterId: string
 ): Promise<{ actionType: string; resultText: string; completedAt: Date }[]> {
   const results = await sql<{
+    id: string
     actionType: string
     resultText: string
     completedAt: Date
   }[]>`
-    SELECT action_type, result_text, completed_at
+    SELECT id, action_type, result_text, completed_at
     FROM action_queue
     WHERE character_id = ${characterId}
       AND status = 'COMPLETED'
@@ -171,6 +172,16 @@ export async function getPendingResults(
     ORDER BY completed_at ASC
     LIMIT 50
   `
+
+  if (results.length > 0) {
+    const ids = results.map(r => r.id)
+    await sql`
+      UPDATE action_queue
+      SET status = 'ACKNOWLEDGED'
+      WHERE id IN ${sql(ids)}
+    `
+  }
+
   return results
 }
 
