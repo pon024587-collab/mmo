@@ -38,7 +38,13 @@ export async function collectTaxes(): Promise<void> {
         WHERE id = ${char.id}
       `
     } else {
-      // 所持金不足 → 負債として記録し、賞金首（脱税）にする
+      // 所持金不足 → 土地と住居を全て没収（差し押さえ）
+      if (char.landCount > 0) {
+        await sql`DELETE FROM housings WHERE character_id = ${char.id}`
+        await sql`UPDATE lands SET owner_character_id = NULL, status = 'UNOWNED' WHERE owner_character_id = ${char.id}`
+      }
+
+      // 負債として記録し、賞金首（脱税）にする
       const shortage = taxAmount - char.gold
       await sql`
         UPDATE characters SET gold = 0, updated_at = NOW() WHERE id = ${char.id}
@@ -51,7 +57,7 @@ export async function collectTaxes(): Promise<void> {
       `
       
       // 脱税による賞金首化（最低50G）
-      await addBounty(char.id, Math.max(50, shortage), '脱税')
+      await addBounty(char.id, Math.max(50, shortage), '脱税による財産差し押さえ逃れ')
     }
   }
 }
