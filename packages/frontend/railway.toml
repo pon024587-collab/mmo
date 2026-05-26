@@ -1,6 +1,5 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm install && pnpm build"
 
 [deploy]
-startCommand = "pnpm preview --host --port $PORT"
+startCommand = "node node_modules/.bin/vite preview --host --port $PORT"
