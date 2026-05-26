@@ -191,6 +191,9 @@ export async function completeCombat(
       const enhancePower = Math.pow(enhanceLv, 2) * 10
       weaponAtk += enhancePower
       weaponMag += enhancePower
+
+      // 強化によって属性値も成長
+      if (weaponElement) weaponElementValue += enhanceLv * 5
     }
   }
 
@@ -224,6 +227,9 @@ export async function completeCombat(
       // 防具強化ボーナス: (enhanceLv^2 * 10)
       const enhanceLv = a[0].metadata?.enhance || 0
       defBonus += Math.pow(enhanceLv, 2) * 10
+      
+      // 強化によって属性耐性値も成長
+      if (armorElement) armorElementValue += enhanceLv * 5
       
       // defBonusをグローバルに持たせるため、charのプロパティのように扱うか
       // 変数宣言を外に出す必要がある。
@@ -265,35 +271,34 @@ export async function completeCombat(
   const elementNames: Record<string, string> = { FIRE: '炎', WATER: '水', WIND: '風', EARTH: '土', THUNDER: '雷', ICE: '氷', LIGHT: '光', DARK: '闇', POISON: '毒' }
 
   // ===== 属性攻撃ボーナス計算 =====
-  // 武器の属性攻撃 or 装飾品の属性攻撃が魔物の属性と一致する場合ボーナス
-  let elementalAtkBonus = 0
+  // 武器の属性攻撃 or 装飾品の属性攻撃が魔物の属性と一致する場合ボーナス (パーセンテージ倍率)
+  let elementalAtkMultiplier = 1.0
   let elementalAtkMsg = ''
   if (randomElement && weaponElement === randomElement) {
-    elementalAtkBonus = weaponElementValue
-    elementalAtkMsg = `\n⚡ 属性一致！ 【${elementNames[randomElement]}属性攻撃】が刺さり +${elementalAtkBonus}の追加ダメージ！`
+    elementalAtkMultiplier = 1.0 + (weaponElementValue / 100)
+    elementalAtkMsg = `\n⚡ 属性一致！ 【${elementNames[randomElement]}弱点】を突き、攻撃力が ${Math.floor(elementalAtkMultiplier * 100)}% にアップ！`
   } else if (randomElement && accElement === randomElement) {
-    elementalAtkBonus = accElementValue
-    elementalAtkMsg = `\n⚡ 装飾品の属性が刺さった！ 【${elementNames[randomElement]}属性攻撃】+${elementalAtkBonus}の追加ダメージ！`
+    elementalAtkMultiplier = 1.0 + (accElementValue / 100)
+    elementalAtkMsg = `\n⚡ 属性一致！ 【${elementNames[randomElement]}弱点】を突き、攻撃力が ${Math.floor(elementalAtkMultiplier * 100)}% にアップ！`
   }
 
   // ===== 属性耐性ボーナス計算 =====
-  // 防具 or 装飾品の属性耐性が魔物の属性と一致する場合、ダメージ軽減
-  let elementalResVal = 0
+  // 防具 or 装飾品の属性耐性が魔物の属性と一致する場合、ダメージを割合で軽減 (最大80%カット)
+  let elementalResMultiplier = 1.0
   let elementalResMsg = ''
   if (randomElement && armorElement === randomElement) {
-    elementalResVal = armorElementValue
-    elementalResMsg = `\n🛡️ 防具の属性耐性が機能！ 【${elementNames[randomElement]}耐性】でダメージ ${elementalResVal} 軽減！`
+    elementalResMultiplier = Math.max(0.2, 1.0 - (armorElementValue / 100))
+    elementalResMsg = `\n🛡️ 防具の属性耐性が機能！ 【${elementNames[randomElement]}耐性】でダメージを ${Math.floor((1 - elementalResMultiplier) * 100)}% 軽減！`
   } else if (randomElement && accElement === randomElement && !elementalAtkMsg) {
-    // 装飾品は攻撃優先。耐性として使われるのは攻撃一致しない場合のみ
-    elementalResVal = accElementValue
-    elementalResMsg = `\n🛡️ 装飾品の属性耐性が機能！ 【${elementNames[randomElement]}耐性】でダメージ ${elementalResVal} 軽減！`
+    elementalResMultiplier = Math.max(0.2, 1.0 - (accElementValue / 100))
+    elementalResMsg = `\n🛡️ 装飾品の属性耐性が機能！ 【${elementNames[randomElement]}耐性】でダメージを ${Math.floor((1 - elementalResMultiplier) * 100)}% 軽減！`
   }
 
   // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + 防御力ボーナス + スキル補正 + 属性ボーナス）
-  // 割合増加クリスタルの効果（ATK_PERCENT, DEF_PERCENT）を適用する
+  // 割合増加クリスタルの効果と、属性一致効果を適用する
   const atkMultiplier = 1 + (atkPercent / 100)
   const defMultiplier = 1 + (defPercent / 100)
-  const playerPower = (skill + weaponAtk + weaponMag + skillBonus) * atkMultiplier + (defBonus * 1.5 * defMultiplier) + elementalAtkBonus + Math.random() * 30
+  const playerPower = ((skill + weaponAtk + weaponMag + skillBonus) * atkMultiplier * elementalAtkMultiplier) + (defBonus * 1.5 * defMultiplier) + Math.random() * 30
   const monsterPower = totalPower + Math.random() * 10
   const victory = playerPower >= monsterPower * 0.5
   const elStr = randomElement && elementNames[randomElement] ? `【${elementNames[randomElement]}属性】` : ''
@@ -314,8 +319,8 @@ export async function completeCombat(
       // 敵が強い場合はダメージ計算 (防御力も加味して係数0.8)
       let rawDamage = Math.floor(monsterPower - (playerPower * 0.8))
       if (rawDamage < 1) rawDamage = 1
-      // 属性耐性でダメージ軽減
-      damageTaken = Math.max(0, rawDamage - (elementalResVal * 5)) // 耐性の効果を5倍に
+      // 属性耐性でダメージを割合軽減
+      damageTaken = Math.floor(rawDamage * elementalResMultiplier)
       if (elementalResMsg) battleLog += elementalResMsg + '\n'
       battleLog += `▶ ${monster.name}の反撃！ ${damageTaken}のダメージを受けた！\n`
       fatigueGained = 20
