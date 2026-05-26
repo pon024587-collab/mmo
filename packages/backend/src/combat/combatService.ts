@@ -157,6 +157,8 @@ export async function completeCombat(
   let weaponAtk = 0
   let weaponMag = 0
   let weaponCategory = 'WEAPON_UNARMED'
+  let atkPercent = 0
+  let defPercent = 0
   let weaponElement = ''
   let weaponElementValue = 0
 
@@ -180,6 +182,7 @@ export async function completeCombat(
       for (const c of crystals) {
         if (c.ATK) weaponAtk += c.ATK
         if (c.MP) weaponMag += c.MP // 簡単のためMPボーナスを魔法力と見なす
+        if (c.ATK_PERCENT) atkPercent += c.ATK_PERCENT
       }
       
       // 強化値(enhance)ボーナス: 後半ほど強力になる二次関数 (enhanceLv^2 * 10)
@@ -212,6 +215,7 @@ export async function completeCombat(
       const crystals = a[0].metadata?.crystals || []
       for (const c of crystals) {
         if (c.DEF) defBonus += c.DEF
+        if (c.DEF_PERCENT) defPercent += c.DEF_PERCENT
         // 防具の属性耐性ボーナス
         if (c.FIRE_RES && armorElement === 'FIRE') armorElementValue += c.FIRE_RES
         if (c.WATER_RES && armorElement === 'WATER') armorElementValue += c.WATER_RES
@@ -286,8 +290,10 @@ export async function completeCombat(
   }
 
   // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + 防御力ボーナス + スキル補正 + 属性ボーナス）
-  // 防御力がダメージ軽減に大きく寄与するよう、playerPowerへの加算倍率を高める
-  const playerPower = skill + weaponAtk + weaponMag + (defBonus * 1.5) + skillBonus + elementalAtkBonus + Math.random() * 30
+  // 割合増加クリスタルの効果（ATK_PERCENT, DEF_PERCENT）を適用する
+  const atkMultiplier = 1 + (atkPercent / 100)
+  const defMultiplier = 1 + (defPercent / 100)
+  const playerPower = (skill + weaponAtk + weaponMag + skillBonus) * atkMultiplier + (defBonus * 1.5 * defMultiplier) + elementalAtkBonus + Math.random() * 30
   const monsterPower = totalPower + Math.random() * 10
   const victory = playerPower >= monsterPower * 0.5
   const elStr = randomElement && elementNames[randomElement] ? `【${elementNames[randomElement]}属性】` : ''

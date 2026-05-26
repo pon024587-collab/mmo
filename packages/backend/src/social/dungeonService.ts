@@ -66,13 +66,17 @@ export async function completeDungeonFloor(
   `
   if (templates[0]) {
     // ランダムなサブパラメータを生成
-    // 例: ATK, DEF, HP, MP などのうち1つ
-    const bonusTypes = ['ATK', 'DEF', 'HP', 'MP', 'FIRE_RES', 'WATER_RES']
+    const bonusTypes = ['ATK', 'DEF', 'HP', 'MP', 'FIRE_RES', 'WATER_RES', 'ATK_PERCENT', 'DEF_PERCENT']
     const selectedBonus = bonusTypes[Math.floor(Math.random() * bonusTypes.length)]!
     
     // 階層が高いほど数値が高い
-    const baseValue = Math.floor(Math.random() * 5) + 1
-    const bonusValue = baseValue * floor
+    let bonusValue = (Math.floor(Math.random() * 5) + 1) * floor
+    let label = `+${bonusValue}`
+    if (selectedBonus.endsWith('_PERCENT')) {
+      // 割合増加は強力なので数値を控えめに (階層によって 1%〜5% 程度)
+      bonusValue = Math.max(1, Math.floor(Math.random() * floor) + 1)
+      label = `+${bonusValue}%`
+    }
 
     const metadata = { bonus: { [selectedBonus]: bonusValue } }
 
@@ -81,7 +85,7 @@ export async function completeDungeonFloor(
       VALUES (${characterId}, ${templates[0].id}, 1, ${JSON.stringify(metadata)}::jsonb)
     `
     
-    return `第${floor}層を突破し、宝箱から「クリスタル（${selectedBonus}+${bonusValue}）」を手に入れた！`
+    return `第${floor}層を突破し、宝箱から「クリスタル（${selectedBonus}${label}）」を手に入れた！`
   }
 
   return `第${floor}層を突破したが、宝箱は空だった。`
