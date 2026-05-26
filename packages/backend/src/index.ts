@@ -11,7 +11,10 @@ const app = Fastify({
   logger: true,
 })
 
-await app.register(fastifyCors, { origin: true })
+await app.register(fastifyCors, {
+  origin: true,
+  credentials: true,
+})
 
 await app.register(fastifyJwt, {
   secret: config.jwtSecret,

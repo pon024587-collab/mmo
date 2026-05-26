@@ -33,7 +33,7 @@ export function generateFingerprintHash(signals: DeviceFingerprintSignals): stri
     parts.push(`fonts:${sortedFonts}`)
   }
   if (signals.webglRenderer) parts.push(`webgl:${signals.webglRenderer}`)
-  if (signals.ipAddress) parts.push(`ip:${signals.ipAddress}`)
+  // IPアドレスはプロキシ環境で変わるため除外
 
   if (parts.length === 0) {
     throw new Error('フィンガープリントシグナルが1つも取得できませんでした')
