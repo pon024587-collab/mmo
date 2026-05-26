@@ -131,18 +131,10 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     `
     if (!action[0]) return reply.send({ success: false, message: '実行中の行動がありません。' })
 
-    await sql`
-      UPDATE action_queue
-      SET status = 'COMPLETED', completed_at = NOW(),
-          result_text = '[管理者] 行動を即完了しました。',
-          scheduled_completion_at = NOW()
-      WHERE id = ${action[0].id}
-    `
-    await sql`
-      UPDATE characters SET status = 'IDLE', updated_at = NOW()
-      WHERE id = ${body.data.characterId}
-    `
-    return reply.send({ success: true, message: `${action[0].actionType} を即完了しました。` })
+    const { completeAction } = await import('../action/actionService.js')
+    await completeAction(action[0].id, body.data.characterId, action[0].actionType as any)
+
+    return reply.send({ success: true, message: `${action[0].actionType} を即完了しました（報酬や結果も正常に付与されました）。` })
   })
 
   // ---- 魔物召喚（戦闘を強制開始） ----
