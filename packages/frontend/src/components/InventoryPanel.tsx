@@ -7,6 +7,8 @@ interface ItemMetadata {
   suffix?: string
   bonusStrength?: number
   bonusDexterity?: number
+  slots?: number
+  crystals?: Record<string, number>[]
 }
 
 interface InventoryItem {
@@ -50,6 +52,11 @@ export default function InventoryPanel() {
     equippedAccessoryId: null,
   })
   const [message, setMessage] = useState('')
+  const [socketTarget, setSocketTarget] = useState<string | null>(null)
+  const [selectedCrystal, setSelectedCrystal] = useState<string>('')
+
+  // 持っているクリスタル一覧を取得
+  const crystalItems = items.filter(i => i.name === 'CRYSTAL' || i.name === 'クリスタル')
 
   const fetchInventory = async () => {
     const res = await api.get<{ success: boolean; items?: InventoryItem[] }>('/game/inventory')
@@ -86,6 +93,16 @@ export default function InventoryPanel() {
       if (res.success) fetchInventory()
     }
   }
+
+  const handleSocket = async (equipmentId: string) => {
+    if (!selectedCrystal) return setMessage('クリスタルを選択してください。')
+    const res = await api.post<{ success: boolean; message?: string }>('/game/equipment/socket', { equipmentItemId: equipmentId, crystalItemId: selectedCrystal })
+    setMessage(res.message ?? '')
+    setSocketTarget(null)
+    setSelectedCrystal('')
+    if (res.success) { fetchEquipment(); fetchInventory() }
+  }
+
 
   return (
     <div className="space-y-4">
@@ -152,10 +169,47 @@ export default function InventoryPanel() {
                   </div>
                 </div>
                 {/* ボーナスステータス表示 */}
-                {hasBonus && (
-                  <div className="mt-1 flex gap-3 text-xs text-stone-400 pl-1">
+                {(hasBonus || meta?.slots) && (
+                  <div className="mt-1 flex gap-3 text-xs text-stone-400 pl-1 items-center">
                     {(meta?.bonusStrength ?? 0) > 0 && <span className="text-red-400">筋力 +{meta?.bonusStrength}</span>}
                     {(meta?.bonusDexterity ?? 0) > 0 && <span className="text-green-400">器用さ +{meta?.bonusDexterity}</span>}
+                    
+                    {meta?.slots && (
+                      <div className="text-purple-300 ml-2 border-l border-stone-700 pl-3">
+                        ◆スロット: {(meta.crystals || []).length} / {meta.slots}
+                        {(meta.crystals || []).map((c, idx) => (
+                          <span key={idx} className="ml-2 text-purple-400 bg-purple-900/30 px-1 rounded">
+                            {Object.entries(c).map(([k, v]) => `${k}+${v}`).join(' ')}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* クリスタル装着UI */}
+                {meta?.slots && (meta.crystals || []).length < meta.slots && !isEquipped && (
+                  <div className="mt-2 text-right">
+                    {socketTarget === item.id ? (
+                      <div className="flex justify-end gap-1">
+                        <select
+                          className="bg-stone-900 border border-stone-600 text-xs px-1"
+                          value={selectedCrystal}
+                          onChange={e => setSelectedCrystal(e.target.value)}
+                        >
+                          <option value="">-- クリスタルを選択 --</option>
+                          {crystalItems.map(c => {
+                            const b = c.metadata?.bonus || {}
+                            return <option key={c.id} value={c.id}>{c.name} ({Object.entries(b).map(([k,v]) => `${k}+${v}`).join(' ')})</option>
+                          })}
+                        </select>
+                        <button onClick={() => handleSocket(item.id)} className="px-2 py-1 bg-purple-700 hover:bg-purple-600 text-white text-xs rounded">はめる</button>
+                        <button onClick={() => setSocketTarget(null)} className="px-2 py-1 bg-stone-700 hover:bg-stone-600 text-white text-xs rounded">取消</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setSocketTarget(item.id)} className="text-xs text-purple-400 underline hover:text-purple-300">
+                        + クリスタルを装着
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

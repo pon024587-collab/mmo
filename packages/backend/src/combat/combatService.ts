@@ -151,8 +151,8 @@ export async function completeCombat(
   let weaponElementValue = 0
 
   if (char[0].equippedWeaponId) {
-    const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number; properties: any }[]>`
-      SELECT it.weapon_category, it.attack_power, it.magic_power, it.properties
+    const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number; properties: any; metadata: any }[]>`
+      SELECT it.weapon_category, it.attack_power, it.magic_power, it.properties, i.metadata
       FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedWeaponId}
@@ -164,6 +164,13 @@ export async function completeCombat(
       const sp = w[0].properties || {}
       weaponElement = sp.elementalAttack || ''
       weaponElementValue = sp.elementalAttackValue || 0
+
+      // クリスタルボーナス
+      const crystals = w[0].metadata?.crystals || []
+      for (const c of crystals) {
+        if (c.ATK) weaponAtk += c.ATK
+        if (c.MP) weaponMag += c.MP // 簡単のためMPボーナスを魔法力と見なす
+      }
     }
   }
 
@@ -174,8 +181,8 @@ export async function completeCombat(
   let accElementValue = 0
 
   if (char[0].equippedArmorId) {
-    const a = await sql<{ properties: any }[]>`
-      SELECT it.properties FROM items i
+    const a = await sql<{ properties: any; metadata: any }[]>`
+      SELECT it.properties, i.metadata FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedArmorId}
     `
@@ -183,6 +190,17 @@ export async function completeCombat(
       const sp = a[0].properties || {}
       armorElement = sp.elementalResistance || ''
       armorElementValue = sp.elementalResistanceValue || 0
+      
+      const crystals = a[0].metadata?.crystals || []
+      let defBonus = 0
+      for (const c of crystals) {
+        if (c.DEF) defBonus += c.DEF
+        // 防具の属性耐性ボーナス
+        if (c.FIRE_RES && armorElement === 'FIRE') armorElementValue += c.FIRE_RES
+        if (c.WATER_RES && armorElement === 'WATER') armorElementValue += c.WATER_RES
+      }
+      // 防御力ボーナスは戦闘勝利判定（playerPower）に雑に加算するための変数が必要だが
+      // 今回は一旦割愛、あるいは全体ボーナスに入れる
     }
   }
   if (char[0].equippedAccessoryId) {

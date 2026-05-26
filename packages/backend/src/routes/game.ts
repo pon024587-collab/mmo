@@ -527,6 +527,46 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
 
     return reply.send({ success: true, message: '装備を外しました。' })
   })
+  app.post('/api/game/equipment/socket', async (request, reply) => {
+    const body = z.object({ equipmentItemId: z.string(), crystalItemId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false, message: '入力が正しくありません。' })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+
+    const eqRows = await sql<{ id: string; metadata: any }[]>`
+      SELECT id, metadata FROM items WHERE id = ${body.data.equipmentItemId} AND owner_character_id = ${char.id} LIMIT 1
+    `
+    const cryRows = await sql<{ id: string; metadata: any; quantity: number }[]>`
+      SELECT i.id, i.metadata, i.quantity FROM items i 
+      JOIN item_templates it ON i.item_template_id = it.id 
+      WHERE i.id = ${body.data.crystalItemId} AND i.owner_character_id = ${char.id} AND it.name = 'CRYSTAL' LIMIT 1
+    `
+
+    if (!eqRows[0] || !cryRows[0]) return reply.send({ success: false, message: '対象のアイテムが見つかりません。' })
+
+    const eqMeta = eqRows[0].metadata || {}
+    const cryMeta = cryRows[0].metadata || {}
+    const maxSlots = eqMeta.slots || 0
+    const crystals = eqMeta.crystals || []
+
+    if (maxSlots === 0) return reply.send({ success: false, message: 'この装備にはスロットがありません。' })
+    if (crystals.length >= maxSlots) return reply.send({ success: false, message: 'スロットに空きがありません。' })
+    if (!cryMeta.bonus) return reply.send({ success: false, message: 'このクリスタルには力がありません。' })
+
+    crystals.push(cryMeta.bonus)
+    eqMeta.crystals = crystals
+
+    await sql.begin(async tx => {
+      await tx`UPDATE items SET metadata = ${eqMeta}::jsonb WHERE id = ${eqRows[0].id}`
+      if (cryRows[0].quantity > 1) {
+        await tx`UPDATE items SET quantity = quantity - 1 WHERE id = ${cryRows[0].id}`
+      } else {
+        await tx`DELETE FROM items WHERE id = ${cryRows[0].id}`
+      }
+    })
+
+    return reply.send({ success: true, message: 'クリスタルを装備にはめ込みました。' })
+  })
 
   // ---- 世界情報 ----
 

@@ -157,14 +157,26 @@ export async function craftItem(
   }
 
   // 完成品を追加
-  const resultTemplate = await sql<{ id: string; name: string }[]>`
-    SELECT id, name FROM item_templates WHERE id = ${r.resultItemTemplateId} LIMIT 1
+  const resultTemplate = await sql<{ id: string; name: string; category: string }[]>`
+    SELECT id, name, category FROM item_templates WHERE id = ${r.resultItemTemplateId} LIMIT 1
   `
   if (!resultTemplate[0]) return { success: false, message: 'クラフト結果の登録に失敗しました。' }
 
+  const cat = resultTemplate[0].category
+  let metadata: Record<string, any> = {}
+  
+  if (cat === 'WEAPON' || cat === 'ARMOR') {
+    const r = Math.random()
+    if (r < 0.001) {
+      metadata.slots = 2
+    } else if (r < 0.1) {
+      metadata.slots = 1
+    }
+  }
+
   await sql`
-    INSERT INTO items (owner_character_id, item_template_id, quantity)
-    VALUES (${characterId}, ${r.resultItemTemplateId}, 1)
+    INSERT INTO items (owner_character_id, item_template_id, quantity, metadata)
+    VALUES (${characterId}, ${r.resultItemTemplateId}, 1, ${metadata}::jsonb)
   `
 
   // 工作スキル成長
