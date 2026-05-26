@@ -2,7 +2,7 @@
  * Account_Manager
  * アカウント登録・認証・デバイス管理
  */
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { sql } from '../db/client.js'
 import {
   generateFingerprintHash,

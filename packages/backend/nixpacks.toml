@@ -9,3 +9,4 @@ cmds = ["pnpm --filter backend build"]
 
 [start]
 cmd = "node dist/index.js"
+
