@@ -4,30 +4,19 @@ import { api } from '../api/client.js'
 interface Bounty { characterName: string; bountyAmount: number; villageId: string }
 interface Prisoner { id: string; name: string; bountyAmount: number }
 interface Caravan { id: string; destinationName: string; departureAt: string; passengerFee: number; guardReward: number }
-interface GuardCheck { encountered: boolean; hasCriminalRecord: boolean; bountyAmount: number }
 
 export default function PvpPanel() {
   const [tab, setTab] = useState<'bounties' | 'caravans' | 'prisoners' | 'guard'>('caravans')
   const [bounties, setBounties] = useState<Bounty[]>([])
   const [prisoners, setPrisoners] = useState<Prisoner[]>([])
   const [caravans, setCaravans] = useState<Caravan[]>([])
-  const [guardCheck, setGuardCheck] = useState<GuardCheck | null>(null)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
     api.get<{ success: boolean; bounties?: Bounty[] }>('/pvp/bounties').then(r => { if (r.success) setBounties(r.bounties ?? []) })
     api.get<{ success: boolean; prisoners?: Prisoner[] }>('/pvp/prisoners').then(r => { if (r.success) setPrisoners(r.prisoners ?? []) })
     api.get<{ success: boolean; caravans?: Caravan[] }>('/pvp/caravans').then(r => { if (r.success) setCaravans(r.caravans ?? []) })
-    api.get<GuardCheck & { success: boolean }>('/pvp/guard/check').then(r => { if (r.success) setGuardCheck(r) })
   }, [])
-
-  const handleGuardAction = async (action: 'fight' | 'flee' | 'surrender') => {
-    const res = await api.post<{ success?: boolean; victory?: boolean; resultText?: string; text?: string; message?: string }>(
-      `/pvp/guard/${action}`, {}
-    )
-    setMessage(res.resultText ?? res.text ?? res.message ?? '処理しました。')
-    setGuardCheck(null)
-  }
 
   const handleJoinCaravan = async (caravanId: string, role: 'passenger' | 'guard') => {
     const res = await api.post<{ success: boolean; message?: string }>(`/pvp/caravan/${role}`, { caravanId })
@@ -42,21 +31,6 @@ export default function PvpPanel() {
 
   return (
     <div className="space-y-3">
-      {/* 衛兵遭遇 */}
-      {guardCheck?.encountered && (
-        <div className="bg-red-950 border border-red-700 rounded-lg p-4">
-          <p className="text-red-300 font-bold mb-2">⚠️ 衛兵に遭遇した！</p>
-          {guardCheck.hasCriminalRecord && (
-            <p className="text-red-400 text-sm mb-3">賞金首として指名手配されている（{guardCheck.bountyAmount}G）。どうする？</p>
-          )}
-          <div className="flex gap-2">
-            <button onClick={() => handleGuardAction('fight')} className="flex-1 py-2 bg-red-800 hover:bg-red-700 text-white text-sm rounded">戦う</button>
-            <button onClick={() => handleGuardAction('flee')} className="flex-1 py-2 bg-stone-700 hover:bg-stone-600 text-stone-300 text-sm rounded">逃げる</button>
-            <button onClick={() => handleGuardAction('surrender')} className="flex-1 py-2 bg-amber-800 hover:bg-amber-700 text-white text-sm rounded">自首する</button>
-          </div>
-        </div>
-      )}
-
       {message && (
         <div className="bg-stone-800 border border-stone-600 rounded p-3 text-stone-300 text-sm">{message}</div>
       )}

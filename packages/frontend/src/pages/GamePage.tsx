@@ -66,6 +66,8 @@ const TAB_LABELS: Record<Tab, string> = {
 export default function GamePage() {
   const [character, setCharacter] = useState<CharacterStatus | null>(null)
   const [results, setResults] = useState<Result[]>([])
+  const [guardCheck, setGuardCheck] = useState<{ pending: boolean; bountyAmount: number } | null>(null)
+  const [guardMessage, setGuardMessage] = useState('')
   const [activeTab, setActiveTab] = useState<Tab>('status')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -90,17 +92,36 @@ export default function GamePage() {
     } catch {}
   }, [])
 
+  const checkGuard = useCallback(async () => {
+    try {
+      const res = await api.get<{ success: boolean; pending?: boolean; bountyAmount?: number }>('/pvp/guard/status')
+      if (res.success && res.pending) {
+        setGuardCheck({ pending: res.pending, bountyAmount: res.bountyAmount ?? 0 })
+      }
+    } catch {}
+  }, [])
+
   useEffect(() => {
     const init = async () => {
       setLoading(true)
       await fetchCharacter()
       await fetchResults()
+      await checkGuard()
       setLoading(false)
     }
     init()
-    const interval = setInterval(() => { fetchCharacter(); fetchResults() }, 30000)
+    const interval = setInterval(() => { fetchCharacter(); fetchResults(); checkGuard() }, 30000)
     return () => clearInterval(interval)
-  }, [fetchCharacter, fetchResults])
+  }, [fetchCharacter, fetchResults, checkGuard])
+
+  const handleGuardAction = async (action: 'fight' | 'flee' | 'surrender') => {
+    const res = await api.post<{ success?: boolean; victory?: boolean; resultText?: string; text?: string; message?: string }>(
+      `/pvp/guard/${action}`, {}
+    )
+    setGuardMessage(res.resultText ?? res.text ?? res.message ?? '処理しました。')
+    setGuardCheck(null)
+    fetchCharacter()
+  }
 
   const handleLogout = () => { logout(); navigate('/login') }
 
@@ -128,6 +149,33 @@ export default function GamePage() {
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col">
+      {/* 衛兵強制モーダル */}
+      {guardCheck && guardCheck.pending && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+          <div className="bg-red-950 border border-red-700 p-6 rounded-lg max-w-sm w-full shadow-2xl">
+            <h2 className="text-xl font-bold text-red-400 mb-4 text-center animate-pulse">⚠️ 衛兵に遭遇した！</h2>
+            <p className="text-stone-300 text-sm mb-4">
+              あなたは賞金首（{guardCheck.bountyAmount}G）として指名手配されています。衛兵が立ちはだかりました。
+            </p>
+            <div className="flex flex-col gap-3">
+              <button onClick={() => handleGuardAction('fight')} className="py-3 bg-red-800 hover:bg-red-700 text-white font-bold rounded">⚔️ 強行突破する</button>
+              <button onClick={() => handleGuardAction('flee')} className="py-3 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold rounded">🏃 逃げ出す</button>
+              <button onClick={() => handleGuardAction('surrender')} className="py-3 bg-amber-800 hover:bg-amber-700 text-white font-bold rounded">🏳️ 大人しく自首する</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 衛兵事後メッセージモーダル */}
+      {guardMessage && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-stone-900 border border-stone-600 p-6 rounded-lg max-w-sm w-full shadow-xl text-center">
+            <p className="text-stone-300 mb-6">{guardMessage}</p>
+            <button onClick={() => setGuardMessage('')} className="px-6 py-2 bg-stone-700 hover:bg-stone-600 rounded text-stone-100 font-bold">閉じる</button>
+          </div>
+        </div>
+      )}
+
       {/* ヘッダー */}
       <header className="border-b border-stone-800 px-4 py-3 flex items-center justify-between sticky top-0 bg-stone-950 z-10">
         <div className="flex items-center gap-3">

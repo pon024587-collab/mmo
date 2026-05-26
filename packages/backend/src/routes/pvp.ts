@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { sql } from '../db/client.js'
 import {
   checkGuardEncounter, fightGuard, fleeFromGuard, surrender,
+  getGuardEncounterStatus,
   attackPlayer, completePvp, deliverPrisoner,
   getAvailableCaravans, joinCaravanAsPassenger, joinCaravanAsGuard,
   setupAmbush, addBounty,
@@ -19,6 +20,24 @@ export async function pvpRoutes(app: FastifyInstance): Promise<void> {
   })
 
   // ---- 衛兵遭遇 ----
+
+  // 衛兵遭遇ペンディング状態確認（フロントが30秒ごとにポーリング）
+  app.get('/api/pvp/guard/status', async (request, reply) => {
+    const char = await getActiveChar((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    let status = await getGuardEncounterStatus(char.id)
+    
+    // 賞金首なのにフラグが立っていなければ、一定確率で遭遇フラグを立てる（ポーリングで遭遇）
+    if (!status.pending && status.bountyAmount > 0) {
+      const { triggerGuardEncounterIfWanted } = await import('../pvp/pvpService.js')
+      const triggered = await triggerGuardEncounterIfWanted(char.id)
+      if (triggered) {
+        status.pending = true
+      }
+    }
+    
+    return reply.send({ success: true, ...status })
+  })
 
   // 衛兵遭遇チェック（都市移動時に呼び出す）
   app.get('/api/pvp/guard/check', async (request, reply) => {

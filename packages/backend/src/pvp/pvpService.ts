@@ -29,6 +29,38 @@ export async function checkGuardEncounter(characterId: string): Promise<{
   return { encountered, hasCriminalRecord, bountyAmount: char[0].bountyAmount }
 }
 
+/** 賞金首なら衛兵遭遇フラグを立てる（移動完了時・World_Tickから呼び出す） */
+export async function triggerGuardEncounterIfWanted(
+  characterId: string
+): Promise<boolean> {
+  const char = await sql<{ bountyAmount: number }[]>`
+    SELECT bounty_amount FROM characters WHERE id = ${characterId} LIMIT 1
+  `
+  if (!char[0] || char[0].bountyAmount <= 0) return false
+
+  // 30%の確率でフラグを立てる
+  if (Math.random() >= 0.3) return false
+
+  await sql`
+    UPDATE characters SET guard_encounter_pending = true, updated_at = NOW()
+    WHERE id = ${characterId}
+  `
+  return true
+}
+
+/** 衛兵遭遇ペンディング状態を取得 */
+export async function getGuardEncounterStatus(
+  characterId: string
+): Promise<{ pending: boolean; bountyAmount: number }> {
+  const rows = await sql<{ guardEncounterPending: boolean; bountyAmount: number }[]>`
+    SELECT guard_encounter_pending, bounty_amount FROM characters WHERE id = ${characterId} LIMIT 1
+  `
+  return {
+    pending: rows[0]?.guardEncounterPending ?? false,
+    bountyAmount: rows[0]?.bountyAmount ?? 0,
+  }
+}
+
 /** 衛兵と戦う */
 export async function fightGuard(characterId: string): Promise<{
   victory: boolean
@@ -47,6 +79,8 @@ export async function fightGuard(characterId: string): Promise<{
   if (victory) {
     // 勝利しても犯罪記録が増える
     await addBounty(characterId, 200, '衛兵への暴行')
+    // ペンディング解除
+    await sql`UPDATE characters SET guard_encounter_pending = false, updated_at = NOW() WHERE id = ${characterId}`
     return { victory: true, resultText: log + '衛兵を倒した。しかし、これで賞金首としての額が跳ね上がった。逃げるしかない。' }
   } else {
     // 敗北→拘束8時間
@@ -72,6 +106,7 @@ export async function fleeFromGuard(characterId: string): Promise<{
   const success = Math.random() < fleeChance
 
   if (success) {
+    await sql`UPDATE characters SET guard_encounter_pending = false, updated_at = NOW() WHERE id = ${characterId}`
     return { success: true, resultText: '衛兵の目を掻い潜り、なんとか逃げ切った。' }
   } else {
     await imprison(characterId, 8)
@@ -83,12 +118,8 @@ export async function fleeFromGuard(characterId: string): Promise<{
 export async function surrender(characterId: string): Promise<string> {
   await imprison(characterId, 6) // 自首は6時間
   // 賞金首を解除
-  await sql`
-    UPDATE characters SET bounty_amount = 0 WHERE id = ${characterId}
-  `
-  await sql`
-    UPDATE bounties SET is_active = false WHERE character_id = ${characterId}
-  `
+  await sql`UPDATE characters SET bounty_amount = 0 WHERE id = ${characterId}`
+  await sql`UPDATE bounties SET is_active = false WHERE character_id = ${characterId}`
   return '自首した。6時間の拘束と引き換えに、犯罪記録が消えた。'
 }
 
@@ -99,7 +130,8 @@ async function imprison(characterId: string, hours: number): Promise<void> {
     UPDATE characters
     SET is_imprisoned = true,
         imprisonment_ends_at = ${endsAt},
-        status = 'ACTIVE_ACTION',
+        status = 'IMPRISONED',
+        guard_encounter_pending = false,
         updated_at = NOW()
     WHERE id = ${characterId}
   `
