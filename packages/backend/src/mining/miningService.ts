@@ -67,12 +67,30 @@ export async function completeGather(
   const fatigueMultiplier = 1.0 - (fatigue * 0.5 / 100)
   const skill = Math.floor(char[0].skillMiningGrowth * fatigueMultiplier)
 
+  // 採掘は地形によって取得金属が変わる
+  let actualItemName = itemName
+  if (gatherType === 'MINE') {
+    const village = await sql<{ terrainType: string }[]>`
+      SELECT terrain_type FROM villages WHERE id = ${char[0].villageId} LIMIT 1
+    `
+    const terrain = village[0]?.terrainType || 'PLAIN'
+    const metalMap: Record<string, string> = {
+      PLAIN:     'IRON_ORE',
+      MOUNTAIN:  'COPPER_ORE',
+      FOREST:    'SILVER_ORE',
+      RIVER:     'GOLD_ORE',
+      DESERT:    'MITHRIL_ORE',
+      SNOWFIELD: 'MITHRIL_ORE',
+    }
+    actualItemName = metalMap[terrain] ?? 'IRON_ORE'
+  }
+
   // 採集量（スキルに応じて増加）
   const amount = Math.max(1, Math.floor((1 + skill / 100 + Math.random()) * fatigueMultiplier))
 
   // アイテム追加
   const template = await sql<{ id: string }[]>`
-    SELECT id FROM item_templates WHERE name = ${itemName} LIMIT 1
+    SELECT id FROM item_templates WHERE name = ${actualItemName} LIMIT 1
   `
   if (template[0]) {
     await sql`

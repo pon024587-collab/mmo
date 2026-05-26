@@ -171,6 +171,11 @@ export async function completeCombat(
         if (c.ATK) weaponAtk += c.ATK
         if (c.MP) weaponMag += c.MP // 簡単のためMPボーナスを魔法力と見なす
       }
+      
+      // 強化値(enhance)ボーナス (+1につき 基礎威力+5)
+      const enhanceLv = w[0].metadata?.enhance || 0
+      weaponAtk += enhanceLv * 5
+      weaponMag += enhanceLv * 5
     }
   }
 
@@ -179,6 +184,7 @@ export async function completeCombat(
   let armorElementValue = 0
   let accElement = ''
   let accElementValue = 0
+  let defBonus = 0
 
   if (char[0].equippedArmorId) {
     const a = await sql<{ properties: any; metadata: any }[]>`
@@ -192,15 +198,20 @@ export async function completeCombat(
       armorElementValue = sp.elementalResistanceValue || 0
       
       const crystals = a[0].metadata?.crystals || []
-      let defBonus = 0
       for (const c of crystals) {
         if (c.DEF) defBonus += c.DEF
         // 防具の属性耐性ボーナス
         if (c.FIRE_RES && armorElement === 'FIRE') armorElementValue += c.FIRE_RES
         if (c.WATER_RES && armorElement === 'WATER') armorElementValue += c.WATER_RES
       }
-      // 防御力ボーナスは戦闘勝利判定（playerPower）に雑に加算するための変数が必要だが
-      // 今回は一旦割愛、あるいは全体ボーナスに入れる
+      
+      // 強化値(enhance)ボーナス (+1につき 防御力相当のパワー+5)
+      const enhanceLv = a[0].metadata?.enhance || 0
+      defBonus += enhanceLv * 5
+      
+      // defBonusをグローバルに持たせるため、charのプロパティのように扱うか
+      // 変数宣言を外に出す必要がある。
+      // 一旦、ここで計算した defBonus を playerPower に加算できるように外部スコープの変数に渡す
     }
   }
   if (char[0].equippedAccessoryId) {
@@ -262,8 +273,8 @@ export async function completeCombat(
     elementalResMsg = `\n🛡️ 装飾品の属性耐性が機能！ 【${elementNames[randomElement]}耐性】でダメージ ${elementalResVal} 軽減！`
   }
 
-  // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + スキル補正 + 属性ボーナス）
-  const playerPower = skill + weaponAtk + weaponMag + skillBonus + elementalAtkBonus + Math.random() * 30
+  // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + 防御力ボーナス + スキル補正 + 属性ボーナス）
+  const playerPower = skill + weaponAtk + weaponMag + defBonus + skillBonus + elementalAtkBonus + Math.random() * 30
   const monsterPower = totalPower + Math.random() * 10
   const victory = playerPower >= monsterPower * 0.5
   const elStr = randomElement && elementNames[randomElement] ? `【${elementNames[randomElement]}属性】` : ''

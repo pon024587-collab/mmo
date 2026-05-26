@@ -10,6 +10,7 @@ interface ItemMetadata {
   slots?: number
   crystals?: Record<string, number>[]
   bonus?: Record<string, number>
+  enhance?: number
 }
 
 interface InventoryItem {
@@ -37,8 +38,14 @@ const RARITY_STYLE: Record<string, { color: string; label: string; border: strin
 
 function getDisplayName(item: InventoryItem): string {
   const m = item.metadata
-  if (!m?.rarity || m.rarity === 'NORMAL') return item.name
-  return `${m.prefix ?? ''}${item.name}${m.suffix ?? ''}`
+  let baseName = item.name
+  if (m?.rarity && m.rarity !== 'NORMAL') {
+    baseName = `${m.prefix ?? ''}${item.name}${m.suffix ?? ''}`
+  }
+  if (m?.enhance && m.enhance > 0) {
+    baseName = `${baseName} (+${m.enhance})`
+  }
+  return baseName
 }
 
 function getRarityStyle(rarity?: string) {
@@ -104,6 +111,15 @@ export default function InventoryPanel() {
     if (res.success) { fetchEquipment(); fetchInventory() }
   }
 
+  const handleEnhance = async (equipmentId: string) => {
+    const res = await api.post<{ success: boolean; message?: string; result?: string }>('/game/equipment/enhance', { itemId: equipmentId })
+    setMessage(res.message ?? '')
+    if (res.success || res.result === 'DESTROY') {
+      fetchEquipment()
+      fetchInventory()
+    }
+  }
+
 
   return (
     <div className="space-y-4">
@@ -152,12 +168,20 @@ export default function InventoryPanel() {
                   </div>
                   <div className="flex gap-2">
                     {!isEquipped && (item.category === 'WEAPON' || item.category === 'ARMOR') && (
-                      <button
-                        onClick={() => handleEquip(item.id)}
-                        className="px-3 py-1 bg-amber-700 hover:bg-amber-600 text-white text-xs rounded"
-                      >
-                        装備
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleEnhance(item.id)}
+                          className="px-3 py-1 bg-blue-700 hover:bg-blue-600 text-white text-xs rounded"
+                        >
+                          強化
+                        </button>
+                        <button
+                          onClick={() => handleEquip(item.id)}
+                          className="px-3 py-1 bg-amber-700 hover:bg-amber-600 text-white text-xs rounded"
+                        >
+                          装備
+                        </button>
+                      </>
                     )}
                     {(item.category === 'FOOD' || item.category === 'CONSUMABLE') && (
                       <button
