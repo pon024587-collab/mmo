@@ -28,6 +28,15 @@ const ACTION_GROUPS: ActionGroup[] = [
       { label: '素振り（30分）', endpoint: '/game/action', body: { actionType: 'COMBAT_PRACTICE' } },
       { label: 'ゴブリンと戦う', endpoint: '/game/combat', body: { monsterType: 'GOBLIN' }, confirm: '戦闘は危険です。本当に挑みますか？' },
       { label: 'オークと戦う', endpoint: '/game/combat', body: { monsterType: 'ORC' }, confirm: '強敵です。本当に挑みますか？' },
+      { label: '狼と戦う', endpoint: '/game/combat', body: { monsterType: 'WOLF' }, confirm: '戦闘は危険です。本当に挑みますか？' },
+      { label: 'アンデッドと戦う', endpoint: '/game/combat', body: { monsterType: 'UNDEAD' }, confirm: '戦闘は危険です。本当に挑みますか？' },
+    ],
+  },
+  {
+    label: '🦹 犯罪行為',
+    actions: [
+      { label: 'NPCから盗む', endpoint: '/game/action', body: { actionType: 'STEAL_NPC' }, confirm: '⚠️ 犯罪行為です。賞金首になります。本当に実行しますか？' },
+      { label: '道中に潜む（盗賊）', endpoint: '/pvp/ambush', body: { routeVillageA: '', routeVillageB: '', maxAttacks: 3 }, confirm: '⚠️ 犯罪行為です。賞金首になります。本当に実行しますか？' },
     ],
   },
   {

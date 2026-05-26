@@ -259,7 +259,40 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await acceptQuest(char.id, body.data.npcId, body.data.title, body.data.description, body.data.rewardGold, []))
   })
 
-  // ---- インベントリ ----
+  // ---- 犯罪 ----
+
+  app.post('/api/game/steal', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+
+    // NPCから盗む
+    const npcs = await sql<{ id: string; name: string }[]>`
+      SELECT id, name FROM npcs WHERE village_id = ${char.villageId} AND is_alive = true ORDER BY RANDOM() LIMIT 1
+    `
+    if (!npcs[0]) return reply.send({ success: false, message: '盗む相手がいません。' })
+
+    // 成功確率（器用さに依存）
+    const charData = await sql<{ dexterityGrowth: number; nationId: string }[]>`
+      SELECT dexterity_growth, nation_id FROM characters WHERE id = ${char.id} LIMIT 1
+    `
+    const dex = charData[0]?.dexterityGrowth ?? 0
+    const successChance = 0.3 + (dex / 500)
+    const success = Math.random() < successChance
+
+    if (success) {
+      const stolen = Math.floor(Math.random() * 30) + 5
+      await sql`UPDATE characters SET gold = gold + ${stolen}, updated_at = NOW() WHERE id = ${char.id}`
+      // 犯罪記録
+      const { addBounty } = await import('../pvp/pvpService.js')
+      await addBounty(char.id, 50, `${npcs[0].name}からの窃盗`)
+      return reply.send({ success: true, message: `${npcs[0].name}から${stolen}Gを盗んだ。しかし賞金首になった。` })
+    } else {
+      // 失敗→犯罪記録＋評判低下
+      const { addBounty } = await import('../pvp/pvpService.js')
+      await addBounty(char.id, 30, `${npcs[0].name}への窃盗未遂`)
+      return reply.send({ success: false, message: `${npcs[0].name}への盗みに失敗した。目撃されてしまった。` })
+    }
+  })
 
   app.get('/api/game/inventory', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
