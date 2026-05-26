@@ -44,8 +44,6 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const body = z.object({ times: z.number().min(1).max(100).default(1) }).safeParse(request.body)
     const times = body.success ? body.data.times : 1
 
-    const { processWorldTick } = await import('../queue/worldTickWorker.js').catch(() => ({ processWorldTick: null }))
-
     // World_Tickを直接呼び出す代わりにSQLで直接更新
     for (let i = 0; i < times; i++) {
       // Hunger/Thirst減少
