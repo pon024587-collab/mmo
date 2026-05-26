@@ -20,3 +20,4 @@ export const config = {
   jwtSecret: process.env['JWT_SECRET'] ?? 'dev-secret-change-in-production',
   isDev: process.env['NODE_ENV'] !== 'production',
 } as const
+// force rebuild 05/26/2026 11:46:16
