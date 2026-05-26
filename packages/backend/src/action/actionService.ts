@@ -167,6 +167,12 @@ export async function completeAction(
     } else if (['MINE', 'CHOP_WOOD', 'GATHER_HERBS', 'FISH'].includes(actionType)) {
       const { completeGather } = await import('../mining/miningService.js')
       resultText = await completeGather(characterId, actionType as any)
+    } else if (actionType === 'COMBAT_MONSTER') {
+      const { completeCombat } = await import('../combat/combatService.js')
+      const monsterType = params.monsterType || 'SLIME'
+      const count = params.count || 1
+      const combatResult = await completeCombat(characterId, monsterType, count)
+      resultText = combatResult.resultText
     } else if (actionType === 'COOK') {
       const { completeCook } = await import('../social/dungeonService.js')
       resultText = await completeCook(characterId, params.recipeType)
