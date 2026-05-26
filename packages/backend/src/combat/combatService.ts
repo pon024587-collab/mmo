@@ -131,13 +131,16 @@ export async function completeCombat(
   monsterType: MonsterType,
   count: number = 1
 ): Promise<{ resultText: string; victory: boolean; canSkin: boolean }> {
-  const char = await sql<{ skillCombatGrowth: number; health: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null }[]>`
-    SELECT skill_combat_growth, health, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ skillCombatGrowth: number; fatigueInternal: number; health: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null }[]>`
+    SELECT skill_combat_growth, fatigue_internal, health, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!char[0]) return { resultText: '戦闘結果を処理できませんでした。', victory: false, canSkin: false }
 
   const monster = MONSTERS[monsterType]!
-  const skill = char[0].skillCombatGrowth
+  // 疲労ペナルティ（疲労100で全ステータスが半減）
+  const fatigue = Math.max(0, Math.min(100, char[0].fatigueInternal))
+  const fatigueMultiplier = 1.0 - (fatigue * 0.5 / 100)
+  const skill = Math.floor(char[0].skillCombatGrowth * fatigueMultiplier)
   const totalPower = monster.basePower * count
 
   // 武器ステータスと属性情報の取得
@@ -195,7 +198,7 @@ export async function completeCombat(
     }
   }
 
-  // 武器スキル・魔法スキルの補正値を取得
+  // 武器スキル・魔法スキルの補正値を取得（疲労で刻吹）
   const skills = await sql<{ exp: number }[]>`
     SELECT exp FROM character_skills
     WHERE character_id = ${characterId} AND (skill_category = ${weaponCategory} OR skill_category LIKE 'MAGIC_%')
@@ -204,6 +207,13 @@ export async function completeCombat(
   for (const s of skills) {
     skillBonus += Math.floor(Math.sqrt(s.exp))
   }
+  // 疲労による全ステータス減少
+  weaponAtk = Math.floor(weaponAtk * fatigueMultiplier)
+  weaponMag = Math.floor(weaponMag * fatigueMultiplier)
+  weaponElementValue = Math.floor(weaponElementValue * fatigueMultiplier)
+  armorElementValue = Math.floor(armorElementValue * fatigueMultiplier)
+  accElementValue = Math.floor(accElementValue * fatigueMultiplier)
+  skillBonus = Math.floor(skillBonus * fatigueMultiplier)
 
   // 魔物の出現時属性をランダム決定
   const randomElement = monster.elements[Math.floor(Math.random() * monster.elements.length)] || ''
