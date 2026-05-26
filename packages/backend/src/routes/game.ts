@@ -566,6 +566,8 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     })
 
     return reply.send({ success: true, message: 'クリスタルを装備にはめ込みました。' })
+  })
+
   app.post('/api/game/equipment/enhance', async (request, reply) => {
     const body = z.object({ itemId: z.string() }).safeParse(request.body)
     if (!body.success) return reply.status(400).send({ success: false, message: '入力が正しくありません。' })
