@@ -457,8 +457,8 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/game/inventory', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
-    const items = await sql<{ id: string; name: string; category: string; quantity: number; durability: number | null; metadata: any }[]>`
-      SELECT i.id, it.name, it.category, i.quantity, i.durability, i.metadata
+    const items = await sql<{ id: string; name: string; category: string; quantity: number; durability: number | null; metadata: any; properties: any }[]>`
+      SELECT i.id, it.name, it.category, i.quantity, i.durability, i.metadata, it.properties
       FROM items i JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.owner_character_id = ${char.id}
       ORDER BY it.category, it.name

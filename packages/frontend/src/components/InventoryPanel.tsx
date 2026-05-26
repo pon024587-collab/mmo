@@ -13,6 +13,15 @@ interface ItemMetadata {
   enhance?: number
 }
 
+interface ItemProperties {
+  attack?: number
+  defense?: number
+  elementalAttack?: string
+  elementalAttackValue?: number
+  elementalResistance?: string
+  elementalResistanceValue?: number
+}
+
 interface InventoryItem {
   id: string
   name: string
@@ -20,6 +29,7 @@ interface InventoryItem {
   quantity: number
   durability: number | null
   metadata: ItemMetadata
+  properties: ItemProperties
 }
 
 interface Equipment {
@@ -193,22 +203,41 @@ export default function InventoryPanel() {
                     )}
                   </div>
                 </div>
-                {/* ボーナスステータス表示 */}
-                {(hasBonus || meta?.slots) && (
+                {/* 基礎ステータス（properties）表示 */}
+                {(item.category === 'WEAPON' || item.category === 'ARMOR' || item.category === 'ACCESSORY') && (
+                  <div className="mt-1 flex flex-wrap gap-2 text-xs pl-1">
+                    {(item.properties?.attack ?? 0) > 0 && (
+                      <span className="text-orange-400">⚔️ ATK {item.properties.attack}</span>
+                    )}
+                    {(item.properties?.defense ?? 0) > 0 && (
+                      <span className="text-sky-400">🛡️ DEF {item.properties.defense}</span>
+                    )}
+                    {item.properties?.elementalAttack && (item.properties.elementalAttackValue ?? 0) > 0 && (
+                      <span className="text-yellow-400">✨ {item.properties.elementalAttack} +{item.properties.elementalAttackValue}</span>
+                    )}
+                    {item.properties?.elementalResistance && (item.properties.elementalResistanceValue ?? 0) > 0 && (
+                      <span className="text-teal-400">🔰 {item.properties.elementalResistance} 耐性 +{item.properties.elementalResistanceValue}</span>
+                    )}
+                    {meta?.slots && (
+                      <span className="text-purple-300">◆ スロット {(meta.crystals || []).length}/{meta.slots}</span>
+                    )}
+                  </div>
+                )}
+                {/* クラフト付与ボーナス */}
+                {(hasBonus) && (
                   <div className="mt-1 flex gap-3 text-xs text-stone-400 pl-1 items-center">
                     {(meta?.bonusStrength ?? 0) > 0 && <span className="text-red-400">筋力 +{meta?.bonusStrength}</span>}
                     {(meta?.bonusDexterity ?? 0) > 0 && <span className="text-green-400">器用さ +{meta?.bonusDexterity}</span>}
-                    
-                    {meta?.slots && (
-                      <div className="text-purple-300 ml-2 border-l border-stone-700 pl-3">
-                        ◆スロット: {(meta.crystals || []).length} / {meta.slots}
-                        {(meta.crystals || []).map((c, idx) => (
-                          <span key={idx} className="ml-2 text-purple-400 bg-purple-900/30 px-1 rounded">
-                            {Object.entries(c).map(([k, v]) => `${k}+${v}`).join(' ')}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                  </div>
+                )}
+                {/* クリスタル一覧 */}
+                {meta?.slots && (meta.crystals || []).length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1 pl-1">
+                    {(meta.crystals || []).map((c, idx) => (
+                      <span key={idx} className="text-purple-400 bg-purple-900/30 px-1 rounded text-xs">
+                        {Object.entries(c).map(([k, v]) => `${k}+${v}`).join(' ')}
+                      </span>
+                    ))}
                   </div>
                 )}
                 {/* クリスタル装着UI */}
