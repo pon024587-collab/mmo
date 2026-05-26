@@ -55,14 +55,24 @@ export async function cook(
   }
   const needed = ingredients[recipeType] ?? []
 
+  // 英語名→日本語名のマッピング（DBが日本語化されていても対応）
+  const nameAliases: Record<string, string[]> = {
+    WHEAT:  ['WHEAT', '小麦'],
+    MEAT:   ['MEAT',  '肉'],
+    CARROT: ['CARROT', 'ニンジン'],
+    HERB:   ['HERB',  '薬草'],
+  }
+
   for (const ing of needed) {
+    const aliases = nameAliases[ing] ?? [ing]
     const item = await sql<{ id: string }[]>`
       SELECT i.id FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
-      WHERE i.owner_character_id = ${characterId} AND it.name = ${ing} LIMIT 1
+      WHERE i.owner_character_id = ${characterId} AND it.name = ANY(${aliases}::text[]) LIMIT 1
     `
     if (!item[0]) {
-      return { success: false, errorCode: 'MISSING_PREREQUISITE', message: `素材が足りません: ${ing}` }
+      const label = ing === 'WHEAT' ? '小麦' : ing === 'MEAT' ? '肉' : ing === 'CARROT' ? 'ニンジン' : ing === 'HERB' ? '薬草' : ing
+      return { success: false, errorCode: 'MISSING_PREREQUISITE', message: `素材が足りません：${label}` }
     }
   }
 
@@ -82,11 +92,15 @@ export async function completeCook(characterId: string, recipeType: string): Pro
   const fatigue = Math.max(0, Math.min(100, skill[0]?.fatigueInternal ?? 0))
   const s = Math.floor(rawSkill * (1.0 - fatigue * 0.5 / 100))
 
-  // 完成品をインベントリに追加
-  const outputMap: Record<string, string> = { BREAD: 'BREAD', STEW: 'MEAT', HERBAL_TEA: 'HERB' }
-  const output = outputMap[recipeType] ?? 'BREAD'
+  // 完成品をインベントリに追加（英語・日本語両方対応）
+  const outputSearch: Record<string, string[]> = {
+    BREAD: ['BREAD', 'パン'],
+    STEW:  ['MEAT', '肉'],
+    HERBAL_TEA: ['HERB', '薬草'],
+  }
+  const searchNames = outputSearch[recipeType] ?? ['BREAD']
   const template = await sql<{ id: string }[]>`
-    SELECT id FROM item_templates WHERE name = ${output} LIMIT 1
+    SELECT id FROM item_templates WHERE name = ANY(${searchNames}::text[]) LIMIT 1
   `
   if (template[0]) {
     await sql`

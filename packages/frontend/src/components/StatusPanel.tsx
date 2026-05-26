@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { api } from '../api/client.js'
 
 interface CharacterStatus {
   name: string
@@ -21,14 +22,26 @@ interface Props {
 }
 
 export default function StatusPanel({ character, onRefresh }: Props) {
-  const [message, setMessage] = useState('')
+  const [nameInput, setNameInput] = useState('')
+  const [nameEditing, setNameEditing] = useState(false)
 
   const handleRepay = async () => {
-    const { api } = await import('../api/client.js')
     const res = await api.post<{ success: boolean; message?: string }>('/game/tax/repay', { amount: character.taxDebt })
     setMessage(res.message ?? '')
     if (res.success) onRefresh()
   }
+
+  const handleRename = async () => {
+    const trimmed = nameInput.trim()
+    if (!trimmed || trimmed.length < 1 || trimmed.length > 20) {
+      setMessage('名前は1〜20文字で入力してください。')
+      return
+    }
+    const res = await api.post<{ success: boolean; message?: string }>('/game/character/rename', { name: trimmed })
+    setMessage(res.message ?? '')
+    if (res.success) { setNameEditing(false); setNameInput(''); onRefresh() }
+  }
+
 
   const SKILL_LABELS: Record<string, string> = {
     'MAGIC_FIRE': '炎魔法', 'MAGIC_WATER': '水魔法', 'MAGIC_WIND': '風魔法',
@@ -49,7 +62,29 @@ export default function StatusPanel({ character, onRefresh }: Props) {
           </div>
         )}
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <StatusRow label="名前" value={character.name} />
+          <div className="col-span-2 flex items-center gap-2 border border-stone-800 p-2 rounded bg-stone-950">
+            <span className="text-stone-500 shrink-0">名前: </span>
+            {nameEditing ? (
+              <>
+                <input
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleRename()}
+                  maxLength={20}
+                  placeholder={character.name}
+                  className="flex-1 bg-stone-800 border border-stone-600 rounded px-2 py-0.5 text-sm text-white"
+                  autoFocus
+                />
+                <button onClick={handleRename} className="px-2 py-0.5 bg-amber-700 hover:bg-amber-600 text-white text-xs rounded">確定</button>
+                <button onClick={() => setNameEditing(false)} className="px-2 py-0.5 bg-stone-700 hover:bg-stone-600 text-white text-xs rounded">取消</button>
+              </>
+            ) : (
+              <>
+                <span className="text-stone-200 flex-1">{character.name}</span>
+                <button onClick={() => { setNameEditing(true); setNameInput(character.name) }} className="px-2 py-0.5 bg-stone-700 hover:bg-stone-600 text-white text-xs rounded">変更</button>
+              </>
+            )}
+          </div>
           <StatusRow label="年齢" value={`${character.age}歳`} />
           <StatusRow label="所持金" value={`${character.gold}G`} />
           <StatusRow label="国家" value={character.nationName} />

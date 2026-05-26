@@ -51,6 +51,17 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ success: true, character: status })
   })
 
+  app.post('/api/game/character/rename', async (request, reply) => {
+    const body = z.object({ name: z.string().min(1).max(20) }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false, message: '名前は1〜20文字で入力してください。' })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    await sql`UPDATE characters SET name = ${body.data.name}, updated_at = NOW() WHERE id = ${char.id}`
+    return reply.send({ success: true, message: `名前を「${body.data.name}」に変更しました。` })
+  })
+
+
+
   // ---- 行動（汎用） ----
 
   app.post('/api/game/action', async (request, reply) => {

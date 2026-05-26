@@ -14,15 +14,6 @@ interface ActionGroup {
 
 const ACTION_GROUPS: ActionGroup[] = [
   {
-    label: '🌾 農業',
-    actions: [
-      { label: '畑を耕す（2時間）', endpoint: '/game/farm/plow' },
-      { label: '種をまく（1時間）', endpoint: '/game/farm/sow', body: { cropType: 'POTATO' } },
-      { label: '水やり（30分）', endpoint: '/game/farm/water' },
-      { label: '収穫（1時間）', endpoint: '/game/farm/harvest' },
-    ],
-  },
-  {
     label: '⚔️ 基礎訓練',
     actions: [
       { label: '素振り（30分）', endpoint: '/game/action', body: { actionType: 'COMBAT_PRACTICE' } },
@@ -76,6 +67,7 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
   const [loading, setLoading] = useState(false)
   const [monsters, setMonsters] = useState<{ id: string; name: string; basePower: number; minCount: number; maxCount: number; elements: string[] }[]>([])
   const [selectedMonster, setSelectedMonster] = useState('')
+  const [selectedCrop, setSelectedCrop] = useState('POTATO')
 
   useEffect(() => {
     api.get<{ success: boolean; monsters?: any[] }>('/game/monsters').then(res => {
@@ -160,6 +152,32 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
           >
             討伐へ向かう
           </button>
+        </div>
+      </div>
+
+      {/* 農業セクション */}
+      <div className="bg-stone-900 border border-stone-700 rounded-lg p-4">
+        <h3 className="text-stone-300 font-medium mb-3">🌾 農業</h3>
+        <div className="mb-3">
+          <label className="text-stone-500 text-xs">作物を選択：</label>
+          <select
+            value={selectedCrop}
+            onChange={e => setSelectedCrop(e.target.value)}
+            disabled={isBusy || loading}
+            className="ml-2 bg-stone-950 border border-stone-700 rounded px-2 py-1 text-sm text-stone-200"
+          >
+            <option value="POTATO">ジャガイモ</option>
+            <option value="WHEAT">小麦</option>
+            <option value="CARROT">ニンジン</option>
+            <option value="CABBAGE">キャベツ</option>
+            <option value="HERB">薬草</option>
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={() => handleAction('/game/farm/plow')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">畑を耕す（2時間）</button>
+          <button onClick={() => handleAction('/game/farm/sow', { cropType: selectedCrop })} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">種をまく（1時間）</button>
+          <button onClick={() => handleAction('/game/farm/water')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">水やり（30分）</button>
+          <button onClick={() => handleAction('/game/farm/harvest')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">収穫（1時間）</button>
         </div>
       </div>
 
