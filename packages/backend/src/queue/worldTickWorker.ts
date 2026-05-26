@@ -41,6 +41,9 @@ export function startWorldTickWorker(): Worker {
         await updateBodyTemperatures()
         await processInjuryDegradation()
         await propagateRumors()
+        // 拘束解除チェック
+        const { checkImprisonmentRelease } = await import('../pvp/pvpService.js')
+        await checkImprisonmentRelease()
 
         // 7Tickごと（7時間 = ゲーム内7日）
         if (tickCount % 7 === 0) {
@@ -58,6 +61,8 @@ export function startWorldTickWorker(): Worker {
           await checkChildBirth()
           const { cleanupExpiredRelationships } = await import('../social/mentorService.js')
           await cleanupExpiredRelationships()
+          const { generateCaravans } = await import('../pvp/pvpService.js')
+          await generateCaravans()
         }
 
         // 72Tickごと（72時間）

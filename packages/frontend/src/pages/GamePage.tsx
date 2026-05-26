@@ -11,6 +11,7 @@ import LifeRecordPanel from '../components/LifeRecordPanel.js'
 import WorldMapPanel from '../components/WorldMapPanel.js'
 import NpcPanel from '../components/NpcPanel.js'
 import QuestPanel from '../components/QuestPanel.js'
+import PvpPanel from '../components/PvpPanel.js'
 
 interface CharacterStatus {
   name: string
@@ -33,7 +34,7 @@ interface Result {
   completedAt: string
 }
 
-type Tab = 'status' | 'action' | 'village' | 'map' | 'npc' | 'quest' | 'market' | 'log' | 'records'
+type Tab = 'status' | 'action' | 'village' | 'map' | 'npc' | 'quest' | 'market' | 'pvp' | 'log' | 'records'
 
 const TAB_LABELS: Record<Tab, string> = {
   status:  '状態',
@@ -43,6 +44,7 @@ const TAB_LABELS: Record<Tab, string> = {
   npc:     '村人',
   quest:   'クエスト',
   market:  '市場',
+  pvp:     'PvP',
   log:     '記録',
   records: '人生',
 }
@@ -180,6 +182,7 @@ export default function GamePage() {
         {activeTab === 'npc'     && <NpcPanel />}
         {activeTab === 'quest'   && <QuestPanel />}
         {activeTab === 'market'  && <MarketPanel />}
+        {activeTab === 'pvp'     && <PvpPanel />}
         {activeTab === 'log'     && <ResultLog results={results} />}
         {activeTab === 'records' && <LifeRecordPanel />}
       </main>

@@ -5,6 +5,7 @@ import { config } from './config.js'
 import { authRoutes } from './routes/auth.js'
 import { gameRoutes } from './routes/game.js'
 import { socialRoutes } from './routes/social.js'
+import { pvpRoutes } from './routes/pvp.js'
 import { runMigrations } from './db/migrate.js'
 
 const app = Fastify({
@@ -23,6 +24,7 @@ await app.register(fastifyJwt, {
 await app.register(authRoutes)
 await app.register(gameRoutes)
 await app.register(socialRoutes)
+await app.register(pvpRoutes)
 
 app.get('/health', async () => ({
   status: 'ok',
