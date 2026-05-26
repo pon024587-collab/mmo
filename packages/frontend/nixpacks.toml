@@ -8,4 +8,4 @@ cmds = ["pnpm install --no-frozen-lockfile"]
 cmds = ["pnpm --filter frontend build"]
 
 [start]
-cmd = "node node_modules/.bin/vite preview --host --port $PORT"
+cmd = "pnpm --filter frontend preview --host --port $PORT"

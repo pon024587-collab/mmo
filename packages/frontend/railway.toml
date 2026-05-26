@@ -2,4 +2,5 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "node node_modules/.bin/vite preview --host --port $PORT"
+startCommand = "pnpm --filter frontend preview --host --port $PORT"
+restartPolicyType = "on_failure"
