@@ -229,6 +229,27 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await studyMagic(char.id, body.data.spellBookItemId))
   })
 
+  app.get('/api/game/magic/spells', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { getAvailableSpells } = await import('../magic/magicService.js')
+    const spells = await getAvailableSpells(char.id)
+    // MP情報も合わせて返す
+    const mpInfo = await sql<{ mp: number; mpMax: number }[]>`
+      SELECT mp, mp_max FROM characters WHERE id = ${char.id}
+    `
+    return reply.send({ success: true, spells, mp: mpInfo[0]?.mp ?? 0, mpMax: mpInfo[0]?.mpMax ?? 0 })
+  })
+
+  app.post('/api/game/magic/cast', async (request, reply) => {
+    const body = z.object({ spellId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { castActiveSpell } = await import('../magic/magicService.js')
+    return reply.send(await castActiveSpell(char.id, body.data.spellId))
+  })
+
   // ---- 土地・住居 ----
 
   app.get('/api/game/lands', async (request, reply) => {
