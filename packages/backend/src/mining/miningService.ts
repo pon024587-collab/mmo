@@ -8,10 +8,10 @@ import type { RegisterActionResult } from '../action/actionService.js'
 export type GatherType = 'MINE' | 'CHOP_WOOD' | 'GATHER_HERBS' | 'FISH'
 
 const GATHER_YIELDS: Record<GatherType, { itemName: string; baseDuration: number }> = {
-  MINE:         { itemName: 'IRON_ORE', baseDuration: 120 },
-  CHOP_WOOD:    { itemName: 'WOOD',     baseDuration: 90  },
-  GATHER_HERBS: { itemName: 'HERB',     baseDuration: 60  },
-  FISH:         { itemName: 'MEAT',     baseDuration: 90  },
+  MINE:         { itemName: '鉄鉱石', baseDuration: 120 },
+  CHOP_WOOD:    { itemName: '木材',     baseDuration: 90  },
+  GATHER_HERBS: { itemName: '薬草',     baseDuration: 60  },
+  FISH:         { itemName: '肉',       baseDuration: 90  },
 }
 
 /** 採集行動を開始する */
@@ -75,14 +75,14 @@ export async function completeGather(
     `
     const terrain = village[0]?.terrainType || 'PLAIN'
     const metalMap: Record<string, string> = {
-      PLAIN:     'IRON_ORE',
+      PLAIN:     '鉄鉱石',
       MOUNTAIN:  'COPPER_ORE',
       FOREST:    'SILVER_ORE',
       RIVER:     'GOLD_ORE',
       DESERT:    'MITHRIL_ORE',
       SNOWFIELD: 'MITHRIL_ORE',
     }
-    actualItemName = metalMap[terrain] ?? 'IRON_ORE'
+    actualItemName = metalMap[terrain] ?? '鉄鉱石'
   }
 
   // 採集量（スキルに応じて増加）

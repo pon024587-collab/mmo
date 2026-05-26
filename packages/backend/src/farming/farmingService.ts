@@ -206,8 +206,17 @@ function generateHarvestText(skillGrowth: number, amount: number, base: number):
 }
 
 async function getCropTemplateId(cropType: CropType): Promise<string | null> {
+  const nameMap: Record<CropType, string> = {
+    POTATO: 'ジャガイモ',
+    WHEAT: '小麦',
+    CARROT: 'ニンジン',
+    CABBAGE: 'キャベツ',
+    HERB: '薬草',
+  }
+  const jpName = nameMap[cropType] ?? cropType
+
   const rows = await sql<{ id: string }[]>`
-    SELECT id FROM item_templates WHERE name = ${cropType} LIMIT 1
+    SELECT id FROM item_templates WHERE name = ${jpName} LIMIT 1
   `
   return rows[0]?.id ?? null
 }
