@@ -1,17 +1,12 @@
 /**
  * APIクライアント
- * 本番: VITE_API_URLのバックエンドに直接リクエスト
- * 開発: /api経由でViteプロキシ
+ * VITE_API_URL環境変数でバックエンドURLを指定する
  */
 
-declare const __API_URL__: string
-
-// ビルド時に埋め込まれたAPIのURL
-const API_BASE = (typeof __API_URL__ !== 'undefined' && __API_URL__)
-  ? `${__API_URL__}/api`
+// Viteの環境変数（ビルド時に埋め込まれる）
+const API_BASE = (import.meta.env['VITE_API_URL'] as string | undefined)
+  ? `${import.meta.env['VITE_API_URL']}/api`
   : '/api'
-
-console.log('[client] API_BASE:', API_BASE)
 
 function getToken(): string | null {
   return localStorage.getItem('medieval_token')
@@ -19,9 +14,7 @@ function getToken(): string | null {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken()
-  const url = `${API_BASE}${path}`
-
-  const res = await fetch(url, {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -29,7 +22,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...options.headers,
     },
   })
-
   const data = await res.json() as T
   return data
 }
