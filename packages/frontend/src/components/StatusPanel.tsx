@@ -24,6 +24,7 @@ interface Props {
 export default function StatusPanel({ character, onRefresh }: Props) {
   const [nameInput, setNameInput] = useState('')
   const [nameEditing, setNameEditing] = useState(false)
+  const [message, setMessage] = useState('')
 
   const handleRepay = async () => {
     const res = await api.post<{ success: boolean; message?: string }>('/game/tax/repay', { amount: character.taxDebt })
