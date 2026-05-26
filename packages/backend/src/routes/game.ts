@@ -221,13 +221,7 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
 
   // ---- 魔法 ----
 
-  app.post('/api/game/magic/study', async (request, reply) => {
-    const body = z.object({ spellBookItemId: z.string() }).safeParse(request.body)
-    if (!body.success) return reply.status(400).send({ success: false })
-    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
-    if (!char) return reply.status(404).send({ success: false })
-    return reply.send(await studyMagic(char.id, body.data.spellBookItemId))
-  })
+
 
   app.get('/api/game/magic/spells', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
