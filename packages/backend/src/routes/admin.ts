@@ -182,4 +182,20 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     `
     return reply.send({ success: true, characters: chars })
   })
+
+  // ---- 囚人を釈放 ----
+  app.post('/api/admin/release-prisoner', async (request, reply) => {
+    const body = z.object({ characterId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+
+    await sql`
+      UPDATE characters
+      SET is_imprisoned = false,
+          imprisonment_ends_at = NULL,
+          status = 'IDLE',
+          updated_at = NOW()
+      WHERE id = ${body.data.characterId}
+    `
+    return reply.send({ success: true, message: 'キャラクターを釈放し、自由の身にしました。' })
+  })
 }

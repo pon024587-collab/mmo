@@ -88,6 +88,14 @@ export default function AdminPage() {
     setMessage(res.message ?? '')
   }
 
+  const handleReleasePrisoner = async () => {
+    if (!selectedCharId) { setMessage('キャラクターを選択してください。'); return }
+    if (!window.confirm('このキャラクターを釈放しますか？')) return
+    const res = await adminFetch<{ success: boolean; message?: string }>('/admin/release-prisoner', 'POST', { characterId: selectedCharId }, secret)
+    setMessage(res.message ?? '')
+    if (res.success) loadData()
+  }
+
   if (!authed) {
     return (
       <div className="min-h-screen bg-stone-950 flex items-center justify-center">
@@ -231,10 +239,15 @@ export default function AdminPage() {
 
             {/* 行動操作 */}
             <div className="bg-stone-900 border border-stone-700 rounded-lg p-4">
-              <h3 className="text-stone-300 font-medium mb-3">⚡ 行動操作</h3>
-              <button onClick={handleCompleteAction} className="w-full py-2 bg-green-800 hover:bg-green-700 text-white text-sm rounded mb-2">
-                実行中の行動を即完了
-              </button>
+              <h3 className="text-stone-300 font-medium mb-3">⚡ 行動操作 / 状態異常解除</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={handleCompleteAction} className="py-2 bg-green-800 hover:bg-green-700 text-white text-sm rounded mb-2">
+                  実行中の行動を即完了
+                </button>
+                <button onClick={handleReleasePrisoner} className="py-2 bg-blue-800 hover:bg-blue-700 text-white text-sm rounded mb-2">
+                  投獄状態を解除（釈放）
+                </button>
+              </div>
             </div>
 
             {/* 魔物召喚 */}
