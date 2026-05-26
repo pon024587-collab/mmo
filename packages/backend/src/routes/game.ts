@@ -627,32 +627,8 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await sendVillageChat(char.id, char.villageId, body.data.content))
   })
 
-  // ---- 料理・ダンジョン・家畜 ----
-
-  app.post('/api/game/cook', async (request, reply) => {
-    const body = z.object({ recipeType: z.enum(['BREAD', 'STEW', 'HERBAL_TEA']) }).safeParse(request.body)
-    if (!body.success) return reply.status(400).send({ success: false })
-    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
-    if (!char) return reply.status(404).send({ success: false })
-    return reply.send(await cook(char.id, body.data.recipeType))
-  })
-
-  app.post('/api/game/dungeon/explore', async (request, reply) => {
-    const body = z.object({ dungeonId: z.string() }).safeParse(request.body)
-    if (!body.success) return reply.status(400).send({ success: false })
-    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
-    if (!char) return reply.status(404).send({ success: false })
-    return reply.send(await exploreDungeon(char.id, body.data.dungeonId))
-  })
-
-  app.post('/api/game/livestock/buy', async (request, reply) => {
-    const body = z.object({ animalType: z.enum(['HORSE', 'COW', 'SHEEP', 'CHICKEN', 'DOG']) }).safeParse(request.body)
-    if (!body.success) return reply.status(400).send({ success: false })
-    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
-    if (!char) return reply.status(404).send({ success: false })
-    return reply.send(await buyLivestock(char.id, body.data.animalType))
-  })
 }
+
 
 // ---- ヘルパー ----
 
