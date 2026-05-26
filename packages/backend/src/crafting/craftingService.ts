@@ -2,6 +2,7 @@
  * クラフトシステム
  */
 import { sql } from '../db/client.js'
+import { giveItem } from '../character/itemService.js'
 
 interface RecipeMaterial { name: string; quantity: number }
 
@@ -182,10 +183,7 @@ export async function craftItem(
     }
   }
 
-  await sql`
-    INSERT INTO items (owner_character_id, item_template_id, quantity, metadata)
-    VALUES (${characterId}, ${r.resultItemTemplateId}, 1, ${JSON.stringify(metadata)}::jsonb)
-  `
+  await giveItem(characterId, r.resultItemTemplateId, 1, metadata)
 
   // 工作スキル成長
   const skillGain = Math.max(5, Math.floor(r.requiredCraftingSkill / 10))

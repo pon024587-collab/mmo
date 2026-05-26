@@ -4,6 +4,7 @@
 import { sql } from '../db/client.js'
 import { registerAction } from '../action/actionService.js'
 import type { RegisterActionResult } from '../action/actionService.js'
+import { giveItem } from '../character/itemService.js'
 
 // ---- 知識・書物 ----
 
@@ -45,10 +46,7 @@ export async function completeWriteBook(characterId: string): Promise<string> {
     SELECT id FROM item_templates WHERE category = 'BOOK' LIMIT 1
   `
   if (template[0]) {
-    await sql`
-      INSERT INTO items (owner_character_id, item_template_id, quantity, quality_internal)
-      VALUES (${characterId}, ${template[0].id}, 1, ${Math.min(100, n * 5)})
-    `
+    await giveItem(characterId, template[0].id, 1, {}, Math.min(100, n * 5))
   }
 
   if (n < 20) return '薄い冊子を書き上げた。素朴な内容だが、自分の経験が詰まっている。'

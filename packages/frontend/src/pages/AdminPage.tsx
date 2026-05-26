@@ -96,6 +96,14 @@ export default function AdminPage() {
     if (res.success) loadData()
   }
 
+  const handleDeletePlayer = async (playerId: string, ban: boolean) => {
+    const actionName = ban ? 'BAN' : 'データ削除'
+    if (!window.confirm(`本当にこのプレイヤーを${actionName}しますか？この操作は元に戻せません。`)) return
+    const res = await adminFetch<{ success: boolean; message?: string }>('/admin/delete-player', 'POST', { playerId, ban }, secret)
+    setMessage(res.message ?? '')
+    if (res.success) loadData()
+  }
+
   if (!authed) {
     return (
       <div className="min-h-screen bg-stone-950 flex items-center justify-center">
@@ -179,6 +187,14 @@ export default function AdminPage() {
                   <span>{p.nationName} / {p.villageName}</span>
                   <span>状態: {p.status}</span>
                   {p.bountyAmount > 0 && <span className="text-red-400">賞金: {p.bountyAmount}G</span>}
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => handleDeletePlayer(p.id, false)} className="px-3 py-1 bg-red-900 hover:bg-red-800 text-red-100 text-xs rounded">
+                    キャラデータ削除
+                  </button>
+                  <button onClick={() => handleDeletePlayer(p.id, true)} className="px-3 py-1 bg-stone-700 hover:bg-stone-600 text-stone-300 text-xs rounded">
+                    アカウントBAN
+                  </button>
                 </div>
               </div>
             ))}

@@ -5,6 +5,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { sql } from '../db/client.js'
+import { giveItem } from '../character/itemService.js'
 
 const ADMIN_SECRET = process.env['ADMIN_SECRET'] ?? 'admin-secret-change-this'
 
@@ -79,10 +80,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       return reply.send({ success: false, message: 'アイテムが見つかりません。', availableItems: items.map(i => i.name) })
     }
 
-    await sql`
-      INSERT INTO items (owner_character_id, item_template_id, quantity)
-      VALUES (${body.data.characterId}, ${template[0].id}, ${body.data.quantity})
-    `
+    await giveItem(body.data.characterId, template[0].id, body.data.quantity, {})
     return reply.send({ success: true, message: `${body.data.itemName} x${body.data.quantity} を付与しました。` })
   })
 
@@ -197,5 +195,21 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       WHERE id = ${body.data.characterId}
     `
     return reply.send({ success: true, message: 'キャラクターを釈放し、自由の身にしました。' })
+  })
+
+  // ---- プレイヤー削除・BAN ----
+  app.post('/api/admin/delete-player', async (request, reply) => {
+    const body = z.object({
+      playerId: z.string(),
+      ban: z.boolean().default(false),
+    }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+
+    if (body.data.ban) {
+      await sql`UPDATE players SET is_active = FALSE WHERE id = ${body.data.playerId}`
+    } else {
+      await sql`UPDATE characters SET status = 'INACTIVE' WHERE player_id = ${body.data.playerId}`
+    }
+    return reply.send({ success: true, message: body.data.ban ? 'プレイヤーをBANしました。' : 'プレイヤーデータを削除（非アクティブ化）しました。' })
   })
 }

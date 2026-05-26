@@ -6,6 +6,7 @@ import { sql } from '../db/client.js'
 import { registerAction } from '../action/actionService.js'
 import type { RegisterActionResult } from '../action/actionService.js'
 import { addSkillExp } from '../skills/skillService.js'
+import { giveItem } from '../character/itemService.js'
 
 export type MonsterType =
   // Tier1 (弱)
@@ -477,10 +478,7 @@ export async function completeSkinning(
       SELECT id FROM item_templates WHERE name = ${materialName} LIMIT 1
     `
     if (template[0]) {
-      await sql`
-        INSERT INTO items (owner_character_id, item_template_id, quantity)
-        VALUES (${characterId}, ${template[0].id}, ${amount})
-      `
+      await giveItem(characterId, template[0].id, amount, {})
       droppedText.push(`${materialName}x${amount}`)
     }
   }

@@ -4,6 +4,7 @@
 import { sql } from '../db/client.js'
 import { registerAction } from '../action/actionService.js'
 import type { RegisterActionResult } from '../action/actionService.js'
+import { giveItem } from '../character/itemService.js'
 
 // ---- ダンジョン探索 ----
 
@@ -80,10 +81,7 @@ export async function completeDungeonFloor(
 
     const metadata = { bonus: { [selectedBonus]: bonusValue } }
 
-    await sql`
-      INSERT INTO items (owner_character_id, item_template_id, quantity, metadata)
-      VALUES (${characterId}, ${templates[0].id}, 1, ${JSON.stringify(metadata)}::jsonb)
-    `
+    await giveItem(characterId, templates[0].id, 1, metadata)
     
     return `第${floor}層を突破し、宝箱から「クリスタル（${selectedBonus}${label}）」を手に入れた！`
   }
@@ -160,10 +158,7 @@ export async function completeCook(characterId: string, recipeType: string): Pro
     SELECT id FROM item_templates WHERE name = ${cookedName} LIMIT 1
   `
   if (template[0]) {
-    await sql`
-      INSERT INTO items (owner_character_id, item_template_id, quantity)
-      VALUES (${characterId}, ${template[0].id}, 1)
-    `
+    await giveItem(characterId, template[0].id, 1, {})
   }
 
   await sql`

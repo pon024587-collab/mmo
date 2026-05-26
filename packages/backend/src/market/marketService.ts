@@ -3,6 +3,7 @@
  * 需要と供給による動的価格計算
  */
 import { sql } from '../db/client.js'
+import { giveItem } from '../character/itemService.js'
 
 export interface MarketItem {
   itemTemplateId: string
@@ -168,10 +169,7 @@ export async function buyItem(
           updated_at = NOW()
       WHERE id = ${characterId}
     `
-    await tx`
-      INSERT INTO items (owner_character_id, item_template_id, quantity)
-      VALUES (${characterId}, ${itemTemplateId}, 1)
-    `
+    await giveItem(characterId, itemTemplateId, 1, {}, 50, tx)
     const newStock = listing[0]!.stockQuantity - 1
     const newPrice = calculateMarketPrice(listing[0]!.basePrice, newStock, 1)
     await tx`

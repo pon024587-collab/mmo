@@ -5,6 +5,7 @@
 import { sql } from '../db/client.js'
 import { registerAction } from '../action/actionService.js'
 import type { RegisterActionResult } from '../action/actionService.js'
+import { giveItem } from '../character/itemService.js'
 
 export type CropType = 'POTATO' | 'WHEAT' | 'CARROT' | 'CABBAGE' | 'HERB'
 export type FarmStep = 'PLOWED' | 'SOWED' | 'WATERED' | 'READY_HARVEST'
@@ -164,10 +165,7 @@ export async function completeFarmHarvest(characterId: string): Promise<string> 
   // アイテムをインベントリに追加
   const templateId = await getCropTemplateId(plot.cropType)
   if (templateId) {
-    await sql`
-      INSERT INTO items (owner_character_id, item_template_id, quantity)
-      VALUES (${characterId}, ${templateId}, ${amount})
-    `
+    await giveItem(characterId, templateId, amount, {})
   }
 
   // 農地をリセット

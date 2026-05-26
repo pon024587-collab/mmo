@@ -4,6 +4,7 @@
 import { sql } from '../db/client.js'
 import { registerAction } from '../action/actionService.js'
 import type { RegisterActionResult } from '../action/actionService.js'
+import { giveItem } from '../character/itemService.js'
 
 export type GatherType = 'MINE' | 'CHOP_WOOD' | 'GATHER_HERBS' | 'FISH'
 
@@ -93,10 +94,7 @@ export async function completeGather(
     SELECT id FROM item_templates WHERE name = ${actualItemName} LIMIT 1
   `
   if (template[0]) {
-    await sql`
-      INSERT INTO items (owner_character_id, item_template_id, quantity)
-      VALUES (${characterId}, ${template[0].id}, ${amount})
-    `
+    await giveItem(characterId, template[0].id, amount, {})
   }
 
   // 資源残量を減少
