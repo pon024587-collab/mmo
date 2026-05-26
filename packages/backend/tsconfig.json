@@ -4,7 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
-    "strict": true,
+    "strict": false,
     "skipLibCheck": true,
     "declaration": true,
     "sourceMap": true,

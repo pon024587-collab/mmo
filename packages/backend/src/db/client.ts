@@ -10,6 +10,8 @@ export const sql = postgres(config.databaseUrl, {
   connect_timeout: 10,
   transform: {
     // snake_case → camelCase の自動変換
-    column: postgres.camel,
+    column: {
+      from: postgres.camel,
+    },
   },
 })
