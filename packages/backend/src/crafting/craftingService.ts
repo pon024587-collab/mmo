@@ -111,6 +111,14 @@ export async function craftItem(
   `
   if (!recipe[0]) return { success: false, message: 'レシピが見つかりません。' }
 
+  // 行動中はクラフト不可（素材が行動に割り当てられている可能性があるため）
+  const busyChar = await sql<{ status: string }[]>`
+    SELECT status FROM characters WHERE id = ${characterId} LIMIT 1
+  `
+  if (busyChar[0]?.status === 'ACTIVE_ACTION') {
+    return { success: false, message: '行動完了後にクラフトしてください。' }
+  }
+
   const r = recipe[0]
 
   // スキル確認

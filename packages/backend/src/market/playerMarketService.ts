@@ -60,6 +60,18 @@ export async function listPlayerItem(characterId: string, villageId: string, ite
     return { success: false, message: 'アイテムが見つかりません。' }
   }
 
+  // 行動中に使用予定のアイテムは出品不可
+  const activeAction = await sql<{ id: string }[]>`
+    SELECT id FROM action_queue
+    WHERE character_id = ${characterId}
+      AND status = 'ACTIVE'
+      AND parameters->>'itemId' = ${itemId}
+    LIMIT 1
+  `
+  if (activeAction[0]) {
+    return { success: false, message: '現在使用中のアイテムは出品できません。行動完了後にお試しください。' }
+  }
+
   // Ensure item is not equipped
   const char = await sql<{ equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null }[]>`
     SELECT equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${characterId}

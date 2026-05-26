@@ -33,6 +33,18 @@ export async function enhanceEquipment(
   if (!itemRows[0]) return { success: false, message: 'アイテムが見つかりません。', result: 'FAIL' }
   const item = itemRows[0]
 
+  // 行動中は強化不可（アイテムが消費中の場合）
+  const activeUse = await sql<{ id: string }[]>`
+    SELECT id FROM action_queue
+    WHERE character_id = ${characterId}
+      AND status = 'ACTIVE'
+      AND parameters->>'itemId' = ${itemId}
+    LIMIT 1
+  `
+  if (activeUse[0]) {
+    return { success: false, message: '現在使用中のアイテムは強化できません。', result: 'FAIL' }
+  }
+
   if (item.category !== 'WEAPON' && item.category !== 'ARMOR') {
     return { success: false, message: '武器か防具のみ強化できます。', result: 'FAIL' }
   }
