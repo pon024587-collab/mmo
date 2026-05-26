@@ -25,6 +25,7 @@ interface CharacterStatus {
   stressText: string
   villageName: string
   nationName: string
+  gold: number
   taxDebt: number
   currentAction: string | null
   actionCompletesAt: string | null
