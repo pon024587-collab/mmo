@@ -44,9 +44,15 @@ const start = async () => {
     try {
       const { startWorldTickWorker, initWorldTickQueue } = await import('./queue/worldTickWorker.js')
       const { startActionWorker } = await import('./action/actionWorker.js')
+      const { recoverStuckActions } = await import('./action/actionService.js')
+      
       await initWorldTickQueue()
       startWorldTickWorker()
       startActionWorker()
+      
+      // 再起動等でキューから漏れた行動を復旧
+      await recoverStuckActions()
+      
       app.log.info('バックグラウンドワーカー起動完了')
     } catch {
       console.warn('ワーカー起動失敗（サーバーは継続）')

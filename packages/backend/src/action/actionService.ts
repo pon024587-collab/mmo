@@ -243,3 +243,26 @@ function generateResultText(actionType: ActionType): string {
   }
   return texts[actionType] ?? `${actionType}を完了した。`
 }
+
+/**
+ * サーバー再起動等で取り残されたACTIVE状態の行動を復旧する
+ */
+export async function recoverStuckActions(): Promise<void> {
+  const stuck = await sql<{ id: string; characterId: string; actionType: ActionType }[]>`
+    SELECT id, character_id, action_type
+    FROM action_queue
+    WHERE status = 'ACTIVE' AND scheduled_completion_at <= NOW()
+  `
+
+  if (stuck.length > 0) {
+    console.log(`[ActionService] 実行中スタック状態のアクションを ${stuck.length} 件検出しました。キューに再登録します...`)
+    const queue = getActionQueue()
+    for (const s of stuck) {
+      await queue.add(
+        'complete',
+        { actionId: s.id, characterId: s.characterId, actionType: s.actionType },
+        { jobId: s.id }
+      )
+    }
+  }
+}
