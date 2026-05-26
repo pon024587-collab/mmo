@@ -59,42 +59,42 @@ export const MONSTERS: Record<MonsterType, MonsterStats> = {
   GOLEM:        { name: 'ゴーレム',       basePower: 35,  elements: ['EARTH'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 1 },
   ORC_WARRIOR:  { name: 'オーク戦士',     basePower: 30,  elements: ['EARTH','FIRE'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 2 },
 
-  // --- Tier3 (basePower 36-65) ---
-  UNDEAD:       { name: 'アンデッド',     basePower: 30,  elements: ['DARK','ICE'], terrains: ['SNOWFIELD','FOREST'], minCount: 2, maxCount: 8 },
-  DARK_ELF:     { name: 'ダークエルフ',   basePower: 35,  elements: ['DARK','WIND','ICE'], terrains: ['FOREST','SNOWFIELD'], minCount: 1, maxCount: 3 },
-  TROLL:        { name: 'トロル',         basePower: 40,  elements: ['EARTH','WATER'], terrains: ['MOUNTAIN','RIVER'], minCount: 1, maxCount: 2 },
-  GRIFFIN:      { name: 'グリフィン',     basePower: 45,  elements: ['WIND','THUNDER','LIGHT'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 2 },
-  BASILISK:     { name: 'バジリスク',     basePower: 48,  elements: ['EARTH','POISON','DARK'], terrains: ['DESERT','MOUNTAIN'], minCount: 1, maxCount: 1 },
-  VAMPIRE:      { name: 'ヴァンパイア',   basePower: 50,  elements: ['DARK','ICE','WIND'], terrains: ['FOREST','SNOWFIELD'], minCount: 1, maxCount: 2 },
-  OGRE:         { name: 'オーガ',         basePower: 45,  elements: ['EARTH','FIRE'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 2 },
-  CHIMERA:      { name: 'キマイラ',       basePower: 55,  elements: ['THUNDER','FIRE'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 1 },
-  WEREWOLF:     { name: 'ウェアウルフ',   basePower: 48,  elements: ['WIND','DARK','ICE'], terrains: ['FOREST','SNOWFIELD'], minCount: 1, maxCount: 2 },
-  GARGOYLE:     { name: 'ガーゴイル',     basePower: 42,  elements: ['EARTH','WIND'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 3 },
-  CYCLOPS:      { name: 'サイクロプス',   basePower: 50,  elements: ['EARTH','THUNDER'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 1 },
-  ZOMBIE_KNIGHT:{ name: 'ゾンビナイト',   basePower: 40,  elements: ['DARK','ICE'], terrains: ['SNOWFIELD','DESERT'], minCount: 1, maxCount: 2 },
-  DARK_MAGE:    { name: '闇魔法使い',     basePower: 45,  elements: ['DARK','FIRE','ICE'], terrains: ['FOREST','DESERT'], minCount: 1, maxCount: 2 },
-  STONE_GOLEM:  { name: 'ストーンゴーレム',basePower: 55, elements: ['EARTH'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 1 },
-  DOPPELGANGER: { name: 'ドッペルゲンガー',basePower: 52, elements: ['DARK','LIGHT'], terrains: ['PLAIN','FOREST'], minCount: 1, maxCount: 1 },
-  DARK_KNIGHT:  { name: '暗黒騎士',       basePower: 60,  elements: ['DARK','FIRE','ICE'], terrains: ['MOUNTAIN','SNOWFIELD'], minCount: 1, maxCount: 1 },
+  // --- Tier3 中盤（×5強化: basePower 150-300） ---
+  UNDEAD:       { name: 'アンデッド',     basePower: 150,  elements: ['DARK','ICE'], terrains: ['SNOWFIELD','FOREST'], minCount: 2, maxCount: 8 },
+  DARK_ELF:     { name: 'ダークエルフ',   basePower: 175,  elements: ['DARK','WIND','ICE'], terrains: ['FOREST','SNOWFIELD'], minCount: 1, maxCount: 3 },
+  TROLL:        { name: 'トロル',         basePower: 200,  elements: ['EARTH','WATER'], terrains: ['MOUNTAIN','RIVER'], minCount: 1, maxCount: 2 },
+  GRIFFIN:      { name: 'グリフィン',     basePower: 225,  elements: ['WIND','THUNDER','LIGHT'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 2 },
+  BASILISK:     { name: 'バジリスク',     basePower: 240,  elements: ['EARTH','POISON','DARK'], terrains: ['DESERT','MOUNTAIN'], minCount: 1, maxCount: 1 },
+  VAMPIRE:      { name: 'ヴァンパイア',   basePower: 250,  elements: ['DARK','ICE','WIND'], terrains: ['FOREST','SNOWFIELD'], minCount: 1, maxCount: 2 },
+  OGRE:         { name: 'オーガ',         basePower: 225,  elements: ['EARTH','FIRE'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 2 },
+  CHIMERA:      { name: 'キマイラ',       basePower: 275,  elements: ['THUNDER','FIRE'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 1 },
+  WEREWOLF:     { name: 'ウェアウルフ',   basePower: 240,  elements: ['WIND','DARK','ICE'], terrains: ['FOREST','SNOWFIELD'], minCount: 1, maxCount: 2 },
+  GARGOYLE:     { name: 'ガーゴイル',     basePower: 210,  elements: ['EARTH','WIND'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 3 },
+  CYCLOPS:      { name: 'サイクロプス',   basePower: 250,  elements: ['EARTH','THUNDER'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 1 },
+  ZOMBIE_KNIGHT:{ name: 'ゾンビナイト',   basePower: 200,  elements: ['DARK','ICE'], terrains: ['SNOWFIELD','DESERT'], minCount: 1, maxCount: 2 },
+  DARK_MAGE:    { name: '闇魔法使い',     basePower: 225,  elements: ['DARK','FIRE','ICE'], terrains: ['FOREST','DESERT'], minCount: 1, maxCount: 2 },
+  STONE_GOLEM:  { name: 'ストーンゴーレム',basePower: 275, elements: ['EARTH'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 1 },
+  DOPPELGANGER: { name: 'ドッペルゲンガー',basePower: 260, elements: ['DARK','LIGHT'], terrains: ['PLAIN','FOREST'], minCount: 1, maxCount: 1 },
+  DARK_KNIGHT:  { name: '暗黒騎士',       basePower: 300,  elements: ['DARK','FIRE','ICE'], terrains: ['MOUNTAIN','SNOWFIELD'], minCount: 1, maxCount: 1 },
 
-  // --- Tier4 (basePower 66-100) ---
-  PHOENIX:      { name: 'フェニックス',   basePower: 70,  elements: ['FIRE','LIGHT'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 2 },
-  LICH:         { name: 'リッチ',         basePower: 80,  elements: ['DARK','ICE','EARTH'], terrains: ['SNOWFIELD','DESERT'], minCount: 1, maxCount: 2 },
-  HYDRA:        { name: 'ヒュドラ',       basePower: 75,  elements: ['WATER','DARK','POISON'], terrains: ['RIVER'], minCount: 1, maxCount: 2 },
-  MINOTAUR:     { name: 'ミノタウロス',   basePower: 70,  elements: ['EARTH','FIRE'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 3 },
-  DRAGON:       { name: 'ドラゴン',       basePower: 100, elements: ['FIRE','WIND','EARTH'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 2 },
-  GORGON:       { name: 'ゴルゴン',       basePower: 72,  elements: ['EARTH','DARK','WATER'], terrains: ['RIVER','MOUNTAIN'], minCount: 1, maxCount: 2 },
-  WYVERN:       { name: 'ワイバーン',     basePower: 85,  elements: ['WIND','THUNDER'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 3 },
-  DEMON_MINION: { name: '魔王の手下',     basePower: 88,  elements: ['DARK','FIRE'], terrains: ['MOUNTAIN','SNOWFIELD','DESERT'], minCount: 2, maxCount: 4 },
-  ABYSS_WALKER: { name: '深淵の歩者',     basePower: 90,  elements: ['DARK','ICE','WATER'], terrains: ['SNOWFIELD','RIVER'], minCount: 1, maxCount: 2 },
-  TITAN:        { name: 'タイタン',       basePower: 95,  elements: ['EARTH','THUNDER'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 2 },
+  // --- Tier4 後半（×12強化: basePower 850-1200） ---
+  PHOENIX:      { name: 'フェニックス',   basePower: 850,  elements: ['FIRE','LIGHT'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 2 },
+  LICH:         { name: 'リッチ',         basePower: 960,  elements: ['DARK','ICE','EARTH'], terrains: ['SNOWFIELD','DESERT'], minCount: 1, maxCount: 2 },
+  HYDRA:        { name: 'ヒュドラ',       basePower: 900,  elements: ['WATER','DARK','POISON'], terrains: ['RIVER'], minCount: 1, maxCount: 2 },
+  MINOTAUR:     { name: 'ミノタウロス',   basePower: 850,  elements: ['EARTH','FIRE'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 3 },
+  DRAGON:       { name: 'ドラゴン',       basePower: 1200, elements: ['FIRE','WIND','EARTH'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 2 },
+  GORGON:       { name: 'ゴルゴン',       basePower: 870,  elements: ['EARTH','DARK','WATER'], terrains: ['RIVER','MOUNTAIN'], minCount: 1, maxCount: 2 },
+  WYVERN:       { name: 'ワイバーン',     basePower: 1020, elements: ['WIND','THUNDER'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 3 },
+  DEMON_MINION: { name: '魔王の手下',     basePower: 1050, elements: ['DARK','FIRE'], terrains: ['MOUNTAIN','SNOWFIELD','DESERT'], minCount: 2, maxCount: 4 },
+  ABYSS_WALKER: { name: '深淵の歩者',     basePower: 1080, elements: ['DARK','ICE','WATER'], terrains: ['SNOWFIELD','RIVER'], minCount: 1, maxCount: 2 },
+  TITAN:        { name: 'タイタン',       basePower: 1140, elements: ['EARTH','THUNDER'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 2 },
 
-  // --- Tier5 (basePower 120+, ボス) ---
-  ANCIENT_DRAGON:{ name: '古竜',          basePower: 150, elements: ['LIGHT','DARK','FIRE'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 2 },
-  DEMON_KING:   { name: '魔王',           basePower: 200, elements: ['DARK','FIRE','ICE'], terrains: ['DESERT','MOUNTAIN'], minCount: 1, maxCount: 1 },
-  DEATH_GOD:    { name: '死神',           basePower: 180, elements: ['DARK','ICE'], terrains: ['SNOWFIELD'], minCount: 1, maxCount: 1 },
-  FALLEN_ANGEL: { name: '堕天使',         basePower: 170, elements: ['LIGHT','DARK','WIND'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 2 },
-  CHAOS_GOD:    { name: '混沌の神',       basePower: 250, elements: ['DARK','LIGHT','FIRE'], terrains: ['MOUNTAIN','DESERT','SNOWFIELD'], minCount: 1, maxCount: 1 },
+  // --- Tier5 ボス（×25強化: basePower 3750-6250） ---
+  ANCIENT_DRAGON:{ name: '古竜',          basePower: 3750, elements: ['LIGHT','DARK','FIRE'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 2 },
+  DEMON_KING:   { name: '魔王',           basePower: 5000, elements: ['DARK','FIRE','ICE'], terrains: ['DESERT','MOUNTAIN'], minCount: 1, maxCount: 1 },
+  DEATH_GOD:    { name: '死神',           basePower: 4500, elements: ['DARK','ICE'], terrains: ['SNOWFIELD'], minCount: 1, maxCount: 1 },
+  FALLEN_ANGEL: { name: '堕天使',         basePower: 4250, elements: ['LIGHT','DARK','WIND'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 2 },
+  CHAOS_GOD:    { name: '混沌の神',       basePower: 6250, elements: ['DARK','LIGHT','FIRE'], terrains: ['MOUNTAIN','DESERT','SNOWFIELD'], minCount: 1, maxCount: 1 },
 }
 
 /** 戦闘開始（群れ対応） */
@@ -322,7 +322,7 @@ export async function completeCombat(
     }
     battleLog += efficiencyMsg
 
-    const baseGrowth = Math.floor(totalPower / 8) + Math.floor(Math.random() * 3)
+    const baseGrowth = Math.floor(totalPower / 25) + Math.floor(Math.random() * 2)
     const growthGain = Math.max(0, Math.round(baseGrowth * expEfficiency))
 
     // 勝利時のステータス更新（ダメージと疲労、基礎戦闘スキル）
@@ -344,6 +344,19 @@ export async function completeCombat(
     await sql`
       UPDATE characters SET strength_growth = strength_growth + 1 WHERE id = ${characterId}
     `
+
+    // レベルアップ判定（累計growthが閾値を超えたら自動レベルアップ）
+    // level N+1に必要な累計growth = N * N * 30
+    const charLevel = await sql<{ level: number; skillCombatGrowth: number }[]>`
+      SELECT level, skill_combat_growth FROM characters WHERE id = ${characterId} LIMIT 1
+    `
+    if (charLevel[0]) {
+      const { level: lv, skillCombatGrowth: totalGrowth } = charLevel[0]
+      const nextLvThreshold = lv * lv * 30
+      if (totalGrowth >= nextLvThreshold && lv < 100) {
+        await sql`UPDATE characters SET level = level + 1, updated_at = NOW() WHERE id = ${characterId}`
+      }
+    }
 
     battleLog += `\n【戦闘終了】 ${generateVictoryText(skill, monster.name, countText)}`
     return {
