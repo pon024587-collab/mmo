@@ -101,7 +101,7 @@ export async function completeEat(characterId: string, itemId: string): Promise<
   const t = template[0]
 
   // 食料の種類によって回復量を変える
-  const hungerRestore = t?.name === 'MEAT' ? 40 : t?.name === 'BREAD' ? 25 : 20
+  const hungerRestore = (t?.name === 'MEAT' || t?.name === '肉') ? 40 : (t?.name === 'BREAD' || t?.name === 'パン') ? 25 : 20
 
   await sql`
     UPDATE characters
@@ -111,9 +111,9 @@ export async function completeEat(characterId: string, itemId: string): Promise<
   `
   await sql`DELETE FROM items WHERE id = ${itemId}`
 
-  return t?.name === 'MEAT'
+  return (t?.name === 'MEAT' || t?.name === '肉')
     ? '肉を食べた。体に力が戻ってきた。'
-    : t?.name === 'BREAD'
+    : (t?.name === 'BREAD' || t?.name === 'パン')
     ? 'パンを食べた。少し元気が出た。'
     : '食事をとった。'
 }
