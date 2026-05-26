@@ -5,6 +5,7 @@
 import { sql } from '../db/client.js'
 import { registerAction } from '../action/actionService.js'
 import type { RegisterActionResult } from '../action/actionService.js'
+import { addSkillExp } from '../skills/skillService.js'
 
 export type MonsterType =
   // Tier1 (弱)
@@ -126,8 +127,8 @@ export async function completeCombat(
   monsterType: MonsterType,
   count: number = 1
 ): Promise<{ resultText: string; victory: boolean; canSkin: boolean }> {
-  const char = await sql<{ skillCombatGrowth: number; health: number; healthMax: number }[]>`
-    SELECT skill_combat_growth, health, health_max FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ skillCombatGrowth: number; health: number; healthMax: number; equippedWeaponId: string | null }[]>`
+    SELECT skill_combat_growth, health, health_max, equipped_weapon_id FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!char[0]) return { resultText: '戦闘結果を処理できませんでした。', victory: false, canSkin: false }
 
@@ -148,6 +149,22 @@ export async function completeCombat(
       SET skill_combat_growth = skill_combat_growth + ${growthGain}
       WHERE id = ${characterId}
     `
+
+    // 詳細スキルの成長（魔法と武器）
+    const magicCategory = getMonsterMagicCategory(monsterType)
+    await addSkillExp(characterId, magicCategory, growthGain)
+    
+    // 武器スキル成長
+    let weaponCategory = 'WEAPON_UNARMED'
+    if (char[0].equippedWeaponId) {
+      const w = await sql<{ weaponCategory: string | null }[]>`
+        SELECT it.weapon_category FROM items i
+        JOIN item_templates it ON i.item_template_id = it.id
+        WHERE i.id = ${char[0].equippedWeaponId}
+      `
+      if (w[0] && w[0].weaponCategory) weaponCategory = w[0].weaponCategory
+    }
+    await addSkillExp(characterId, weaponCategory, growthGain)
 
     // 筋力成長（重い武器を使うほど成長）
     await sql`
@@ -321,4 +338,32 @@ function generateHnsMetadata() {
     bonusStrength: bonusStr,
     bonusDexterity: bonusDex
   }
+}
+
+function getMonsterMagicCategory(m: MonsterType): string {
+  const FIRE = 'MAGIC_FIRE'
+  const WATER = 'MAGIC_WATER'
+  const WIND = 'MAGIC_WIND'
+  const EARTH = 'MAGIC_EARTH'
+  const THUNDER = 'MAGIC_THUNDER'
+  const ICE = 'MAGIC_ICE'
+  const LIGHT = 'MAGIC_LIGHT'
+  const DARK = 'MAGIC_DARK'
+  const TIME = 'MAGIC_TIME'
+  const LIFE = 'MAGIC_LIFE'
+
+  const mapping: Record<MonsterType, string> = {
+    SLIME: WATER, BAT: WIND, GIANT_RAT: EARTH, GOBLIN: EARTH, SKELETON: DARK, ZOMBIE: DARK,
+    HOBGOBLIN: EARTH, KOBOLD: EARTH, WOLF: WIND, POISON_SPIDER: DARK,
+    ORC: EARTH, BANDIT: DARK, LIZARDMAN: WATER, HARPY: WIND, GIANT_SNAKE: WATER,
+    HELLHOUND: FIRE, GREMLIN: THUNDER, MUMMY: DARK, GOLEM: EARTH, ORC_WARRIOR: EARTH,
+    UNDEAD: DARK, DARK_ELF: DARK, TROLL: EARTH, GRIFFIN: WIND, BASILISK: EARTH,
+    VAMPIRE: DARK, OGRE: EARTH, CHIMERA: THUNDER, WEREWOLF: LIFE, GARGOYLE: EARTH,
+    CYCLOPS: EARTH, ZOMBIE_KNIGHT: DARK, DARK_MAGE: DARK, STONE_GOLEM: EARTH,
+    DOPPELGANGER: TIME, DARK_KNIGHT: DARK,
+    PHOENIX: FIRE, LICH: DARK, HYDRA: WATER, MINOTAUR: EARTH, DRAGON: FIRE,
+    GORGON: EARTH, WYVERN: WIND, DEMON_MINION: DARK, ABYSS_WALKER: TIME, TITAN: EARTH,
+    ANCIENT_DRAGON: TIME, DEMON_KING: DARK, DEATH_GOD: DARK, FALLEN_ANGEL: LIGHT, CHAOS_GOD: TIME
+  }
+  return mapping[m] || 'MAGIC_LIFE'
 }

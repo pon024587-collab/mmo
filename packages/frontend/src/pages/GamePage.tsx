@@ -31,6 +31,7 @@ interface CharacterStatus {
   taxDebt: number
   currentAction: string | null
   actionCompletesAt: string | null
+  skills?: { category: string; exp: number; rank: string }[]
 }
 
 interface Result {

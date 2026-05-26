@@ -125,6 +125,7 @@ export async function getCharacterStatus(characterId: string): Promise<{
   taxDebt: number
   currentAction: string | null
   actionCompletesAt: Date | null
+  skills: { category: string; exp: number; rank: string }[]
 } | null> {
   const rows = await sql<{
     id: string
@@ -171,6 +172,9 @@ export async function getCharacterStatus(characterId: string): Promise<{
   `
   const taxDebt = taxDebts[0]?.amount ?? 0
 
+  const { getCharacterSkills } = await import('../skills/skillService.js')
+  const detailedSkills = await getCharacterSkills(characterId)
+
   return {
     name: c.name,
     age: c.age,
@@ -185,6 +189,7 @@ export async function getCharacterStatus(characterId: string): Promise<{
     taxDebt,
     currentAction: action?.actionType ?? null,
     actionCompletesAt: action?.scheduledCompletionAt ?? null,
+    skills: detailedSkills,
   }
 }
 

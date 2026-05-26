@@ -12,6 +12,7 @@ interface CharacterStatus {
   villageName: string
   nationName: string
   taxDebt: number
+  skills?: { category: string; exp: number; rank: string }[]
 }
 
 interface Props { 
@@ -28,6 +29,16 @@ export default function StatusPanel({ character, onRefresh }: Props) {
     setMessage(res.message ?? '')
     if (res.success) onRefresh()
   }
+
+  const SKILL_LABELS: Record<string, string> = {
+    'MAGIC_FIRE': '炎魔法', 'MAGIC_WATER': '水魔法', 'MAGIC_WIND': '風魔法',
+    'MAGIC_EARTH': '土魔法', 'MAGIC_THUNDER': '雷魔法', 'MAGIC_ICE': '氷魔法',
+    'MAGIC_LIGHT': '光魔法', 'MAGIC_DARK': '闇魔法', 'MAGIC_TIME': '時空魔法', 'MAGIC_LIFE': '生命魔法',
+    'WEAPON_SWORD': '剣技', 'WEAPON_SPEAR': '槍技', 'WEAPON_AXE': '斧技',
+    'WEAPON_BOW': '弓技', 'WEAPON_DAGGER': '短剣技', 'WEAPON_BLUNT': '打撃技',
+    'WEAPON_STAFF': '杖技', 'WEAPON_UNARMED': '体術'
+  }
+
   return (
     <div className="space-y-4">
       <div className="bg-stone-900 border border-stone-700 rounded-lg p-4">
@@ -70,6 +81,22 @@ export default function StatusPanel({ character, onRefresh }: Props) {
           <ConditionRow label="疲労" text={character.fatigueText} />
           <ConditionRow label="精神" text={character.stressText} />
         </div>
+      </div>
+
+      <div className="bg-stone-900 border border-stone-700 rounded-lg p-4">
+        <h2 className="text-amber-400 font-bold mb-3">習得スキル</h2>
+        {(!character.skills || character.skills.length === 0) ? (
+          <p className="text-stone-500 text-sm">まだ習得しているスキルはありません。</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {character.skills.map(s => (
+              <div key={s.category} className="border border-stone-800 p-2 rounded bg-stone-950 flex justify-between items-center">
+                <span className="text-stone-300 font-bold">{SKILL_LABELS[s.category] || s.category}</span>
+                <span className="text-amber-400">{s.rank}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
