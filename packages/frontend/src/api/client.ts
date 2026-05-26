@@ -1,14 +1,17 @@
 /**
  * APIクライアント
- * 開発時: /api → Viteプロキシ経由でバックエンドへ
- * 本番時: VITE_API_URLが設定されていればそちらへ直接
+ * 本番: VITE_API_URLのバックエンドに直接リクエスト
+ * 開発: /api経由でViteプロキシ
  */
 
-// ビルド時に埋め込まれたAPIのURL（Railwayの環境変数から）
 declare const __API_URL__: string
+
+// ビルド時に埋め込まれたAPIのURL
 const API_BASE = (typeof __API_URL__ !== 'undefined' && __API_URL__)
   ? `${__API_URL__}/api`
   : '/api'
+
+console.log('[client] API_BASE:', API_BASE)
 
 function getToken(): string | null {
   return localStorage.getItem('medieval_token')
@@ -16,7 +19,9 @@ function getToken(): string | null {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken()
-  const res = await fetch(`${API_BASE}${path}`, {
+  const url = `${API_BASE}${path}`
+
+  const res = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -25,11 +30,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     },
   })
 
-  if (!res.ok && res.status === 500) {
-    throw new Error('サーバーエラーが発生しました。')
-  }
-
-  return res.json() as Promise<T>
+  const data = await res.json() as T
+  return data
 }
 
 export const api = {
