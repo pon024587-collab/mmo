@@ -79,12 +79,15 @@ export async function sellItem(
   `
   if (!listings[0]) return { success: false, message: 'この村では取引できません。' }
 
-  const price = listings[0].currentPrice
+  const sellPrice = Math.floor(listings[0].currentPrice * 0.7) // 売却価格は市場価格の70%
 
   await sql.begin(async (tx) => {
-    // 所持金増加
+    // 所持金増加と商売スキルの成長
     await tx`
-      UPDATE characters SET gold = gold + ${price}, updated_at = NOW()
+      UPDATE characters 
+      SET gold = gold + ${sellPrice}, 
+          skill_trading_growth = skill_trading_growth + ${Math.floor(Math.random() * 2) + 1},
+          updated_at = NOW()
       WHERE id = ${characterId}
     `
     // アイテム削除
@@ -108,7 +111,7 @@ export async function sellItem(
     `
   })
 
-  return { success: true, goldEarned: price }
+  return { success: true, goldEarned: sellPrice }
 }
 
 /** アイテムを購入する */
@@ -132,9 +135,9 @@ export async function buyItem(
     return { success: false, message: '在庫がありません。' }
   }
 
-  const price = listing[0].currentPrice
-  if (char[0].gold < price) {
-    return { success: false, message: `所持金が足りません。必要: ${price}G` }
+  const buyPrice = Math.ceil(listing[0].currentPrice * 1.2) // 購入価格は市場価格の120%
+  if (char[0].gold < buyPrice) {
+    return { success: false, message: `所持金が足りません。必要: ${buyPrice}G` }
   }
 
   // インベントリ上限確認（50スロット）
@@ -147,7 +150,10 @@ export async function buyItem(
 
   await sql.begin(async (tx) => {
     await tx`
-      UPDATE characters SET gold = gold - ${price}, updated_at = NOW()
+      UPDATE characters 
+      SET gold = gold - ${buyPrice}, 
+          skill_trading_growth = skill_trading_growth + ${Math.floor(Math.random() * 2) + 1},
+          updated_at = NOW()
       WHERE id = ${characterId}
     `
     await tx`
@@ -163,7 +169,7 @@ export async function buyItem(
     `
   })
 
-  return { success: true, goldSpent: price }
+  return { success: true, goldSpent: buyPrice }
 }
 
 async function getBasePrice(itemTemplateId: string): Promise<number> {

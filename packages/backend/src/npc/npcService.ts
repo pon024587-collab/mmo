@@ -35,6 +35,12 @@ export async function talkToNpc(
   const text = generateNpcDialogue(npc[0].role, npc[0].name, relationValue, v)
   const questAvailable = relationValue >= 0 && Math.random() < 0.3
 
+  // 社交スキルの成長
+  await sql`
+    UPDATE characters SET skill_social_growth = skill_social_growth + ${Math.floor(Math.random() * 2) + 1}
+    WHERE id = ${characterId}
+  `
+
   return { text, questAvailable }
 }
 

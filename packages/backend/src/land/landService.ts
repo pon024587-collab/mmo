@@ -111,6 +111,12 @@ export async function completeBuildHouse(characterId: string, landId: string): P
     ON CONFLICT DO NOTHING
   `
 
+  // 工作・建築スキルの成長
+  await sql`
+    UPDATE characters SET skill_crafting_growth = skill_crafting_growth + 15
+    WHERE id = ${characterId}
+  `
+
   return '住居が完成した。これで雨風をしのげる場所ができた。'
 }
 
