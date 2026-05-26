@@ -137,6 +137,11 @@ export async function completeCombat(
   if (!char[0]) return { resultText: '戦闘結果を処理できませんでした。', victory: false, canSkin: false }
 
   const monster = MONSTERS[monsterType]!
+  
+  // 疲労ペナルティ（疲労100で全ステータスが半減）
+  const fatigue = Math.max(0, Math.min(100, char[0].fatigueInternal))
+  const fatigueMultiplier = 1.0 - (fatigue * 0.5 / 100)
+
   // 基礎戦闘力を後半ほど飛躍的に伸びるように変更 (二次関数的)
   // 例: Lv10=~244, Lv50=~1810, Lv100=~4500
   const baseSkill = char[0].level * 15 + Math.floor(Math.pow(char[0].level, 1.5) * 3)
