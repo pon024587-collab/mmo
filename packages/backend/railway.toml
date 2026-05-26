@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install"
+buildCommand = "pnpm install --no-frozen-lockfile && pnpm --filter backend build"
 
 [deploy]
 startCommand = "node --loader tsx/esm src/index.ts"
