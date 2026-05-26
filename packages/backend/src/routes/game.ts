@@ -247,6 +247,17 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await seekTreatment(char.id))
   })
 
+  // ---- 税金 ----
+
+  app.post('/api/game/tax/repay', async (request, reply) => {
+    const body = z.object({ amount: z.number() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { repayTaxDebt } = await import('../economy/taxService.js')
+    return reply.send(await repayTaxDebt(char.id, body.data.amount))
+  })
+
   // ---- クエスト ----
 
   app.get('/api/game/quests', async (request, reply) => {

@@ -22,9 +22,9 @@ interface CharacterStatus {
   thirstText: string
   fatigueText: string
   stressText: string
-  gold: number
   villageName: string
   nationName: string
+  taxDebt: number
   currentAction: string | null
   actionCompletesAt: string | null
 }
@@ -166,7 +166,7 @@ export default function GamePage() {
 
       {/* コンテンツ */}
       <main className="flex-1 p-4 max-w-2xl mx-auto w-full">
-        {activeTab === 'status'  && <StatusPanel character={character} />}
+        {activeTab === 'status'  && <StatusPanel character={character} onRefresh={fetchCharacter} />}
         {activeTab === 'action'  && (
           <ActionPanel
             characterId=""

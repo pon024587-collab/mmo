@@ -122,6 +122,7 @@ export async function getCharacterStatus(characterId: string): Promise<{
   gold: number
   villageName: string
   nationName: string
+  taxDebt: number
   currentAction: string | null
   actionCompletesAt: Date | null
 } | null> {
@@ -165,6 +166,11 @@ export async function getCharacterStatus(characterId: string): Promise<{
   `
   const action = actions[0] ?? null
 
+  const taxDebts = await sql<{ amount: number }[]>`
+    SELECT SUM(amount)::INTEGER as amount FROM tax_debts WHERE character_id = ${characterId}
+  `
+  const taxDebt = taxDebts[0]?.amount ?? 0
+
   return {
     name: c.name,
     age: c.age,
@@ -176,6 +182,7 @@ export async function getCharacterStatus(characterId: string): Promise<{
     gold: c.gold,
     villageName: c.villageName,
     nationName: c.nationName,
+    taxDebt,
     currentAction: action?.actionType ?? null,
     actionCompletesAt: action?.scheduledCompletionAt ?? null,
   }

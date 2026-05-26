@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 interface CharacterStatus {
   name: string
   age: number
@@ -9,21 +11,53 @@ interface CharacterStatus {
   gold: number
   villageName: string
   nationName: string
+  taxDebt: number
 }
 
-interface Props { character: CharacterStatus }
+interface Props { 
+  character: CharacterStatus
+  onRefresh: () => void
+}
 
-export default function StatusPanel({ character }: Props) {
+export default function StatusPanel({ character, onRefresh }: Props) {
+  const [message, setMessage] = useState('')
+
+  const handleRepay = async () => {
+    const { api } = await import('../api/client.js')
+    const res = await api.post<{ success: boolean; message?: string }>('/game/tax/repay', { amount: character.taxDebt })
+    setMessage(res.message ?? '')
+    if (res.success) onRefresh()
+  }
   return (
     <div className="space-y-4">
       <div className="bg-stone-900 border border-stone-700 rounded-lg p-4">
         <h2 className="text-amber-400 font-bold text-lg mb-3">キャラクター状態</h2>
+        {message && (
+          <div className={`mb-3 p-2 rounded text-sm ${message.includes('失敗') || message.includes('足りません') ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300'}`}>
+            {message}
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <StatusRow label="名前" value={character.name} />
           <StatusRow label="年齢" value={`${character.age}歳`} />
           <StatusRow label="所持金" value={`${character.gold}G`} />
           <StatusRow label="国家" value={character.nationName} />
           <StatusRow label="村" value={character.villageName} />
+          
+          <div className="col-span-2 flex items-center justify-between border border-stone-800 p-2 rounded bg-stone-950">
+            <div>
+              <span className="text-stone-500">未納税額: </span>
+              <span className={character.taxDebt > 0 ? 'text-red-400' : 'text-stone-200'}>{character.taxDebt}G</span>
+            </div>
+            {character.taxDebt > 0 && (
+              <button 
+                onClick={handleRepay}
+                className="px-3 py-1 bg-amber-700 hover:bg-amber-600 text-white text-xs rounded"
+              >
+                納税する
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

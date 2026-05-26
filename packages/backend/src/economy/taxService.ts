@@ -83,3 +83,34 @@ export async function repayDebt(
 
   return { success: true, message: `${repay}Gを返済しました。` }
 }
+
+/** 税金の滞納を返済する */
+export async function repayTaxDebt(
+  characterId: string,
+  amount: number
+): Promise<{ success: boolean; message?: string }> {
+  const taxDebt = await sql<{ amount: number; nationId: string }[]>`
+    SELECT amount, nation_id FROM tax_debts
+    WHERE character_id = ${characterId} LIMIT 1
+  `
+  if (!taxDebt[0] || taxDebt[0].amount <= 0) return { success: false, message: '滞納している税金はありません。' }
+
+  const char = await sql<{ gold: number }[]>`
+    SELECT gold FROM characters WHERE id = ${characterId} LIMIT 1
+  `
+  if (!char[0] || char[0].gold < amount) {
+    return { success: false, message: '所持金が足りません。' }
+  }
+
+  const repay = Math.min(amount, taxDebt[0].amount)
+  await sql.begin(async (tx) => {
+    await tx`UPDATE characters SET gold = gold - ${repay}, updated_at = NOW() WHERE id = ${characterId}`
+    if (repay >= taxDebt[0].amount) {
+      await tx`DELETE FROM tax_debts WHERE character_id = ${characterId} AND nation_id = ${taxDebt[0].nationId}`
+    } else {
+      await tx`UPDATE tax_debts SET amount = amount - ${repay} WHERE character_id = ${characterId} AND nation_id = ${taxDebt[0].nationId}`
+    }
+  })
+
+  return { success: true, message: `未納だった税金 ${repay}G を納めました。` }
+}
