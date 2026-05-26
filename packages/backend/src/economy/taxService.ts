@@ -11,15 +11,25 @@ export async function collectTaxes(): Promise<void> {
     gold: number
     nationId: string
     taxRate: number
+    landCount: number
   }[]>`
-    SELECT c.id, c.gold, c.nation_id, n.tax_rate
+    SELECT 
+      c.id, 
+      c.gold, 
+      c.nation_id, 
+      n.tax_rate,
+      (SELECT COUNT(*)::INTEGER FROM lands l WHERE l.owner_character_id = c.id) as land_count
     FROM characters c
     JOIN nations n ON c.nation_id = n.id
     WHERE c.status != 'INACTIVE'
   `
 
   for (const char of chars) {
-    const taxAmount = Math.floor(char.gold * (char.taxRate / 100))
+    // 基礎税（所持金の割合） + 固定資産税（土地1つにつき200G）
+    const baseTax = Math.floor(char.gold * (char.taxRate / 100))
+    const propertyTax = char.landCount * 200
+    const taxAmount = baseTax + propertyTax
+
     if (taxAmount <= 0) continue
 
     if (char.gold >= taxAmount) {
