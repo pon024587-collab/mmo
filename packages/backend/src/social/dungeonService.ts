@@ -153,3 +153,17 @@ export async function startTradeRoute(
     durationOverrideMinutes: durationMinutes,
   })
 }
+
+export async function completeMove(characterId: string, targetVillageId: string, tradeItemIds?: string[]): Promise<string> {
+  const village = await sql<{ name: string }[]>`SELECT name FROM villages WHERE id = ${targetVillageId} LIMIT 1`
+  if (!village[0]) return '移動に失敗しました。'
+
+  await sql`UPDATE characters SET village_id = ${targetVillageId}, updated_at = NOW() WHERE id = ${characterId}`
+  
+  if (tradeItemIds && tradeItemIds.length > 0) {
+    // 荷物を運んだ場合の処理（簡略化：貿易報酬などを追加可能）
+    return `${village[0].name}に到着し、荷物を届けた。`
+  }
+  
+  return `${village[0].name}に到着した。`
+}

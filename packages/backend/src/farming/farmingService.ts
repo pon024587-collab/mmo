@@ -84,6 +84,56 @@ export async function startHarvest(characterId: string): Promise<RegisterActionR
   return registerAction({ characterId, actionType: 'FARM_HARVEST' })
 }
 
+/** 畑を耕し終わった時の処理 */
+export async function completeFarmPlow(characterId: string): Promise<string> {
+  await sql`
+    INSERT INTO farm_plots (character_id, step) VALUES (${characterId}, 'PLOWED')
+    ON CONFLICT (character_id) DO UPDATE SET step = 'PLOWED'
+  `
+  return '荒れた土地を耕し、種をまく準備が整った。'
+}
+
+/** 種まき完了時の処理 */
+export async function completeFarmSow(characterId: string, cropType: string): Promise<string> {
+  const plot = await getFarmPlot(characterId)
+  if (!plot || plot.step !== 'PLOWED') return '種をまけませんでした。'
+
+  // 現在の季節を取得（簡易的に春固定としているが、適宜拡張可能）
+  const plantedSeason = 'SPRING'
+
+  await sql`
+    UPDATE farm_plots
+    SET step = 'SOWED', crop_type = ${cropType}, planted_season = ${plantedSeason}, planted_at = NOW()
+    WHERE character_id = ${characterId}
+  `
+  return `畑に種（${cropType}）をまいた。`
+}
+
+/** 水やり完了時の処理 */
+export async function completeFarmWater(characterId: string): Promise<string> {
+  const plot = await getFarmPlot(characterId)
+  if (!plot || plot.step !== 'SOWED') return '水やりができませんでした。'
+
+  const requiredWater = CROP_WATER_NEEDED[plot.cropType as CropType] ?? 3
+  const nextWater = plot.waterCount + 1
+
+  if (nextWater >= requiredWater) {
+    await sql`
+      UPDATE farm_plots
+      SET step = 'READY_HARVEST', water_count = ${nextWater}
+      WHERE character_id = ${characterId}
+    `
+    return 'たっぷりと水をやった。作物は収穫の時を待っている。'
+  } else {
+    await sql`
+      UPDATE farm_plots
+      SET water_count = ${nextWater}
+      WHERE character_id = ${characterId}
+    `
+    return '畑に水をやった。'
+  }
+}
+
 /** 収穫完了時の処理 */
 export async function completeFarmHarvest(characterId: string): Promise<string> {
   const plot = await getFarmPlot(characterId)

@@ -147,6 +147,30 @@ export async function completeAction(
   } else if (actionType === 'SLEEP') {
     const { completeSleep } = await import('../survival/survivalService.js')
     resultText = await completeSleep(characterId)
+  } else if (actionType === 'FARM_PLOW') {
+    const { completeFarmPlow } = await import('../farming/farmingService.js')
+    resultText = await completeFarmPlow(characterId)
+  } else if (actionType === 'FARM_SOW') {
+    const { completeFarmSow } = await import('../farming/farmingService.js')
+    resultText = await completeFarmSow(characterId, params.cropType)
+  } else if (actionType === 'FARM_WATER') {
+    const { completeFarmWater } = await import('../farming/farmingService.js')
+    resultText = await completeFarmWater(characterId)
+  } else if (actionType === 'FARM_HARVEST') {
+    const { completeFarmHarvest } = await import('../farming/farmingService.js')
+    resultText = await completeFarmHarvest(characterId)
+  } else if (['MINE', 'CHOP_WOOD', 'GATHER_HERBS', 'FISH'].includes(actionType)) {
+    const { completeGather } = await import('../mining/miningService.js')
+    resultText = await completeGather(characterId, actionType as any)
+  } else if (actionType === 'COOK') {
+    const { completeCook } = await import('../social/dungeonService.js')
+    resultText = await completeCook(characterId, params.recipeType)
+  } else if (actionType === 'DUNGEON_EXPLORE') {
+    const { completeDungeonFloor } = await import('../social/dungeonService.js')
+    resultText = await completeDungeonFloor(characterId, params.dungeonId)
+  } else if (actionType === 'MOVE') {
+    const { completeMove } = await import('../social/dungeonService.js')
+    resultText = await completeMove(characterId, params.targetVillageId, params.tradeItemIds)
   }
 
   await sql.begin(async (tx) => {
