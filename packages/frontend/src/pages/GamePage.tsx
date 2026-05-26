@@ -8,6 +8,9 @@ import ResultLog from '../components/ResultLog.js'
 import VillagePanel from '../components/VillagePanel.js'
 import MarketPanel from '../components/MarketPanel.js'
 import LifeRecordPanel from '../components/LifeRecordPanel.js'
+import WorldMapPanel from '../components/WorldMapPanel.js'
+import NpcPanel from '../components/NpcPanel.js'
+import QuestPanel from '../components/QuestPanel.js'
 
 interface CharacterStatus {
   name: string
@@ -30,14 +33,17 @@ interface Result {
   completedAt: string
 }
 
-type Tab = 'status' | 'action' | 'village' | 'market' | 'log' | 'records'
+type Tab = 'status' | 'action' | 'village' | 'map' | 'npc' | 'quest' | 'market' | 'log' | 'records'
 
 const TAB_LABELS: Record<Tab, string> = {
-  status: '状態',
-  action: '行動',
+  status:  '状態',
+  action:  '行動',
   village: '村',
-  market: '市場',
-  log: '記録',
+  map:     '地図',
+  npc:     '村人',
+  quest:   'クエスト',
+  market:  '市場',
+  log:     '記録',
   records: '人生',
 }
 
@@ -165,6 +171,14 @@ export default function GamePage() {
           />
         )}
         {activeTab === 'village' && <VillagePanel />}
+        {activeTab === 'map'     && (
+          <WorldMapPanel
+            isBusy={!!character.currentAction}
+            onMove={() => { fetchCharacter(); fetchResults() }}
+          />
+        )}
+        {activeTab === 'npc'     && <NpcPanel />}
+        {activeTab === 'quest'   && <QuestPanel />}
         {activeTab === 'market'  && <MarketPanel />}
         {activeTab === 'log'     && <ResultLog results={results} />}
         {activeTab === 'records' && <LifeRecordPanel />}
