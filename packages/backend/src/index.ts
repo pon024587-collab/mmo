@@ -5,17 +5,13 @@ import { config } from './config.js'
 import { authRoutes } from './routes/auth.js'
 import { gameRoutes } from './routes/game.js'
 import { socialRoutes } from './routes/social.js'
-import { startWorldTickWorker, initWorldTickQueue } from './queue/worldTickWorker.js'
-import { startActionWorker } from './action/actionWorker.js'
 import { runMigrations } from './db/migrate.js'
 
 const app = Fastify({
-  logger: { level: config.isDev ? 'info' : 'warn' },
+  logger: true,
 })
 
-await app.register(fastifyCors, {
-  origin: config.isDev ? '*' : ['https://your-domain.com'],
-})
+await app.register(fastifyCors, { origin: true })
 
 await app.register(fastifyJwt, {
   secret: config.jwtSecret,
@@ -32,20 +28,26 @@ app.get('/health', async () => ({
 
 const start = async () => {
   try {
-    // 起動前にDBマイグレーションを実行
     app.log.info('DBマイグレーション実行中...')
     await runMigrations()
     app.log.info('DBマイグレーション完了')
 
     await app.listen({ port: config.port, host: '0.0.0.0' })
-    app.log.info(`サーバー起動: http://0.0.0.0:${config.port}`)
+    app.log.info(`サーバー起動完了: port ${config.port}`)
 
-    await initWorldTickQueue()
-    startWorldTickWorker()
-    startActionWorker()
-    app.log.info('バックグラウンドワーカー起動完了')
+    // ワーカーはサーバー起動後に非同期で開始（失敗してもサーバーは継続）
+    try {
+      const { startWorldTickWorker, initWorldTickQueue } = await import('./queue/worldTickWorker.js')
+      const { startActionWorker } = await import('./action/actionWorker.js')
+      await initWorldTickQueue()
+      startWorldTickWorker()
+      startActionWorker()
+      app.log.info('バックグラウンドワーカー起動完了')
+    } catch (workerErr) {
+      app.log.warn('ワーカー起動失敗（サーバーは継続）:', workerErr)
+    }
   } catch (err) {
-    app.log.error(err)
+    app.log.error('起動エラー:', err)
     process.exit(1)
   }
 }
