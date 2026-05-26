@@ -11,6 +11,8 @@ const ADMIN_SECRET = process.env['ADMIN_SECRET'] ?? 'admin-secret-change-this'
 export async function adminRoutes(app: FastifyInstance): Promise<void> {
   // 管理者認証ミドルウェア
   app.addHook('preHandler', async (request, reply) => {
+    if (request.method === 'OPTIONS') return // CORS Preflightを許可
+
     const secret = request.headers['x-admin-secret']
     if (secret !== ADMIN_SECRET) {
       return reply.status(403).send({ success: false, message: '管理者権限がありません。' })
