@@ -5,7 +5,10 @@ nixPkgs = ["nodejs_20", "nodePackages.pnpm"]
 cmds = ["pnpm install --no-frozen-lockfile"]
 
 [phases.build]
-cmds = ["pnpm --filter backend build"]
+cmds = [
+  "pnpm --filter backend build",
+  "cp -r packages/backend/src/db/migrations packages/backend/dist/db/migrations"
+]
 
 [start]
 cmd = "node dist/index.js"
