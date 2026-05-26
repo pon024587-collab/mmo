@@ -137,15 +137,16 @@ export async function completeCombat(
   if (!char[0]) return { resultText: '戦闘結果を処理できませんでした。', victory: false, canSkin: false }
 
   const monster = MONSTERS[monsterType]!
-  // 疲労ペナルティ（疲労100で全ステータスが半減）
-  const fatigue = Math.max(0, Math.min(100, char[0].fatigueInternal))
-  const fatigueMultiplier = 1.0 - (fatigue * 0.5 / 100)
-  // skillCombatGrowthの代わりにレベルベースで基礎戦闘力を計算 (1レベル = 30パワー)
-  const skill = Math.floor((char[0].level * 30) * fatigueMultiplier)
+  // 基礎戦闘力を後半ほど飛躍的に伸びるように変更 (二次関数的)
+  // 例: Lv10=~244, Lv50=~1810, Lv100=~4500
+  const baseSkill = char[0].level * 15 + Math.floor(Math.pow(char[0].level, 1.5) * 3)
+  const skill = Math.floor(baseSkill * fatigueMultiplier)
   const totalPower = monster.basePower * count
 
-  // 実質最大HPの計算 (既存キャラのDB値が古くても補正する)
-  const actualHealthMax = Math.max(char[0].healthMax, 100 + char[0].level * 20)
+  // 実質最大HPの計算 (後半ほどHPが大きく伸びる)
+  // 例: Lv10=~313, Lv50=~1557, Lv100=~3600
+  const calculatedMaxHp = 100 + char[0].level * 15 + Math.floor(Math.pow(char[0].level, 1.5) * 2)
+  const actualHealthMax = Math.max(char[0].healthMax, calculatedMaxHp)
 
   // 武器ステータスと属性情報の取得
   let weaponAtk = 0
@@ -176,10 +177,12 @@ export async function completeCombat(
         if (c.MP) weaponMag += c.MP // 簡単のためMPボーナスを魔法力と見なす
       }
       
-      // 強化値(enhance)ボーナス (+1につき 基礎威力+30)
+      // 強化値(enhance)ボーナス: 後半ほど強力になる二次関数 (enhanceLv^2 * 10)
+      // 例: +1=+10, +5=+250, +9=+810
       const enhanceLv = w[0].metadata?.enhance || 0
-      weaponAtk += enhanceLv * 30
-      weaponMag += enhanceLv * 30
+      const enhancePower = Math.pow(enhanceLv, 2) * 10
+      weaponAtk += enhancePower
+      weaponMag += enhancePower
     }
   }
 
@@ -209,9 +212,9 @@ export async function completeCombat(
         if (c.WATER_RES && armorElement === 'WATER') armorElementValue += c.WATER_RES
       }
       
-      // 強化値(enhance)ボーナス (+1につき 防御力相当のパワー+30)
+      // 防具強化ボーナス: (enhanceLv^2 * 10)
       const enhanceLv = a[0].metadata?.enhance || 0
-      defBonus += enhanceLv * 30
+      defBonus += Math.pow(enhanceLv, 2) * 10
       
       // defBonusをグローバルに持たせるため、charのプロパティのように扱うか
       // 変数宣言を外に出す必要がある。
@@ -371,14 +374,16 @@ export async function completeCombat(
       const { level: lv, skillCombatGrowth: totalGrowth, healthMax } = charLevel[0]
       const nextLvThreshold = lv * lv * 30
       if (totalGrowth >= nextLvThreshold && lv < 100) {
-        // レベルアップ時に最大HPも増加（+20）し、現在HPも全回復
-        const newMax = Math.max(healthMax + 20, 100 + (lv + 1) * 20)
+        // レベルアップ時に最大HPも増加し、現在HPも全回復
+        const nextLevel = lv + 1
+        const newMaxHp = 100 + nextLevel * 15 + Math.floor(Math.pow(nextLevel, 1.5) * 2)
+        const newMax = Math.max(healthMax + 20, newMaxHp)
         await sql`
           UPDATE characters
           SET level = level + 1, health_max = ${newMax}, health = ${newMax}, updated_at = NOW()
           WHERE id = ${characterId}
         `
-        battleLog += `\n🌟 レベルアップ！ レベルが ${lv + 1} になり、最大体力が ${newMax} に増加した！`
+        battleLog += `\n🌟 レベルアップ！ レベルが ${nextLevel} になり、最大体力が ${newMax} に増加した！`
       }
     }
 
