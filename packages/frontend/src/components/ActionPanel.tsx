@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api/client.js'
+import { SoundManager } from '../utils/sound.js'
+
 
 interface Props {
   characterId: string
@@ -79,21 +81,32 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
   }, [])
 
   const handleAction = async (endpoint: string, body?: Record<string, unknown>, confirm?: string) => {
-    if (isBusy) { setMessage('現在別の行動を実行中です。完了するまでお待ちください。'); return }
-    if (confirm && !window.confirm(confirm)) return
+    if (isBusy) { 
+      SoundManager.playError()
+      setMessage('現在別の行動を実行中です。完了するまでお待ちください。')
+      return 
+    }
+    
+    if (confirm) {
+      SoundManager.playClick() // 確認ダイアログが出る前に鳴らす
+      if (!window.confirm(confirm)) return
+    }
 
     setLoading(true)
     setMessage('')
     try {
       const res = await api.post<{ success: boolean; message?: string; completionTime?: string }>(endpoint, body ?? {})
       if (res.success) {
+        SoundManager.playSuccess()
         const time = res.completionTime ? new Date(res.completionTime).toLocaleTimeString('ja-JP') : ''
         setMessage(`行動を開始しました。${time ? `完了予定: ${time}` : ''}`)
         onActionStart()
       } else {
+        SoundManager.playError()
         setMessage(res.message ?? '行動に失敗しました。')
       }
     } catch {
+      SoundManager.playError()
       setMessage('接続エラーが発生しました。')
     } finally {
       setLoading(false)
@@ -146,7 +159,10 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
             })}
           </select>
           <button
-            onClick={handleFight}
+            onClick={() => {
+              SoundManager.playAttack()
+              handleFight()
+            }}
             disabled={isBusy || loading || !selectedMonster}
             className="bg-red-900 hover:bg-red-800 text-red-100 px-4 py-2 rounded font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           >

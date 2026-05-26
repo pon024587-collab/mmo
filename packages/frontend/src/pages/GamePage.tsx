@@ -4,6 +4,7 @@ import { api } from '../api/client.js'
 import { useAuth } from '../hooks/useAuth.js'
 import StatusPanel from '../components/StatusPanel.js'
 import ActionPanel from '../components/ActionPanel.js'
+import { SoundManager } from '../utils/sound.js'
 import ResultLog from '../components/ResultLog.js'
 import VillagePanel from '../components/VillagePanel.js'
 import MarketPanel from '../components/MarketPanel.js'
@@ -152,7 +153,7 @@ export default function GamePage() {
 
       {/* 新着結果バナー */}
       {results.length > 0 && results[0] && (
-        <div className="bg-stone-900 border-b border-stone-700 px-4 py-2 text-xs text-stone-400 cursor-pointer hover:bg-stone-800" onClick={() => setActiveTab('log')}>
+        <div className="bg-stone-900 border-b border-stone-700 px-4 py-2 text-xs text-stone-400 cursor-pointer hover:bg-stone-800" onClick={() => { SoundManager.playClick(); setActiveTab('log') }}>
           📜 {results[0].resultText.slice(0, 60)}{results[0].resultText.length > 60 ? '…' : ''}
         </div>
       )}
@@ -162,7 +163,10 @@ export default function GamePage() {
         {(Object.keys(TAB_LABELS) as Tab[]).map(tab => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              SoundManager.playClick()
+              setActiveTab(tab)
+            }}
             className={`flex-1 min-w-[60px] py-3 text-xs font-medium transition-colors whitespace-nowrap ${
               activeTab === tab
                 ? 'text-amber-400 border-b-2 border-amber-400 bg-stone-900'
