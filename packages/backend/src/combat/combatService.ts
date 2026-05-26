@@ -163,13 +163,14 @@ export async function completeCombat(
           SELECT id, category FROM item_templates WHERE name = ${dropName} LIMIT 1
         `
         if (template[0]) {
-          let meta = {}
+          let meta: Record<string, unknown> = {}
           if (template[0].category === 'WEAPON' || template[0].category === 'ARMOR') {
             meta = generateHnsMetadata()
           }
+          const metaJson = JSON.stringify(meta)
           await sql`
             INSERT INTO items (owner_character_id, item_template_id, quantity, metadata)
-            VALUES (${characterId}, ${template[0].id}, 1, ${meta})
+            VALUES (${characterId}, ${template[0].id}, 1, ${metaJson}::jsonb)
           `
           const metaObj = meta as any
           const fullName = metaObj.rarity && metaObj.rarity !== 'NORMAL'
