@@ -105,9 +105,46 @@ export async function completeEat(characterId: string, itemId: string): Promise<
     SELECT name, category FROM item_templates WHERE id = ${item[0].itemTemplateId} LIMIT 1
   `
   const t = template[0]
+  const name = t?.name ?? ''
 
-  // 食料の種類によって回復量を変える
-  const hungerRestore = (t?.name === 'MEAT' || t?.name === '肉') ? 40 : (t?.name === 'BREAD' || t?.name === 'パン') ? 25 : 20
+  // アイテム削除
+  await sql`DELETE FROM items WHERE id = ${itemId}`
+
+  // --- 料理済み専用アイテム ---
+  if (name === '焼きたてのパン') {
+    await sql`
+      UPDATE characters
+      SET hunger_internal = LEAST(100, hunger_internal + 40),
+          updated_at = NOW()
+      WHERE id = ${characterId}
+    `
+    return '焼きたてのパンを食べた。温かくて美味しい。空腹がかなり癒えた。'
+  }
+  if (name === '肉シチュー') {
+    await sql`
+      UPDATE characters
+      SET hunger_internal = LEAST(100, hunger_internal + 60),
+          health = LEAST(health_max, health + 15),
+          updated_at = NOW()
+      WHERE id = ${characterId}
+    `
+    return '肉シチューを食べた。栄養満点で体が温まった。空腹が完全に癒え、傷も少し回復した。'
+  }
+  if (name === '薬草茶') {
+    await sql`
+      UPDATE characters
+      SET thirst_internal = LEAST(100, thirst_internal + 40),
+          stress_internal = GREATEST(0, stress_internal - 20),
+          updated_at = NOW()
+      WHERE id = ${characterId}
+    `
+    return '薬草茶を飲んだ。ほんのり苦くて心地よい香り。喉の渇きが癒え、気分が楽になった。'
+  }
+
+  // --- 生素材（生の肉・パンなど）---
+  const hungerRestore = (name === 'MEAT' || name === '肉') ? 20
+    : (name === 'BREAD' || name === 'パン') ? 15
+    : 10
 
   await sql`
     UPDATE characters
@@ -115,12 +152,10 @@ export async function completeEat(characterId: string, itemId: string): Promise<
         updated_at = NOW()
     WHERE id = ${characterId}
   `
-  await sql`DELETE FROM items WHERE id = ${itemId}`
-
-  return (t?.name === 'MEAT' || t?.name === '肉')
-    ? '肉を食べた。体に力が戻ってきた。'
-    : (t?.name === 'BREAD' || t?.name === 'パン')
-    ? 'パンを食べた。少し元気が出た。'
+  return (name === 'MEAT' || name === '肉')
+    ? '生の肉を食べた。調理すればもっと効果があるのに…'
+    : (name === 'BREAD' || name === 'パン')
+    ? 'パンをかじった。固くて味気ない。'
     : '食事をとった。'
 }
 

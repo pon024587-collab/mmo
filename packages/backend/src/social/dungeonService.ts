@@ -148,15 +148,16 @@ export async function completeCook(characterId: string, recipeType: string): Pro
   const fatigue = Math.max(0, Math.min(100, skill[0]?.fatigueInternal ?? 0))
   const s = Math.floor(rawSkill * (1.0 - fatigue * 0.5 / 100))
 
-  // 完成品をインベントリに追加（英語・日本語両方対応）
-  const outputSearch: Record<string, string[]> = {
-    BREAD: ['BREAD', 'パン'],
-    STEW:  ['MEAT', '肉'],
-    HERBAL_TEA: ['HERB', '薬草'],
+  // レシピに応じた準備品名（料理済み専用アイテム）
+  const outputItemName: Record<string, string> = {
+    BREAD:      '焼きたてのパン',
+    STEW:       '肉シチュー',
+    HERBAL_TEA: '薬草茶',
   }
-  const searchNames = outputSearch[recipeType] ?? ['BREAD']
+  const cookedName = outputItemName[recipeType] ?? '焼きたてのパン'
+
   const template = await sql<{ id: string }[]>`
-    SELECT id FROM item_templates WHERE name = ANY(${searchNames}::text[]) LIMIT 1
+    SELECT id FROM item_templates WHERE name = ${cookedName} LIMIT 1
   `
   if (template[0]) {
     await sql`
@@ -169,9 +170,8 @@ export async function completeCook(characterId: string, recipeType: string): Pro
     UPDATE characters SET skill_cooking_growth = skill_cooking_growth + 1 WHERE id = ${characterId}
   `
 
-  if (s < 50) return `${recipeType}を作った。素朴な味だ。`
-  if (s < 200) return `${recipeType}を作った。なかなかの出来だ。`
-  return `${recipeType}を作った。絶品だ。`
+  const qualityText = s < 50 ? 'なかなかの出来だ。' : s < 200 ? 'とても美味そうだ。' : '絶品の仕上がりだ！'
+  return `${cookedName}を作った。${qualityText}`
 }
 
 // ---- 家畜 ----
