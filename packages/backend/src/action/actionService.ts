@@ -255,14 +255,18 @@ export async function recoverStuckActions(): Promise<void> {
   `
 
   if (stuck.length > 0) {
-    console.log(`[ActionService] 実行中スタック状態のアクションを ${stuck.length} 件検出しました。キューに再登録します...`)
-    const queue = getActionQueue()
+    console.log(`[ActionService] 実行中スタック状態のアクションを ${stuck.length} 件検出しました。直接完了処理を実行します...`)
     for (const s of stuck) {
-      await queue.add(
-        'complete',
-        { actionId: s.id, characterId: s.characterId, actionType: s.actionType },
-        { jobId: s.id }
-      )
+      try {
+        // BullMQを通さず直接完了処理を呼び出して確実に復旧させる
+        await completeAction(s.id, s.characterId, s.actionType)
+        console.log(`[ActionService] アクション ${s.id} の復旧に成功しました。`)
+      } catch (err) {
+        console.error(`[ActionService] アクション ${s.id} の復旧に失敗しました:`, err)
+        // 失敗した場合はキャラクターを強制的にIDLEに戻してロックを解除する
+        await sql`UPDATE characters SET status = 'IDLE', updated_at = NOW() WHERE id = ${s.characterId}`
+        await sql`UPDATE action_queue SET status = 'FAILED', result_text = 'システムエラーにより中断されました。' WHERE id = ${s.id}`
+      }
     }
   }
 }
