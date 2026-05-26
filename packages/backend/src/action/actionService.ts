@@ -48,8 +48,8 @@ export interface RegisterActionResult {
  */
 export async function registerAction(req: RegisterActionRequest): Promise<RegisterActionResult> {
   // キャラクター状態確認
-  const chars = await sql<{ status: string }[]>`
-    SELECT status FROM characters WHERE id = ${req.characterId} LIMIT 1
+  const chars = await sql<{ status: string; isImprisoned: boolean }[]>`
+    SELECT status, is_imprisoned FROM characters WHERE id = ${req.characterId} LIMIT 1
   `
   if (chars.length === 0) {
     return { success: false, errorCode: 'CHARACTER_INACTIVE', message: 'キャラクターが見つかりません。' }
@@ -60,7 +60,7 @@ export async function registerAction(req: RegisterActionRequest): Promise<Regist
     return { success: false, errorCode: 'CHARACTER_INACTIVE', message: 'このキャラクターは死亡しています。' }
   }
 
-  if (char.status === 'IMPRISONED') {
+  if (char.status === 'IMPRISONED' || char.isImprisoned) {
     return { success: false, errorCode: 'CHARACTER_INACTIVE', message: '牢獄に捕らえられているため、行動できません。' }
   }
 
