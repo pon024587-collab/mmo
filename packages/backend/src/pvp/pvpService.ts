@@ -21,9 +21,10 @@ export async function checkGuardEncounter(characterId: string): Promise<{
   `
   if (!char[0]) return { encountered: false, hasCriminalRecord: false, bountyAmount: 0 }
 
-  // 30%の確率で衛兵に遭遇
-  const encountered = Math.random() < 0.3
   const hasCriminalRecord = char[0].bountyAmount > 0
+
+  // 賞金首の場合のみ30%の確率で衛兵に遷遇（無億のプレイヤーにも小隨が来るバグを修正）
+  const encountered = hasCriminalRecord && Math.random() < 0.3
 
   return { encountered, hasCriminalRecord, bountyAmount: char[0].bountyAmount }
 }
