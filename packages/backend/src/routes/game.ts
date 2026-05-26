@@ -195,6 +195,18 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
 
   // ---- 土地・住居 ----
 
+  app.get('/api/game/lands', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const lands = await sql<{ id: string; landType: string; status: string; purchasePrice: number }[]>`
+      SELECT id, land_type, status, purchase_price 
+      FROM lands 
+      WHERE village_id = ${char.villageId}
+      ORDER BY purchase_price ASC
+    `
+    return reply.send({ success: true, lands })
+  })
+
   app.post('/api/game/land/buy', async (request, reply) => {
     const body = z.object({ landId: z.string() }).safeParse(request.body)
     if (!body.success) return reply.status(400).send({ success: false })
