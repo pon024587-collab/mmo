@@ -76,6 +76,12 @@ export default function LoginPage() {
           アカウントをお持ちでない方は{' '}
           <Link to="/register" className="text-amber-400 hover:underline">新規登録</Link>
         </p>
+
+        <div className="mt-8 text-center">
+          <Link to="/admin" className="text-stone-600 hover:text-stone-400 text-xs underline">
+            管理画面 (デバッグ用)
+          </Link>
+        </div>
       </div>
     </div>
   )

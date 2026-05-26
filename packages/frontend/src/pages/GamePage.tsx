@@ -135,6 +135,7 @@ export default function GamePage() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-amber-300 text-sm font-mono">💰 {character.gold}G</span>
+          <button onClick={() => navigate('/admin')} className="text-stone-600 hover:text-stone-400 text-xs">管理画面</button>
           <button onClick={handleLogout} className="text-stone-600 hover:text-stone-400 text-xs">ログアウト</button>
         </div>
       </header>
