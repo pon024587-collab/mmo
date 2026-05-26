@@ -12,6 +12,7 @@ import { getMarketListings, sellItem, buyItem } from '../market/marketService.js
 import { talkToNpc } from '../npc/npcService.js'
 import { eat, drink, sleep, nap } from '../survival/survivalService.js'
 import { getAvailableSpells, castActiveSpell } from '../magic/magicService.js'
+import { MONSTERS } from '../combat/combatService.js'
 import { startGather } from '../mining/miningService.js'
 import { buyLand, buildHouse, getHousing } from '../land/landService.js'
 import { pray } from '../religion/faithService.js'
@@ -242,6 +243,25 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     if (!char) return reply.status(404).send({ success: false })
     const { castActiveSpell } = await import('../magic/magicService.js')
     return reply.send(await castActiveSpell(char.id, body.data.spellId))
+  })
+
+  // ---- 戦闘・魔物 ----
+  app.get('/api/game/monsters', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+
+    const monsterList = Object.entries(MONSTERS).map(([key, data]) => ({
+      id: key,
+      name: data.name,
+      basePower: data.basePower,
+      minCount: data.minCount,
+      maxCount: data.maxCount,
+    }))
+    
+    // 難易度順にソート
+    monsterList.sort((a, b) => a.basePower - b.basePower)
+    
+    return reply.send({ success: true, monsters: monsterList })
   })
 
   // ---- 土地・住居 ----

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { api } from '../api/client.js'
 
 interface Props {
@@ -23,13 +23,9 @@ const ACTION_GROUPS: ActionGroup[] = [
     ],
   },
   {
-    label: '⚔️ 戦闘',
+    label: '⚔️ 基礎訓練',
     actions: [
       { label: '素振り（30分）', endpoint: '/game/action', body: { actionType: 'COMBAT_PRACTICE' } },
-      { label: 'ゴブリンと戦う', endpoint: '/game/combat', body: { monsterType: 'GOBLIN' }, confirm: '戦闘は危険です。本当に挑みますか？' },
-      { label: 'オークと戦う', endpoint: '/game/combat', body: { monsterType: 'ORC' }, confirm: '強敵です。本当に挑みますか？' },
-      { label: '狼と戦う', endpoint: '/game/combat', body: { monsterType: 'WOLF' }, confirm: '戦闘は危険です。本当に挑みますか？' },
-      { label: 'アンデッドと戦う', endpoint: '/game/combat', body: { monsterType: 'UNDEAD' }, confirm: '戦闘は危険です。本当に挑みますか？' },
     ],
   },
   {
@@ -69,6 +65,17 @@ const ACTION_GROUPS: ActionGroup[] = [
 export default function ActionPanel({ isBusy, onActionStart }: Props) {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [monsters, setMonsters] = useState<{ id: string; name: string; basePower: number; minCount: number; maxCount: number }[]>([])
+  const [selectedMonster, setSelectedMonster] = useState('')
+
+  useEffect(() => {
+    api.get<{ success: boolean; monsters?: any[] }>('/game/monsters').then(res => {
+      if (res.success && res.monsters) {
+        setMonsters(res.monsters)
+        if (res.monsters.length > 0) setSelectedMonster(res.monsters[0].id)
+      }
+    })
+  }, [])
 
   const handleAction = async (endpoint: string, body?: Record<string, unknown>, confirm?: string) => {
     if (isBusy) { setMessage('現在別の行動を実行中です。完了するまでお待ちください。'); return }
@@ -92,6 +99,12 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
     }
   }
 
+  const handleFight = () => {
+    const m = monsters.find(x => x.id === selectedMonster)
+    if (!m) return
+    handleAction('/game/combat', { monsterType: selectedMonster }, `【難易度: ${m.basePower}】${m.name}に挑みます。よろしいですか？\n※敗北すると全てを失う可能性があります。`)
+  }
+
   return (
     <div className="space-y-4">
       {message && (
@@ -105,6 +118,36 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
           ⏳ 行動中です。完了するまで新しい行動は選択できません。
         </div>
       )}
+
+      {/* 魔物討伐セクション */}
+      <div className="bg-stone-900 border border-red-900/50 rounded-lg p-4">
+        <h3 className="text-red-400 font-bold mb-3">⚔️ 魔物討伐</h3>
+        <p className="text-xs text-stone-400 mb-3">戦いたい魔物を選択して討伐に向かいます。難易度が高いほど戦闘力が必要です。</p>
+        <div className="flex gap-2">
+          <select
+            className="flex-1 bg-stone-950 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200"
+            value={selectedMonster}
+            onChange={(e) => setSelectedMonster(e.target.value)}
+            disabled={isBusy || loading}
+          >
+            {monsters.map(m => {
+              const display = `${m.name} (難易度: ${m.basePower}) ${m.maxCount > 1 ? `[1〜${m.maxCount}体]` : ''}`
+              return (
+                <option key={m.id} value={m.id}>
+                  {display}
+                </option>
+              )
+            })}
+          </select>
+          <button
+            onClick={handleFight}
+            disabled={isBusy || loading || !selectedMonster}
+            className="bg-red-900 hover:bg-red-800 text-red-100 px-4 py-2 rounded font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            討伐へ向かう
+          </button>
+        </div>
+      </div>
 
       {ACTION_GROUPS.map(group => (
         <div key={group.label} className="bg-stone-900 border border-stone-700 rounded-lg p-4">
