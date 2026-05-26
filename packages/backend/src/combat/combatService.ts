@@ -34,7 +34,7 @@ interface MonsterStats {
   maxCount: number
 }
 
-const MONSTERS: Record<MonsterType, MonsterStats> = {
+export const MONSTERS: Record<MonsterType, MonsterStats> = {
   // --- Tier1 (basePower 5-15) ---
   SLIME:        { name: 'スライム',       basePower: 5,   elements: ['WATER','ICE'], terrains: ['RIVER','FOREST','PLAIN'], minCount: 1, maxCount: 3 },
   BAT:          { name: 'コウモリ',       basePower: 8,   elements: ['WIND','DARK'], terrains: ['MOUNTAIN','FOREST'], minCount: 1, maxCount: 8 },
@@ -131,8 +131,8 @@ export async function completeCombat(
   monsterType: MonsterType,
   count: number = 1
 ): Promise<{ resultText: string; victory: boolean; canSkin: boolean }> {
-  const char = await sql<{ skillCombatGrowth: number; health: number; healthMax: number; equippedWeaponId: string | null }[]>`
-    SELECT skill_combat_growth, health, health_max, equipped_weapon_id FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ skillCombatGrowth: number; health: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null }[]>`
+    SELECT skill_combat_growth, health, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!char[0]) return { resultText: '戦闘結果を処理できませんでした。', victory: false, canSkin: false }
 
@@ -140,14 +140,16 @@ export async function completeCombat(
   const skill = char[0].skillCombatGrowth
   const totalPower = monster.basePower * count
 
-  // 武器ステータスと詳細スキルの取得
+  // 武器ステータスと属性情報の取得
   let weaponAtk = 0
   let weaponMag = 0
   let weaponCategory = 'WEAPON_UNARMED'
-  
+  let weaponElement = ''
+  let weaponElementValue = 0
+
   if (char[0].equippedWeaponId) {
-    const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number }[]>`
-      SELECT it.weapon_category, it.attack_power, it.magic_power 
+    const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number; subParameters: any }[]>`
+      SELECT it.weapon_category, it.attack_power, it.magic_power, it.sub_parameters
       FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedWeaponId}
@@ -156,43 +158,106 @@ export async function completeCombat(
       weaponCategory = w[0].weaponCategory || 'WEAPON_UNARMED'
       weaponAtk = w[0].attackPower || 0
       weaponMag = w[0].magicPower || 0
+      const sp = w[0].subParameters || {}
+      weaponElement = sp.elementalAttack || ''
+      weaponElementValue = sp.elementalAttackValue || 0
+    }
+  }
+
+  // 防具・装飾品の属性耐性取得
+  let armorElement = ''
+  let armorElementValue = 0
+  let accElement = ''
+  let accElementValue = 0
+
+  if (char[0].equippedArmorId) {
+    const a = await sql<{ subParameters: any }[]>`
+      SELECT it.sub_parameters FROM items i
+      JOIN item_templates it ON i.item_template_id = it.id
+      WHERE i.id = ${char[0].equippedArmorId}
+    `
+    if (a[0]) {
+      const sp = a[0].subParameters || {}
+      armorElement = sp.elementalResistance || ''
+      armorElementValue = sp.elementalResistanceValue || 0
+    }
+  }
+  if (char[0].equippedAccessoryId) {
+    const ac = await sql<{ subParameters: any }[]>`
+      SELECT it.sub_parameters FROM items i
+      JOIN item_templates it ON i.item_template_id = it.id
+      WHERE i.id = ${char[0].equippedAccessoryId}
+    `
+    if (ac[0]) {
+      const sp = ac[0].subParameters || {}
+      accElement = sp.elementalResistance || ''
+      accElementValue = sp.elementalResistanceValue || 0
     }
   }
 
   // 武器スキル・魔法スキルの補正値を取得
   const skills = await sql<{ exp: number }[]>`
-    SELECT exp FROM character_skills 
+    SELECT exp FROM character_skills
     WHERE character_id = ${characterId} AND (skill_category = ${weaponCategory} OR skill_category LIKE 'MAGIC_%')
   `
   let skillBonus = 0
   for (const s of skills) {
-    skillBonus += Math.floor(Math.sqrt(s.exp)) // 経験値の平方根をボーナスに（神級10000EXP = +100パワー）
+    skillBonus += Math.floor(Math.sqrt(s.exp))
   }
 
-  // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + スキル補正）
-  const playerPower = skill + weaponAtk + weaponMag + skillBonus + Math.random() * 30
+  // 魔物の出現時属性をランダム決定
+  const randomElement = monster.elements[Math.floor(Math.random() * monster.elements.length)] || ''
+  const elementNames: Record<string, string> = { FIRE: '炎', WATER: '水', WIND: '風', EARTH: '土', THUNDER: '雷', ICE: '氷', LIGHT: '光', DARK: '闇', POISON: '毒' }
+
+  // ===== 属性攻撃ボーナス計算 =====
+  // 武器の属性攻撃 or 装飾品の属性攻撃が魔物の属性と一致する場合ボーナス
+  let elementalAtkBonus = 0
+  let elementalAtkMsg = ''
+  if (randomElement && weaponElement === randomElement) {
+    elementalAtkBonus = weaponElementValue
+    elementalAtkMsg = `\n⚡ 属性一致！ 【${elementNames[randomElement]}属性攻撃】が刺さり +${elementalAtkBonus}の追加ダメージ！`
+  } else if (randomElement && accElement === randomElement) {
+    elementalAtkBonus = accElementValue
+    elementalAtkMsg = `\n⚡ 装飾品の属性が刺さった！ 【${elementNames[randomElement]}属性攻撃】+${elementalAtkBonus}の追加ダメージ！`
+  }
+
+  // ===== 属性耐性ボーナス計算 =====
+  // 防具 or 装飾品の属性耐性が魔物の属性と一致する場合、ダメージ軽減
+  let elementalResVal = 0
+  let elementalResMsg = ''
+  if (randomElement && armorElement === randomElement) {
+    elementalResVal = armorElementValue
+    elementalResMsg = `\n🛡️ 防具の属性耐性が機能！ 【${elementNames[randomElement]}耐性】でダメージ ${elementalResVal} 軽減！`
+  } else if (randomElement && accElement === randomElement && !elementalAtkMsg) {
+    // 装飾品は攻撃優先。耐性として使われるのは攻撃一致しない場合のみ
+    elementalResVal = accElementValue
+    elementalResMsg = `\n🛡️ 装飾品の属性耐性が機能！ 【${elementNames[randomElement]}耐性】でダメージ ${elementalResVal} 軽減！`
+  }
+
+  // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + スキル補正 + 属性ボーナス）
+  const playerPower = skill + weaponAtk + weaponMag + skillBonus + elementalAtkBonus + Math.random() * 30
   const monsterPower = totalPower + Math.random() * 10
   const victory = playerPower >= monsterPower * 0.5
-
-  const randomElement = monster.elements[Math.floor(Math.random() * monster.elements.length)] || '無'
-  const elementNames: Record<string, string> = { FIRE: '炎', WATER: '水', WIND: '風', EARTH: '土', THUNDER: '雷', ICE: '氷', LIGHT: '光', DARK: '闇', POISON: '毒' }
-  const elStr = elementNames[randomElement] ? `【${elementNames[randomElement]}属性】` : ''
+  const elStr = randomElement && elementNames[randomElement] ? `【${elementNames[randomElement]}属性】` : ''
   const countText = count > 1 ? `${count}体の` : ''
   const mName = `${elStr}${countText}${monster.name}`
   let battleLog = `【戦闘開始】 ${mName} が現れた！\n`
 
   let damageTaken = 0
-  let fatigueGained = 10 // 基本の疲労度
+  let fatigueGained = 10
 
   if (playerPower > monsterPower * 1.5) {
     battleLog += `▶ あなたの先制攻撃！ 圧倒的な力で一掃した！\n`
-    fatigueGained = 5 // 楽勝なら疲労軽減
+    fatigueGained = 5
   } else {
     battleLog += `▶ あなたの攻撃！ ${weaponCategory !== 'WEAPON_UNARMED' ? '武器の鋭い一撃！' : '素手による強烈な打撃！'}\n`
+    if (elementalAtkMsg) battleLog += elementalAtkMsg + '\n'
     if (monsterPower > playerPower * 0.7) {
-      // 相手の力が自分の70%以上あればダメージを受ける
-      damageTaken = Math.floor(monsterPower - (playerPower * 0.5))
-      if (damageTaken < 1) damageTaken = 1
+      let rawDamage = Math.floor(monsterPower - (playerPower * 0.5))
+      if (rawDamage < 1) rawDamage = 1
+      // 属性耐性でダメージ軽減
+      damageTaken = Math.max(0, rawDamage - elementalResVal)
+      if (elementalResMsg) battleLog += elementalResMsg + '\n'
       battleLog += `▶ ${monster.name}の反撃！ ${damageTaken}のダメージを受けた！\n`
       fatigueGained = 20
     } else {
@@ -252,34 +317,7 @@ export async function completeCombat(
       UPDATE characters SET strength_growth = strength_growth + 1 WHERE id = ${characterId}
     `
 
-    // ドロップアイテム処理（ハクスラ要素）
-    let dropMsg = ''
-    if (monster.dropItems.length > 0 && Math.random() < 0.15) { // 15%ドロップ
-      const dropName = monster.dropItems[Math.floor(Math.random() * monster.dropItems.length)]
-      if (dropName) {
-        const template = await sql<{ id: string; category: string }[]>`
-          SELECT id, category FROM item_templates WHERE name = ${dropName} LIMIT 1
-        `
-        if (template[0]) {
-          let meta: Record<string, unknown> = {}
-          if (template[0].category === 'WEAPON' || template[0].category === 'ARMOR') {
-            meta = generateHnsMetadata()
-          }
-          const metaJson = JSON.stringify(meta)
-          await sql`
-            INSERT INTO items (owner_character_id, item_template_id, quantity, metadata)
-            VALUES (${characterId}, ${template[0].id}, 1, ${metaJson}::jsonb)
-          `
-          const metaObj = meta as any
-          const fullName = metaObj.rarity && metaObj.rarity !== 'NORMAL'
-            ? `${metaObj.prefix || ''}${dropName}${metaObj.suffix || ''}`
-            : dropName
-          dropMsg = ` 戦利品: ${fullName} を手に入れた！`
-        }
-      }
-    }
-
-    battleLog += `\n【戦闘終了】 ${generateVictoryText(skill, monster.name, countText)}${dropMsg}`
+    battleLog += `\n【戦闘終了】 ${generateVictoryText(skill, monster.name, countText)}`
     return {
       resultText: battleLog,
       victory: true,

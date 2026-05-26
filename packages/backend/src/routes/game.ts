@@ -256,15 +256,16 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     const terrain = village[0]?.terrainType || 'PLAIN'
 
     // 現在の村の地形で出現する魔物だけに絞り込む
-    const monsterList = Object.entries(MONSTERS)
-      .filter(([, data]) => (data as any).terrains.includes(terrain))
+    type MData = { name: string; basePower: number; minCount: number; maxCount: number; elements: string[]; terrains: string[] }
+    const monsterList = (Object.entries(MONSTERS) as [string, MData][])
+      .filter(([, data]) => data.terrains.includes(terrain))
       .map(([key, data]) => ({
         id: key,
         name: data.name,
         basePower: data.basePower,
         minCount: data.minCount,
         maxCount: data.maxCount,
-        elements: (data as any).elements,
+        elements: data.elements,
       }))
     
     // 難易度順にソート
