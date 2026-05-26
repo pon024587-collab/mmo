@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "nodePackages.pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --no-frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm --filter frontend build"]
+
+[start]
+cmd = "node node_modules/.bin/vite preview --host --port $PORT"
