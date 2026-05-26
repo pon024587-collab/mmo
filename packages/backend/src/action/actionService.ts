@@ -14,7 +14,7 @@ let actionQueue: Queue | null = null
 
 function getActionQueue(): Queue {
   if (!actionQueue) {
-    actionQueue = new Queue(ACTION_COMPLETE_QUEUE, { connection: getRedis() })
+    actionQueue = new Queue(ACTION_COMPLETE_QUEUE, { connection: getRedis() as any })
   }
   return actionQueue
 }

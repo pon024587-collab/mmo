@@ -19,7 +19,7 @@ export const ACTION_COMPLETE_QUEUE = 'action-complete'
 let tickCount = 0
 
 export async function initWorldTickQueue(): Promise<Queue> {
-  const queue = new Queue(WORLD_TICK_QUEUE, { connection: getRedis() })
+  const queue = new Queue(WORLD_TICK_QUEUE, { connection: getRedis() as any })
   await queue.obliterate({ force: true }).catch(() => {})
   await queue.add('tick', {}, { repeat: { every: 60 * 60 * 1000 } })
   return queue
@@ -99,7 +99,7 @@ export function startWorldTickWorker(): Worker {
         console.error(`[World_Tick #${tickCount}] エラー:`, err)
       }
     },
-    { connection: getRedis(), concurrency: 1 }
+    { connection: getRedis() as any, concurrency: 1 }
   )
 
   worker.on('failed', (job, err) => {

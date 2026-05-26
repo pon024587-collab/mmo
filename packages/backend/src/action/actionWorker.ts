@@ -25,7 +25,7 @@ export function startActionWorker(): Worker {
       console.log(`[ActionWorker] 処理完了: ${actionId}`)
     },
     {
-      connection: getRedis(),
+      connection: getRedis() as any,
       concurrency: 10,
     }
   )
