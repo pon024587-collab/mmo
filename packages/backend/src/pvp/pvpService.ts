@@ -4,6 +4,7 @@
 import { sql } from '../db/client.js'
 import { registerAction } from '../action/actionService.js'
 import type { RegisterActionResult } from '../action/actionService.js'
+import { calcCombatStats, applyElementalAtk, applyElementalRes } from '../combat/combatStats.js'
 
 // ---- 衛兵遭遇イベント ----
 
@@ -32,24 +33,24 @@ export async function fightGuard(characterId: string): Promise<{
   victory: boolean
   resultText: string
 }> {
-  const char = await sql<{ skillCombatGrowth: number }[]>`
-    SELECT skill_combat_growth FROM characters WHERE id = ${characterId} LIMIT 1
-  `
-  const skill = char[0]?.skillCombatGrowth ?? 0
+  const stats = await calcCombatStats(characterId)
 
-  // 衛兵はかなり強い（スキル300相当）
-  const playerPower = skill + Math.random() * 20
+  // 衛兵は属性なし（純粋な力務）
+  const { finalPower: playerPower, msg: atkMsg } = applyElementalAtk(stats, '')
   const guardPower = GUARD_POWER + Math.random() * 50
-  const victory = playerPower >= guardPower * 0.6
+  const victory = (playerPower + Math.random() * 20) >= guardPower * 0.6
+
+  let log = `【衛兵との戦闘】 衛兵が大剤を持って正面から来る！\n`
+  log += atkMsg ? atkMsg + '\n' : ''
 
   if (victory) {
     // 勝利しても犯罪記録が増える
     await addBounty(characterId, 200, '衛兵への暴行')
-    return { victory: true, resultText: '衛兵を倒した。しかし、これで賞金首としての額が跳ね上がった。逃げるしかない。' }
+    return { victory: true, resultText: log + '衛兵を倒した。しかし、これで賞金首としての額が跳ね上がった。逃げるしかない。' }
   } else {
     // 敗北→拘束8時間
     await imprison(characterId, 8)
-    return { victory: false, resultText: '衛兵に敗れた。最低限の治療を受け、牢に入れられた。' }
+    return { victory: false, resultText: log + '衛兵に敗れた。最低限の治療を受け、牢に入れられた。' }
   }
 }
 
@@ -177,17 +178,31 @@ export async function completePvp(
   targetId: string,
   intent: 'KILL' | 'CAPTURE'
 ): Promise<string> {
-  const attacker = await sql<{ skillCombatGrowth: number }[]>`
-    SELECT skill_combat_growth FROM characters WHERE id = ${attackerId} LIMIT 1
+  const [atkStats, tgtStats] = await Promise.all([
+    calcCombatStats(attackerId),
+    calcCombatStats(targetId),
+  ])
+  const target = await sql<{ name: string; bountyAmount: number }[]>`
+    SELECT name, bounty_amount FROM characters WHERE id = ${targetId} LIMIT 1
   `
-  const target = await sql<{ skillCombatGrowth: number; name: string; bountyAmount: number }[]>`
-    SELECT skill_combat_growth, name, bounty_amount FROM characters WHERE id = ${targetId} LIMIT 1
-  `
-  if (!attacker[0] || !target[0]) return '戦闘結果を処理できませんでした。'
+  if (!target[0]) return '戦闘結果を処理できませんでした。'
 
-  const attackerPower = attacker[0].skillCombatGrowth + Math.random() * 30
-  const targetPower = target[0].skillCombatGrowth + Math.random() * 30
-  const victory = attackerPower > targetPower
+  // 攻撃者の属性を防御者の装備属性に照らし合わせ
+  const atkElement = atkStats.weaponElement || atkStats.accAtkElement || ''
+  const { finalPower: atkPower, msg: atkMsg } = applyElementalAtk(atkStats, tgtStats.armorElement || tgtStats.accResElement || '')
+  const { finalPower: tgtPower } = applyElementalAtk(tgtStats, atkElement)
+
+  // 防御者の属性耐性を適用して既に受けるダメージを大まかに計算
+  const rawDamage = Math.max(0, atkPower - tgtPower * 0.7)
+  const { finalDamage, msg: resMsg } = applyElementalRes(tgtStats, atkElement, Math.floor(rawDamage))
+
+  const attackerFinal = atkPower + Math.random() * 30
+  const targetFinal = tgtPower + Math.random() * 30
+  const victory = attackerFinal > targetFinal
+
+  let log = `【PvP】 ${target[0].name}との戦闘！\n`
+  if (atkMsg) log += atkMsg + '\n'
+  if (resMsg) log += resMsg + '\n'
 
   if (victory) {
     // 攻撃者に犯罪記録
@@ -196,7 +211,7 @@ export async function completePvp(
     if (intent === 'KILL') {
       // 対象を死亡させる
       await sql`UPDATE characters SET health = 0, updated_at = NOW() WHERE id = ${targetId}`
-      return `${target[0].name}を倒した。賞金首として額が上がった。`
+      return log + `${target[0].name}を倒した。賞金首としての額が上がった。`
     } else {
       // 対象を捕縛
       await sql`
