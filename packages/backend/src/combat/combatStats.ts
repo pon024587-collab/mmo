@@ -36,7 +36,7 @@ export async function calcCombatStats(characterId: string): Promise<CombatStats>
 
   if (char[0].equippedWeaponId) {
     const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number; subParameters: any }[]>`
-      SELECT it.weapon_category, it.attack_power, it.magic_power, it.sub_parameters
+      SELECT it.weapon_category, it.attack_power, it.magic_power, it.properties
       FROM items i JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedWeaponId}
     `
@@ -52,7 +52,7 @@ export async function calcCombatStats(characterId: string): Promise<CombatStats>
 
   if (char[0].equippedArmorId) {
     const a = await sql<{ subParameters: any }[]>`
-      SELECT it.sub_parameters FROM items i JOIN item_templates it ON i.item_template_id = it.id
+      SELECT it.properties FROM items i JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedArmorId}
     `
     if (a[0]) {
@@ -64,7 +64,7 @@ export async function calcCombatStats(characterId: string): Promise<CombatStats>
 
   if (char[0].equippedAccessoryId) {
     const ac = await sql<{ subParameters: any }[]>`
-      SELECT it.sub_parameters FROM items i JOIN item_templates it ON i.item_template_id = it.id
+      SELECT it.properties FROM items i JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedAccessoryId}
     `
     if (ac[0]) {

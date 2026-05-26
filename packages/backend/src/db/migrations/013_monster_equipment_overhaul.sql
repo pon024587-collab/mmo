@@ -7,7 +7,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'スライムの鋭牙', 'MATERIAL', 'スライムの稀少な部位。', 100, 1),
   (gen_random_uuid(), 'スライムの魔核', 'MATERIAL', 'スライムの体内にある幻の魔核。', 1000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'スライムの武器', 'WEAPON', 'WEAPON_SWORD', 'スライムの素材で作られた強力な武器。', 250, 5, '{"attack": 7, "elementalAttack": "WATER", "elementalAttackValue": 2}'::jsonb),
   (gen_random_uuid(), 'スライムの防具', 'ARMOR', NULL, 'スライムの素材で作られた堅牢な防具。', 250, 8, '{"defense": 6, "elementalResistance": "ICE", "elementalResistanceValue": 2}'::jsonb),
   (gen_random_uuid(), 'スライムの装飾', 'ACCESSORY', NULL, 'スライムの魔核を用いた装飾品。', 400, 1, '{"attack": 2, "defense": 2, "elementalAttack": "WATER", "elementalAttackValue": 1, "elementalResistance": "ICE", "elementalResistanceValue": 1}'::jsonb);
@@ -28,7 +28,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'コウモリの鋭牙', 'MATERIAL', 'コウモリの稀少な部位。', 160, 1),
   (gen_random_uuid(), 'コウモリの魔核', 'MATERIAL', 'コウモリの体内にある幻の魔核。', 1600, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'コウモリの武器', 'WEAPON', 'WEAPON_SWORD', 'コウモリの素材で作られた強力な武器。', 400, 5, '{"attack": 12, "elementalAttack": "WIND", "elementalAttackValue": 4}'::jsonb),
   (gen_random_uuid(), 'コウモリの防具', 'ARMOR', NULL, 'コウモリの素材で作られた堅牢な防具。', 400, 8, '{"defense": 9, "elementalResistance": "DARK", "elementalResistanceValue": 4}'::jsonb),
   (gen_random_uuid(), 'コウモリの装飾', 'ACCESSORY', NULL, 'コウモリの魔核を用いた装飾品。', 640, 1, '{"attack": 4, "defense": 3, "elementalAttack": "WIND", "elementalAttackValue": 1, "elementalResistance": "DARK", "elementalResistanceValue": 1}'::jsonb);
@@ -49,7 +49,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '大ネズミの鋭牙', 'MATERIAL', '大ネズミの稀少な部位。', 160, 1),
   (gen_random_uuid(), '大ネズミの魔核', 'MATERIAL', '大ネズミの体内にある幻の魔核。', 1600, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '大ネズミの武器', 'WEAPON', 'WEAPON_SWORD', '大ネズミの素材で作られた強力な武器。', 400, 5, '{"attack": 12, "elementalAttack": "EARTH", "elementalAttackValue": 4}'::jsonb),
   (gen_random_uuid(), '大ネズミの防具', 'ARMOR', NULL, '大ネズミの素材で作られた堅牢な防具。', 400, 8, '{"defense": 9, "elementalResistance": "DARK", "elementalResistanceValue": 4}'::jsonb),
   (gen_random_uuid(), '大ネズミの装飾', 'ACCESSORY', NULL, '大ネズミの魔核を用いた装飾品。', 640, 1, '{"attack": 4, "defense": 3, "elementalAttack": "EARTH", "elementalAttackValue": 1, "elementalResistance": "DARK", "elementalResistanceValue": 1}'::jsonb);
@@ -70,7 +70,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ゴブリンの鋭牙', 'MATERIAL', 'ゴブリンの稀少な部位。', 200, 1),
   (gen_random_uuid(), 'ゴブリンの魔核', 'MATERIAL', 'ゴブリンの体内にある幻の魔核。', 2000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ゴブリンの武器', 'WEAPON', 'WEAPON_SWORD', 'ゴブリンの素材で作られた強力な武器。', 500, 5, '{"attack": 15, "elementalAttack": "EARTH", "elementalAttackValue": 5}'::jsonb),
   (gen_random_uuid(), 'ゴブリンの防具', 'ARMOR', NULL, 'ゴブリンの素材で作られた堅牢な防具。', 500, 8, '{"defense": 12, "elementalResistance": "FIRE", "elementalResistanceValue": 5}'::jsonb),
   (gen_random_uuid(), 'ゴブリンの装飾', 'ACCESSORY', NULL, 'ゴブリンの魔核を用いた装飾品。', 800, 1, '{"attack": 5, "defense": 4, "elementalAttack": "EARTH", "elementalAttackValue": 2, "elementalResistance": "FIRE", "elementalResistanceValue": 2}'::jsonb);
@@ -91,7 +91,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'スケルトンの鋭牙', 'MATERIAL', 'スケルトンの稀少な部位。', 200, 1),
   (gen_random_uuid(), 'スケルトンの魔核', 'MATERIAL', 'スケルトンの体内にある幻の魔核。', 2000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'スケルトンの武器', 'WEAPON', 'WEAPON_SWORD', 'スケルトンの素材で作られた強力な武器。', 500, 5, '{"attack": 15, "elementalAttack": "DARK", "elementalAttackValue": 5}'::jsonb),
   (gen_random_uuid(), 'スケルトンの防具', 'ARMOR', NULL, 'スケルトンの素材で作られた堅牢な防具。', 500, 8, '{"defense": 12, "elementalResistance": "EARTH", "elementalResistanceValue": 5}'::jsonb),
   (gen_random_uuid(), 'スケルトンの装飾', 'ACCESSORY', NULL, 'スケルトンの魔核を用いた装飾品。', 800, 1, '{"attack": 5, "defense": 4, "elementalAttack": "DARK", "elementalAttackValue": 2, "elementalResistance": "EARTH", "elementalResistanceValue": 2}'::jsonb);
@@ -112,7 +112,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ゾンビの鋭牙', 'MATERIAL', 'ゾンビの稀少な部位。', 200, 1),
   (gen_random_uuid(), 'ゾンビの魔核', 'MATERIAL', 'ゾンビの体内にある幻の魔核。', 2000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ゾンビの武器', 'WEAPON', 'WEAPON_SWORD', 'ゾンビの素材で作られた強力な武器。', 500, 5, '{"attack": 15, "elementalAttack": "DARK", "elementalAttackValue": 5}'::jsonb),
   (gen_random_uuid(), 'ゾンビの防具', 'ARMOR', NULL, 'ゾンビの素材で作られた堅牢な防具。', 500, 8, '{"defense": 12, "elementalResistance": "WATER", "elementalResistanceValue": 5}'::jsonb),
   (gen_random_uuid(), 'ゾンビの装飾', 'ACCESSORY', NULL, 'ゾンビの魔核を用いた装飾品。', 800, 1, '{"attack": 5, "defense": 4, "elementalAttack": "DARK", "elementalAttackValue": 2, "elementalResistance": "WATER", "elementalResistanceValue": 2}'::jsonb);
@@ -133,7 +133,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '毒蜘蛛の鋭牙', 'MATERIAL', '毒蜘蛛の稀少な部位。', 240, 1),
   (gen_random_uuid(), '毒蜘蛛の魔核', 'MATERIAL', '毒蜘蛛の体内にある幻の魔核。', 2400, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '毒蜘蛛の武器', 'WEAPON', 'WEAPON_SWORD', '毒蜘蛛の素材で作られた強力な武器。', 600, 5, '{"attack": 18, "elementalAttack": "DARK", "elementalAttackValue": 6}'::jsonb),
   (gen_random_uuid(), '毒蜘蛛の防具', 'ARMOR', NULL, '毒蜘蛛の素材で作られた堅牢な防具。', 600, 8, '{"defense": 14, "elementalResistance": "EARTH", "elementalResistanceValue": 6}'::jsonb),
   (gen_random_uuid(), '毒蜘蛛の装飾', 'ACCESSORY', NULL, '毒蜘蛛の魔核を用いた装飾品。', 960, 1, '{"attack": 6, "defense": 4, "elementalAttack": "DARK", "elementalAttackValue": 2, "elementalResistance": "EARTH", "elementalResistanceValue": 2}'::jsonb);
@@ -154,7 +154,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'コボルトの鋭牙', 'MATERIAL', 'コボルトの稀少な部位。', 240, 1),
   (gen_random_uuid(), 'コボルトの魔核', 'MATERIAL', 'コボルトの体内にある幻の魔核。', 2400, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'コボルトの武器', 'WEAPON', 'WEAPON_SWORD', 'コボルトの素材で作られた強力な武器。', 600, 5, '{"attack": 18, "elementalAttack": "EARTH", "elementalAttackValue": 6}'::jsonb),
   (gen_random_uuid(), 'コボルトの防具', 'ARMOR', NULL, 'コボルトの素材で作られた堅牢な防具。', 600, 8, '{"defense": 14, "elementalResistance": "WIND", "elementalResistanceValue": 6}'::jsonb),
   (gen_random_uuid(), 'コボルトの装飾', 'ACCESSORY', NULL, 'コボルトの魔核を用いた装飾品。', 960, 1, '{"attack": 6, "defense": 4, "elementalAttack": "EARTH", "elementalAttackValue": 2, "elementalResistance": "WIND", "elementalResistanceValue": 2}'::jsonb);
@@ -175,7 +175,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ホブゴブリンの鋭牙', 'MATERIAL', 'ホブゴブリンの稀少な部位。', 260, 1),
   (gen_random_uuid(), 'ホブゴブリンの魔核', 'MATERIAL', 'ホブゴブリンの体内にある幻の魔核。', 2600, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ホブゴブリンの武器', 'WEAPON', 'WEAPON_SWORD', 'ホブゴブリンの素材で作られた強力な武器。', 650, 5, '{"attack": 19, "elementalAttack": "EARTH", "elementalAttackValue": 6}'::jsonb),
   (gen_random_uuid(), 'ホブゴブリンの防具', 'ARMOR', NULL, 'ホブゴブリンの素材で作られた堅牢な防具。', 650, 8, '{"defense": 15, "elementalResistance": "FIRE", "elementalResistanceValue": 6}'::jsonb),
   (gen_random_uuid(), 'ホブゴブリンの装飾', 'ACCESSORY', NULL, 'ホブゴブリンの魔核を用いた装飾品。', 1040, 1, '{"attack": 6, "defense": 5, "elementalAttack": "EARTH", "elementalAttackValue": 2, "elementalResistance": "FIRE", "elementalResistanceValue": 2}'::jsonb);
@@ -196,7 +196,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '狼の鋭牙', 'MATERIAL', '狼の稀少な部位。', 300, 1),
   (gen_random_uuid(), '狼の魔核', 'MATERIAL', '狼の体内にある幻の魔核。', 3000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '狼の武器', 'WEAPON', 'WEAPON_SWORD', '狼の素材で作られた強力な武器。', 750, 5, '{"attack": 22, "elementalAttack": "WIND", "elementalAttackValue": 7}'::jsonb),
   (gen_random_uuid(), '狼の防具', 'ARMOR', NULL, '狼の素材で作られた堅牢な防具。', 750, 8, '{"defense": 18, "elementalResistance": "ICE", "elementalResistanceValue": 7}'::jsonb),
   (gen_random_uuid(), '狼の装飾', 'ACCESSORY', NULL, '狼の魔核を用いた装飾品。', 1200, 1, '{"attack": 7, "defense": 6, "elementalAttack": "WIND", "elementalAttackValue": 3, "elementalResistance": "ICE", "elementalResistanceValue": 3}'::jsonb);
@@ -217,7 +217,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'グレムリンの鋭牙', 'MATERIAL', 'グレムリンの稀少な部位。', 360, 1),
   (gen_random_uuid(), 'グレムリンの魔核', 'MATERIAL', 'グレムリンの体内にある幻の魔核。', 3600, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'グレムリンの武器', 'WEAPON', 'WEAPON_SWORD', 'グレムリンの素材で作られた強力な武器。', 900, 5, '{"attack": 27, "elementalAttack": "THUNDER", "elementalAttackValue": 9}'::jsonb),
   (gen_random_uuid(), 'グレムリンの防具', 'ARMOR', NULL, 'グレムリンの素材で作られた堅牢な防具。', 900, 8, '{"defense": 21, "elementalResistance": "WIND", "elementalResistanceValue": 9}'::jsonb),
   (gen_random_uuid(), 'グレムリンの装飾', 'ACCESSORY', NULL, 'グレムリンの魔核を用いた装飾品。', 1440, 1, '{"attack": 9, "defense": 7, "elementalAttack": "THUNDER", "elementalAttackValue": 3, "elementalResistance": "WIND", "elementalResistanceValue": 3}'::jsonb);
@@ -238,7 +238,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ハーピーの鋭牙', 'MATERIAL', 'ハーピーの稀少な部位。', 400, 1),
   (gen_random_uuid(), 'ハーピーの魔核', 'MATERIAL', 'ハーピーの体内にある幻の魔核。', 4000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ハーピーの武器', 'WEAPON', 'WEAPON_SWORD', 'ハーピーの素材で作られた強力な武器。', 1000, 5, '{"attack": 30, "elementalAttack": "WIND", "elementalAttackValue": 10}'::jsonb),
   (gen_random_uuid(), 'ハーピーの防具', 'ARMOR', NULL, 'ハーピーの素材で作られた堅牢な防具。', 1000, 8, '{"defense": 24, "elementalResistance": "THUNDER", "elementalResistanceValue": 10}'::jsonb),
   (gen_random_uuid(), 'ハーピーの装飾', 'ACCESSORY', NULL, 'ハーピーの魔核を用いた装飾品。', 1600, 1, '{"attack": 10, "defense": 8, "elementalAttack": "WIND", "elementalAttackValue": 4, "elementalResistance": "THUNDER", "elementalResistanceValue": 4}'::jsonb);
@@ -259,7 +259,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '盗賊の鋭牙', 'MATERIAL', '盗賊の稀少な部位。', 400, 1),
   (gen_random_uuid(), '盗賊の魔核', 'MATERIAL', '盗賊の体内にある幻の魔核。', 4000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '盗賊の武器', 'WEAPON', 'WEAPON_SWORD', '盗賊の素材で作られた強力な武器。', 1000, 5, '{"attack": 30, "elementalAttack": "DARK", "elementalAttackValue": 10}'::jsonb),
   (gen_random_uuid(), '盗賊の防具', 'ARMOR', NULL, '盗賊の素材で作られた堅牢な防具。', 1000, 8, '{"defense": 24, "elementalResistance": "EARTH", "elementalResistanceValue": 10}'::jsonb),
   (gen_random_uuid(), '盗賊の装飾', 'ACCESSORY', NULL, '盗賊の魔核を用いた装飾品。', 1600, 1, '{"attack": 10, "defense": 8, "elementalAttack": "DARK", "elementalAttackValue": 4, "elementalResistance": "EARTH", "elementalResistanceValue": 4}'::jsonb);
@@ -280,7 +280,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'リザードマンの鋭牙', 'MATERIAL', 'リザードマンの稀少な部位。', 440, 1),
   (gen_random_uuid(), 'リザードマンの魔核', 'MATERIAL', 'リザードマンの体内にある幻の魔核。', 4400, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'リザードマンの武器', 'WEAPON', 'WEAPON_SWORD', 'リザードマンの素材で作られた強力な武器。', 1100, 5, '{"attack": 33, "elementalAttack": "WATER", "elementalAttackValue": 11}'::jsonb),
   (gen_random_uuid(), 'リザードマンの防具', 'ARMOR', NULL, 'リザードマンの素材で作られた堅牢な防具。', 1100, 8, '{"defense": 26, "elementalResistance": "EARTH", "elementalResistanceValue": 11}'::jsonb),
   (gen_random_uuid(), 'リザードマンの装飾', 'ACCESSORY', NULL, 'リザードマンの魔核を用いた装飾品。', 1760, 1, '{"attack": 11, "defense": 8, "elementalAttack": "WATER", "elementalAttackValue": 4, "elementalResistance": "EARTH", "elementalResistanceValue": 4}'::jsonb);
@@ -301,7 +301,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ミイラの鋭牙', 'MATERIAL', 'ミイラの稀少な部位。', 440, 1),
   (gen_random_uuid(), 'ミイラの魔核', 'MATERIAL', 'ミイラの体内にある幻の魔核。', 4400, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ミイラの武器', 'WEAPON', 'WEAPON_SWORD', 'ミイラの素材で作られた強力な武器。', 1100, 5, '{"attack": 33, "elementalAttack": "DARK", "elementalAttackValue": 11}'::jsonb),
   (gen_random_uuid(), 'ミイラの防具', 'ARMOR', NULL, 'ミイラの素材で作られた堅牢な防具。', 1100, 8, '{"defense": 26, "elementalResistance": "EARTH", "elementalResistanceValue": 11}'::jsonb),
   (gen_random_uuid(), 'ミイラの装飾', 'ACCESSORY', NULL, 'ミイラの魔核を用いた装飾品。', 1760, 1, '{"attack": 11, "defense": 8, "elementalAttack": "DARK", "elementalAttackValue": 4, "elementalResistance": "EARTH", "elementalResistanceValue": 4}'::jsonb);
@@ -322,7 +322,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'オークの鋭牙', 'MATERIAL', 'オークの稀少な部位。', 500, 1),
   (gen_random_uuid(), 'オークの魔核', 'MATERIAL', 'オークの体内にある幻の魔核。', 5000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'オークの武器', 'WEAPON', 'WEAPON_SWORD', 'オークの素材で作られた強力な武器。', 1250, 5, '{"attack": 37, "elementalAttack": "EARTH", "elementalAttackValue": 12}'::jsonb),
   (gen_random_uuid(), 'オークの防具', 'ARMOR', NULL, 'オークの素材で作られた堅牢な防具。', 1250, 8, '{"defense": 30, "elementalResistance": "FIRE", "elementalResistanceValue": 12}'::jsonb),
   (gen_random_uuid(), 'オークの装飾', 'ACCESSORY', NULL, 'オークの魔核を用いた装飾品。', 2000, 1, '{"attack": 12, "defense": 10, "elementalAttack": "EARTH", "elementalAttackValue": 5, "elementalResistance": "FIRE", "elementalResistanceValue": 5}'::jsonb);
@@ -343,7 +343,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '大蛇の鋭牙', 'MATERIAL', '大蛇の稀少な部位。', 500, 1),
   (gen_random_uuid(), '大蛇の魔核', 'MATERIAL', '大蛇の体内にある幻の魔核。', 5000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '大蛇の武器', 'WEAPON', 'WEAPON_SWORD', '大蛇の素材で作られた強力な武器。', 1250, 5, '{"attack": 37, "elementalAttack": "WATER", "elementalAttackValue": 12}'::jsonb),
   (gen_random_uuid(), '大蛇の防具', 'ARMOR', NULL, '大蛇の素材で作られた堅牢な防具。', 1250, 8, '{"defense": 30, "elementalResistance": "DARK", "elementalResistanceValue": 12}'::jsonb),
   (gen_random_uuid(), '大蛇の装飾', 'ACCESSORY', NULL, '大蛇の魔核を用いた装飾品。', 2000, 1, '{"attack": 12, "defense": 10, "elementalAttack": "WATER", "elementalAttackValue": 5, "elementalResistance": "DARK", "elementalResistanceValue": 5}'::jsonb);
@@ -364,7 +364,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '魔犬の鋭牙', 'MATERIAL', '魔犬の稀少な部位。', 560, 1),
   (gen_random_uuid(), '魔犬の魔核', 'MATERIAL', '魔犬の体内にある幻の魔核。', 5600, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '魔犬の武器', 'WEAPON', 'WEAPON_SWORD', '魔犬の素材で作られた強力な武器。', 1400, 5, '{"attack": 42, "elementalAttack": "FIRE", "elementalAttackValue": 14}'::jsonb),
   (gen_random_uuid(), '魔犬の防具', 'ARMOR', NULL, '魔犬の素材で作られた堅牢な防具。', 1400, 8, '{"defense": 33, "elementalResistance": "DARK", "elementalResistanceValue": 14}'::jsonb),
   (gen_random_uuid(), '魔犬の装飾', 'ACCESSORY', NULL, '魔犬の魔核を用いた装飾品。', 2240, 1, '{"attack": 14, "defense": 11, "elementalAttack": "FIRE", "elementalAttackValue": 5, "elementalResistance": "DARK", "elementalResistanceValue": 5}'::jsonb);
@@ -385,7 +385,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'アンデッドの鋭牙', 'MATERIAL', 'アンデッドの稀少な部位。', 600, 1),
   (gen_random_uuid(), 'アンデッドの魔核', 'MATERIAL', 'アンデッドの体内にある幻の魔核。', 6000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'アンデッドの武器', 'WEAPON', 'WEAPON_SWORD', 'アンデッドの素材で作られた強力な武器。', 1500, 5, '{"attack": 45, "elementalAttack": "DARK", "elementalAttackValue": 15}'::jsonb),
   (gen_random_uuid(), 'アンデッドの防具', 'ARMOR', NULL, 'アンデッドの素材で作られた堅牢な防具。', 1500, 8, '{"defense": 36, "elementalResistance": "ICE", "elementalResistanceValue": 15}'::jsonb),
   (gen_random_uuid(), 'アンデッドの装飾', 'ACCESSORY', NULL, 'アンデッドの魔核を用いた装飾品。', 2400, 1, '{"attack": 15, "defense": 12, "elementalAttack": "DARK", "elementalAttackValue": 6, "elementalResistance": "ICE", "elementalResistanceValue": 6}'::jsonb);
@@ -406,7 +406,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'オーク戦士の鋭牙', 'MATERIAL', 'オーク戦士の稀少な部位。', 600, 1),
   (gen_random_uuid(), 'オーク戦士の魔核', 'MATERIAL', 'オーク戦士の体内にある幻の魔核。', 6000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'オーク戦士の武器', 'WEAPON', 'WEAPON_SWORD', 'オーク戦士の素材で作られた強力な武器。', 1500, 5, '{"attack": 45, "elementalAttack": "EARTH", "elementalAttackValue": 15}'::jsonb),
   (gen_random_uuid(), 'オーク戦士の防具', 'ARMOR', NULL, 'オーク戦士の素材で作られた堅牢な防具。', 1500, 8, '{"defense": 36, "elementalResistance": "FIRE", "elementalResistanceValue": 15}'::jsonb),
   (gen_random_uuid(), 'オーク戦士の装飾', 'ACCESSORY', NULL, 'オーク戦士の魔核を用いた装飾品。', 2400, 1, '{"attack": 15, "defense": 12, "elementalAttack": "EARTH", "elementalAttackValue": 6, "elementalResistance": "FIRE", "elementalResistanceValue": 6}'::jsonb);
@@ -427,7 +427,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ダークエルフの鋭牙', 'MATERIAL', 'ダークエルフの稀少な部位。', 700, 1),
   (gen_random_uuid(), 'ダークエルフの魔核', 'MATERIAL', 'ダークエルフの体内にある幻の魔核。', 7000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ダークエルフの武器', 'WEAPON', 'WEAPON_SWORD', 'ダークエルフの素材で作られた強力な武器。', 1750, 5, '{"attack": 52, "elementalAttack": "DARK", "elementalAttackValue": 17}'::jsonb),
   (gen_random_uuid(), 'ダークエルフの防具', 'ARMOR', NULL, 'ダークエルフの素材で作られた堅牢な防具。', 1750, 8, '{"defense": 42, "elementalResistance": "WIND", "elementalResistanceValue": 17}'::jsonb),
   (gen_random_uuid(), 'ダークエルフの装飾', 'ACCESSORY', NULL, 'ダークエルフの魔核を用いた装飾品。', 2800, 1, '{"attack": 17, "defense": 14, "elementalAttack": "DARK", "elementalAttackValue": 7, "elementalResistance": "WIND", "elementalResistanceValue": 7}'::jsonb);
@@ -448,7 +448,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'トロルの鋭牙', 'MATERIAL', 'トロルの稀少な部位。', 800, 1),
   (gen_random_uuid(), 'トロルの魔核', 'MATERIAL', 'トロルの体内にある幻の魔核。', 8000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'トロルの武器', 'WEAPON', 'WEAPON_SWORD', 'トロルの素材で作られた強力な武器。', 2000, 5, '{"attack": 60, "elementalAttack": "EARTH", "elementalAttackValue": 20}'::jsonb),
   (gen_random_uuid(), 'トロルの防具', 'ARMOR', NULL, 'トロルの素材で作られた堅牢な防具。', 2000, 8, '{"defense": 48, "elementalResistance": "WATER", "elementalResistanceValue": 20}'::jsonb),
   (gen_random_uuid(), 'トロルの装飾', 'ACCESSORY', NULL, 'トロルの魔核を用いた装飾品。', 3200, 1, '{"attack": 20, "defense": 16, "elementalAttack": "EARTH", "elementalAttackValue": 8, "elementalResistance": "WATER", "elementalResistanceValue": 8}'::jsonb);
@@ -469,7 +469,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ゾンビナイトの鋭牙', 'MATERIAL', 'ゾンビナイトの稀少な部位。', 800, 1),
   (gen_random_uuid(), 'ゾンビナイトの魔核', 'MATERIAL', 'ゾンビナイトの体内にある幻の魔核。', 8000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ゾンビナイトの武器', 'WEAPON', 'WEAPON_SWORD', 'ゾンビナイトの素材で作られた強力な武器。', 2000, 5, '{"attack": 60, "elementalAttack": "DARK", "elementalAttackValue": 20}'::jsonb),
   (gen_random_uuid(), 'ゾンビナイトの防具', 'ARMOR', NULL, 'ゾンビナイトの素材で作られた堅牢な防具。', 2000, 8, '{"defense": 48, "elementalResistance": "ICE", "elementalResistanceValue": 20}'::jsonb),
   (gen_random_uuid(), 'ゾンビナイトの装飾', 'ACCESSORY', NULL, 'ゾンビナイトの魔核を用いた装飾品。', 3200, 1, '{"attack": 20, "defense": 16, "elementalAttack": "DARK", "elementalAttackValue": 8, "elementalResistance": "ICE", "elementalResistanceValue": 8}'::jsonb);
@@ -490,7 +490,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ガーゴイルの鋭牙', 'MATERIAL', 'ガーゴイルの稀少な部位。', 840, 1),
   (gen_random_uuid(), 'ガーゴイルの魔核', 'MATERIAL', 'ガーゴイルの体内にある幻の魔核。', 8400, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ガーゴイルの武器', 'WEAPON', 'WEAPON_SWORD', 'ガーゴイルの素材で作られた強力な武器。', 2100, 5, '{"attack": 63, "elementalAttack": "EARTH", "elementalAttackValue": 21}'::jsonb),
   (gen_random_uuid(), 'ガーゴイルの防具', 'ARMOR', NULL, 'ガーゴイルの素材で作られた堅牢な防具。', 2100, 8, '{"defense": 50, "elementalResistance": "WIND", "elementalResistanceValue": 21}'::jsonb),
   (gen_random_uuid(), 'ガーゴイルの装飾', 'ACCESSORY', NULL, 'ガーゴイルの魔核を用いた装飾品。', 3360, 1, '{"attack": 21, "defense": 16, "elementalAttack": "EARTH", "elementalAttackValue": 8, "elementalResistance": "WIND", "elementalResistanceValue": 8}'::jsonb);
@@ -511,7 +511,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'グリフィンの鋭牙', 'MATERIAL', 'グリフィンの稀少な部位。', 900, 1),
   (gen_random_uuid(), 'グリフィンの魔核', 'MATERIAL', 'グリフィンの体内にある幻の魔核。', 9000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'グリフィンの武器', 'WEAPON', 'WEAPON_SWORD', 'グリフィンの素材で作られた強力な武器。', 2250, 5, '{"attack": 67, "elementalAttack": "WIND", "elementalAttackValue": 22}'::jsonb),
   (gen_random_uuid(), 'グリフィンの防具', 'ARMOR', NULL, 'グリフィンの素材で作られた堅牢な防具。', 2250, 8, '{"defense": 54, "elementalResistance": "THUNDER", "elementalResistanceValue": 22}'::jsonb),
   (gen_random_uuid(), 'グリフィンの装飾', 'ACCESSORY', NULL, 'グリフィンの魔核を用いた装飾品。', 3600, 1, '{"attack": 22, "defense": 18, "elementalAttack": "WIND", "elementalAttackValue": 9, "elementalResistance": "THUNDER", "elementalResistanceValue": 9}'::jsonb);
@@ -532,7 +532,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'オーガの鋭牙', 'MATERIAL', 'オーガの稀少な部位。', 900, 1),
   (gen_random_uuid(), 'オーガの魔核', 'MATERIAL', 'オーガの体内にある幻の魔核。', 9000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'オーガの武器', 'WEAPON', 'WEAPON_SWORD', 'オーガの素材で作られた強力な武器。', 2250, 5, '{"attack": 67, "elementalAttack": "EARTH", "elementalAttackValue": 22}'::jsonb),
   (gen_random_uuid(), 'オーガの防具', 'ARMOR', NULL, 'オーガの素材で作られた堅牢な防具。', 2250, 8, '{"defense": 54, "elementalResistance": "FIRE", "elementalResistanceValue": 22}'::jsonb),
   (gen_random_uuid(), 'オーガの装飾', 'ACCESSORY', NULL, 'オーガの魔核を用いた装飾品。', 3600, 1, '{"attack": 22, "defense": 18, "elementalAttack": "EARTH", "elementalAttackValue": 9, "elementalResistance": "FIRE", "elementalResistanceValue": 9}'::jsonb);
@@ -553,7 +553,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '闇魔法使いの鋭牙', 'MATERIAL', '闇魔法使いの稀少な部位。', 900, 1),
   (gen_random_uuid(), '闇魔法使いの魔核', 'MATERIAL', '闇魔法使いの体内にある幻の魔核。', 9000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '闇魔法使いの武器', 'WEAPON', 'WEAPON_SWORD', '闇魔法使いの素材で作られた強力な武器。', 2250, 5, '{"attack": 67, "elementalAttack": "DARK", "elementalAttackValue": 22}'::jsonb),
   (gen_random_uuid(), '闇魔法使いの防具', 'ARMOR', NULL, '闇魔法使いの素材で作られた堅牢な防具。', 2250, 8, '{"defense": 54, "elementalResistance": "FIRE", "elementalResistanceValue": 22}'::jsonb),
   (gen_random_uuid(), '闇魔法使いの装飾', 'ACCESSORY', NULL, '闇魔法使いの魔核を用いた装飾品。', 3600, 1, '{"attack": 22, "defense": 18, "elementalAttack": "DARK", "elementalAttackValue": 9, "elementalResistance": "FIRE", "elementalResistanceValue": 9}'::jsonb);
@@ -574,7 +574,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'バジリスクの鋭牙', 'MATERIAL', 'バジリスクの稀少な部位。', 960, 1),
   (gen_random_uuid(), 'バジリスクの魔核', 'MATERIAL', 'バジリスクの体内にある幻の魔核。', 9600, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'バジリスクの武器', 'WEAPON', 'WEAPON_SWORD', 'バジリスクの素材で作られた強力な武器。', 2400, 5, '{"attack": 72, "elementalAttack": "EARTH", "elementalAttackValue": 24}'::jsonb),
   (gen_random_uuid(), 'バジリスクの防具', 'ARMOR', NULL, 'バジリスクの素材で作られた堅牢な防具。', 2400, 8, '{"defense": 57, "elementalResistance": "POISON", "elementalResistanceValue": 24}'::jsonb),
   (gen_random_uuid(), 'バジリスクの装飾', 'ACCESSORY', NULL, 'バジリスクの魔核を用いた装飾品。', 3840, 1, '{"attack": 24, "defense": 19, "elementalAttack": "EARTH", "elementalAttackValue": 9, "elementalResistance": "POISON", "elementalResistanceValue": 9}'::jsonb);
@@ -595,7 +595,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ウェアウルフの鋭牙', 'MATERIAL', 'ウェアウルフの稀少な部位。', 960, 1),
   (gen_random_uuid(), 'ウェアウルフの魔核', 'MATERIAL', 'ウェアウルフの体内にある幻の魔核。', 9600, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ウェアウルフの武器', 'WEAPON', 'WEAPON_SWORD', 'ウェアウルフの素材で作られた強力な武器。', 2400, 5, '{"attack": 72, "elementalAttack": "WIND", "elementalAttackValue": 24}'::jsonb),
   (gen_random_uuid(), 'ウェアウルフの防具', 'ARMOR', NULL, 'ウェアウルフの素材で作られた堅牢な防具。', 2400, 8, '{"defense": 57, "elementalResistance": "DARK", "elementalResistanceValue": 24}'::jsonb),
   (gen_random_uuid(), 'ウェアウルフの装飾', 'ACCESSORY', NULL, 'ウェアウルフの魔核を用いた装飾品。', 3840, 1, '{"attack": 24, "defense": 19, "elementalAttack": "WIND", "elementalAttackValue": 9, "elementalResistance": "DARK", "elementalResistanceValue": 9}'::jsonb);
@@ -616,7 +616,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'サイクロプスの鋭牙', 'MATERIAL', 'サイクロプスの稀少な部位。', 1000, 1),
   (gen_random_uuid(), 'サイクロプスの魔核', 'MATERIAL', 'サイクロプスの体内にある幻の魔核。', 10000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'サイクロプスの武器', 'WEAPON', 'WEAPON_SWORD', 'サイクロプスの素材で作られた強力な武器。', 2500, 5, '{"attack": 75, "elementalAttack": "EARTH", "elementalAttackValue": 25}'::jsonb),
   (gen_random_uuid(), 'サイクロプスの防具', 'ARMOR', NULL, 'サイクロプスの素材で作られた堅牢な防具。', 2500, 8, '{"defense": 60, "elementalResistance": "THUNDER", "elementalResistanceValue": 25}'::jsonb),
   (gen_random_uuid(), 'サイクロプスの装飾', 'ACCESSORY', NULL, 'サイクロプスの魔核を用いた装飾品。', 4000, 1, '{"attack": 25, "defense": 20, "elementalAttack": "EARTH", "elementalAttackValue": 10, "elementalResistance": "THUNDER", "elementalResistanceValue": 10}'::jsonb);
@@ -637,7 +637,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ヴァンパイアの鋭牙', 'MATERIAL', 'ヴァンパイアの稀少な部位。', 1000, 1),
   (gen_random_uuid(), 'ヴァンパイアの魔核', 'MATERIAL', 'ヴァンパイアの体内にある幻の魔核。', 10000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ヴァンパイアの武器', 'WEAPON', 'WEAPON_SWORD', 'ヴァンパイアの素材で作られた強力な武器。', 2500, 5, '{"attack": 75, "elementalAttack": "DARK", "elementalAttackValue": 25}'::jsonb),
   (gen_random_uuid(), 'ヴァンパイアの防具', 'ARMOR', NULL, 'ヴァンパイアの素材で作られた堅牢な防具。', 2500, 8, '{"defense": 60, "elementalResistance": "ICE", "elementalResistanceValue": 25}'::jsonb),
   (gen_random_uuid(), 'ヴァンパイアの装飾', 'ACCESSORY', NULL, 'ヴァンパイアの魔核を用いた装飾品。', 4000, 1, '{"attack": 25, "defense": 20, "elementalAttack": "DARK", "elementalAttackValue": 10, "elementalResistance": "ICE", "elementalResistanceValue": 10}'::jsonb);
@@ -658,7 +658,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ドッペルゲンガーの鋭牙', 'MATERIAL', 'ドッペルゲンガーの稀少な部位。', 1040, 1),
   (gen_random_uuid(), 'ドッペルゲンガーの魔核', 'MATERIAL', 'ドッペルゲンガーの体内にある幻の魔核。', 10400, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ドッペルゲンガーの武器', 'WEAPON', 'WEAPON_SWORD', 'ドッペルゲンガーの素材で作られた強力な武器。', 2600, 5, '{"attack": 78, "elementalAttack": "DARK", "elementalAttackValue": 26}'::jsonb),
   (gen_random_uuid(), 'ドッペルゲンガーの防具', 'ARMOR', NULL, 'ドッペルゲンガーの素材で作られた堅牢な防具。', 2600, 8, '{"defense": 62, "elementalResistance": "LIGHT", "elementalResistanceValue": 26}'::jsonb),
   (gen_random_uuid(), 'ドッペルゲンガーの装飾', 'ACCESSORY', NULL, 'ドッペルゲンガーの魔核を用いた装飾品。', 4160, 1, '{"attack": 26, "defense": 20, "elementalAttack": "DARK", "elementalAttackValue": 10, "elementalResistance": "LIGHT", "elementalResistanceValue": 10}'::jsonb);
@@ -679,7 +679,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '暗黒騎士の鋭牙', 'MATERIAL', '暗黒騎士の稀少な部位。', 1200, 1),
   (gen_random_uuid(), '暗黒騎士の魔核', 'MATERIAL', '暗黒騎士の体内にある幻の魔核。', 12000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '暗黒騎士の武器', 'WEAPON', 'WEAPON_SWORD', '暗黒騎士の素材で作られた強力な武器。', 3000, 5, '{"attack": 90, "elementalAttack": "DARK", "elementalAttackValue": 30}'::jsonb),
   (gen_random_uuid(), '暗黒騎士の防具', 'ARMOR', NULL, '暗黒騎士の素材で作られた堅牢な防具。', 3000, 8, '{"defense": 72, "elementalResistance": "FIRE", "elementalResistanceValue": 30}'::jsonb),
   (gen_random_uuid(), '暗黒騎士の装飾', 'ACCESSORY', NULL, '暗黒騎士の魔核を用いた装飾品。', 4800, 1, '{"attack": 30, "defense": 24, "elementalAttack": "DARK", "elementalAttackValue": 12, "elementalResistance": "FIRE", "elementalResistanceValue": 12}'::jsonb);
@@ -700,7 +700,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'フェニックスの鋭牙', 'MATERIAL', 'フェニックスの稀少な部位。', 1400, 1),
   (gen_random_uuid(), 'フェニックスの魔核', 'MATERIAL', 'フェニックスの体内にある幻の魔核。', 14000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'フェニックスの武器', 'WEAPON', 'WEAPON_SWORD', 'フェニックスの素材で作られた強力な武器。', 3500, 5, '{"attack": 105, "elementalAttack": "FIRE", "elementalAttackValue": 35}'::jsonb),
   (gen_random_uuid(), 'フェニックスの防具', 'ARMOR', NULL, 'フェニックスの素材で作られた堅牢な防具。', 3500, 8, '{"defense": 84, "elementalResistance": "LIGHT", "elementalResistanceValue": 35}'::jsonb),
   (gen_random_uuid(), 'フェニックスの装飾', 'ACCESSORY', NULL, 'フェニックスの魔核を用いた装飾品。', 5600, 1, '{"attack": 35, "defense": 28, "elementalAttack": "FIRE", "elementalAttackValue": 14, "elementalResistance": "LIGHT", "elementalResistanceValue": 14}'::jsonb);
@@ -721,7 +721,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'リッチの鋭牙', 'MATERIAL', 'リッチの稀少な部位。', 1600, 1),
   (gen_random_uuid(), 'リッチの魔核', 'MATERIAL', 'リッチの体内にある幻の魔核。', 16000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'リッチの武器', 'WEAPON', 'WEAPON_SWORD', 'リッチの素材で作られた強力な武器。', 4000, 5, '{"attack": 120, "elementalAttack": "DARK", "elementalAttackValue": 40}'::jsonb),
   (gen_random_uuid(), 'リッチの防具', 'ARMOR', NULL, 'リッチの素材で作られた堅牢な防具。', 4000, 8, '{"defense": 96, "elementalResistance": "ICE", "elementalResistanceValue": 40}'::jsonb),
   (gen_random_uuid(), 'リッチの装飾', 'ACCESSORY', NULL, 'リッチの魔核を用いた装飾品。', 6400, 1, '{"attack": 40, "defense": 32, "elementalAttack": "DARK", "elementalAttackValue": 16, "elementalResistance": "ICE", "elementalResistanceValue": 16}'::jsonb);
@@ -742,7 +742,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ヒュドラの鋭牙', 'MATERIAL', 'ヒュドラの稀少な部位。', 1500, 1),
   (gen_random_uuid(), 'ヒュドラの魔核', 'MATERIAL', 'ヒュドラの体内にある幻の魔核。', 15000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ヒュドラの武器', 'WEAPON', 'WEAPON_SWORD', 'ヒュドラの素材で作られた強力な武器。', 3750, 5, '{"attack": 112, "elementalAttack": "WATER", "elementalAttackValue": 37}'::jsonb),
   (gen_random_uuid(), 'ヒュドラの防具', 'ARMOR', NULL, 'ヒュドラの素材で作られた堅牢な防具。', 3750, 8, '{"defense": 90, "elementalResistance": "DARK", "elementalResistanceValue": 37}'::jsonb),
   (gen_random_uuid(), 'ヒュドラの装飾', 'ACCESSORY', NULL, 'ヒュドラの魔核を用いた装飾品。', 6000, 1, '{"attack": 37, "defense": 30, "elementalAttack": "WATER", "elementalAttackValue": 15, "elementalResistance": "DARK", "elementalResistanceValue": 15}'::jsonb);
@@ -763,7 +763,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ミノタウロスの鋭牙', 'MATERIAL', 'ミノタウロスの稀少な部位。', 1400, 1),
   (gen_random_uuid(), 'ミノタウロスの魔核', 'MATERIAL', 'ミノタウロスの体内にある幻の魔核。', 14000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ミノタウロスの武器', 'WEAPON', 'WEAPON_SWORD', 'ミノタウロスの素材で作られた強力な武器。', 3500, 5, '{"attack": 105, "elementalAttack": "EARTH", "elementalAttackValue": 35}'::jsonb),
   (gen_random_uuid(), 'ミノタウロスの防具', 'ARMOR', NULL, 'ミノタウロスの素材で作られた堅牢な防具。', 3500, 8, '{"defense": 84, "elementalResistance": "FIRE", "elementalResistanceValue": 35}'::jsonb),
   (gen_random_uuid(), 'ミノタウロスの装飾', 'ACCESSORY', NULL, 'ミノタウロスの魔核を用いた装飾品。', 5600, 1, '{"attack": 35, "defense": 28, "elementalAttack": "EARTH", "elementalAttackValue": 14, "elementalResistance": "FIRE", "elementalResistanceValue": 14}'::jsonb);
@@ -784,7 +784,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ドラゴンの鋭牙', 'MATERIAL', 'ドラゴンの稀少な部位。', 2000, 1),
   (gen_random_uuid(), 'ドラゴンの魔核', 'MATERIAL', 'ドラゴンの体内にある幻の魔核。', 20000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ドラゴンの武器', 'WEAPON', 'WEAPON_SWORD', 'ドラゴンの素材で作られた強力な武器。', 5000, 5, '{"attack": 150, "elementalAttack": "FIRE", "elementalAttackValue": 50}'::jsonb),
   (gen_random_uuid(), 'ドラゴンの防具', 'ARMOR', NULL, 'ドラゴンの素材で作られた堅牢な防具。', 5000, 8, '{"defense": 120, "elementalResistance": "WIND", "elementalResistanceValue": 50}'::jsonb),
   (gen_random_uuid(), 'ドラゴンの装飾', 'ACCESSORY', NULL, 'ドラゴンの魔核を用いた装飾品。', 8000, 1, '{"attack": 50, "defense": 40, "elementalAttack": "FIRE", "elementalAttackValue": 20, "elementalResistance": "WIND", "elementalResistanceValue": 20}'::jsonb);
@@ -805,7 +805,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ゴルゴンの鋭牙', 'MATERIAL', 'ゴルゴンの稀少な部位。', 1440, 1),
   (gen_random_uuid(), 'ゴルゴンの魔核', 'MATERIAL', 'ゴルゴンの体内にある幻の魔核。', 14400, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ゴルゴンの武器', 'WEAPON', 'WEAPON_SWORD', 'ゴルゴンの素材で作られた強力な武器。', 3600, 5, '{"attack": 108, "elementalAttack": "EARTH", "elementalAttackValue": 36}'::jsonb),
   (gen_random_uuid(), 'ゴルゴンの防具', 'ARMOR', NULL, 'ゴルゴンの素材で作られた堅牢な防具。', 3600, 8, '{"defense": 86, "elementalResistance": "DARK", "elementalResistanceValue": 36}'::jsonb),
   (gen_random_uuid(), 'ゴルゴンの装飾', 'ACCESSORY', NULL, 'ゴルゴンの魔核を用いた装飾品。', 5760, 1, '{"attack": 36, "defense": 28, "elementalAttack": "EARTH", "elementalAttackValue": 14, "elementalResistance": "DARK", "elementalResistanceValue": 14}'::jsonb);
@@ -826,7 +826,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'ワイバーンの鋭牙', 'MATERIAL', 'ワイバーンの稀少な部位。', 1700, 1),
   (gen_random_uuid(), 'ワイバーンの魔核', 'MATERIAL', 'ワイバーンの体内にある幻の魔核。', 17000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'ワイバーンの武器', 'WEAPON', 'WEAPON_SWORD', 'ワイバーンの素材で作られた強力な武器。', 4250, 5, '{"attack": 127, "elementalAttack": "WIND", "elementalAttackValue": 42}'::jsonb),
   (gen_random_uuid(), 'ワイバーンの防具', 'ARMOR', NULL, 'ワイバーンの素材で作られた堅牢な防具。', 4250, 8, '{"defense": 102, "elementalResistance": "THUNDER", "elementalResistanceValue": 42}'::jsonb),
   (gen_random_uuid(), 'ワイバーンの装飾', 'ACCESSORY', NULL, 'ワイバーンの魔核を用いた装飾品。', 6800, 1, '{"attack": 42, "defense": 34, "elementalAttack": "WIND", "elementalAttackValue": 17, "elementalResistance": "THUNDER", "elementalResistanceValue": 17}'::jsonb);
@@ -847,7 +847,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '魔王の手下の鋭牙', 'MATERIAL', '魔王の手下の稀少な部位。', 1760, 1),
   (gen_random_uuid(), '魔王の手下の魔核', 'MATERIAL', '魔王の手下の体内にある幻の魔核。', 17600, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '魔王の手下の武器', 'WEAPON', 'WEAPON_SWORD', '魔王の手下の素材で作られた強力な武器。', 4400, 5, '{"attack": 132, "elementalAttack": "DARK", "elementalAttackValue": 44}'::jsonb),
   (gen_random_uuid(), '魔王の手下の防具', 'ARMOR', NULL, '魔王の手下の素材で作られた堅牢な防具。', 4400, 8, '{"defense": 105, "elementalResistance": "FIRE", "elementalResistanceValue": 44}'::jsonb),
   (gen_random_uuid(), '魔王の手下の装飾', 'ACCESSORY', NULL, '魔王の手下の魔核を用いた装飾品。', 7040, 1, '{"attack": 44, "defense": 35, "elementalAttack": "DARK", "elementalAttackValue": 17, "elementalResistance": "FIRE", "elementalResistanceValue": 17}'::jsonb);
@@ -868,7 +868,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '深淵の歩者の鋭牙', 'MATERIAL', '深淵の歩者の稀少な部位。', 1800, 1),
   (gen_random_uuid(), '深淵の歩者の魔核', 'MATERIAL', '深淵の歩者の体内にある幻の魔核。', 18000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '深淵の歩者の武器', 'WEAPON', 'WEAPON_SWORD', '深淵の歩者の素材で作られた強力な武器。', 4500, 5, '{"attack": 135, "elementalAttack": "DARK", "elementalAttackValue": 45}'::jsonb),
   (gen_random_uuid(), '深淵の歩者の防具', 'ARMOR', NULL, '深淵の歩者の素材で作られた堅牢な防具。', 4500, 8, '{"defense": 108, "elementalResistance": "ICE", "elementalResistanceValue": 45}'::jsonb),
   (gen_random_uuid(), '深淵の歩者の装飾', 'ACCESSORY', NULL, '深淵の歩者の魔核を用いた装飾品。', 7200, 1, '{"attack": 45, "defense": 36, "elementalAttack": "DARK", "elementalAttackValue": 18, "elementalResistance": "ICE", "elementalResistanceValue": 18}'::jsonb);
@@ -889,7 +889,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), 'タイタンの鋭牙', 'MATERIAL', 'タイタンの稀少な部位。', 1900, 1),
   (gen_random_uuid(), 'タイタンの魔核', 'MATERIAL', 'タイタンの体内にある幻の魔核。', 19000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), 'タイタンの武器', 'WEAPON', 'WEAPON_SWORD', 'タイタンの素材で作られた強力な武器。', 4750, 5, '{"attack": 142, "elementalAttack": "EARTH", "elementalAttackValue": 47}'::jsonb),
   (gen_random_uuid(), 'タイタンの防具', 'ARMOR', NULL, 'タイタンの素材で作られた堅牢な防具。', 4750, 8, '{"defense": 114, "elementalResistance": "THUNDER", "elementalResistanceValue": 47}'::jsonb),
   (gen_random_uuid(), 'タイタンの装飾', 'ACCESSORY', NULL, 'タイタンの魔核を用いた装飾品。', 7600, 1, '{"attack": 47, "defense": 38, "elementalAttack": "EARTH", "elementalAttackValue": 19, "elementalResistance": "THUNDER", "elementalResistanceValue": 19}'::jsonb);
@@ -910,7 +910,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '古竜の鋭牙', 'MATERIAL', '古竜の稀少な部位。', 3000, 1),
   (gen_random_uuid(), '古竜の魔核', 'MATERIAL', '古竜の体内にある幻の魔核。', 30000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '古竜の武器', 'WEAPON', 'WEAPON_SWORD', '古竜の素材で作られた強力な武器。', 7500, 5, '{"attack": 225, "elementalAttack": "LIGHT", "elementalAttackValue": 75}'::jsonb),
   (gen_random_uuid(), '古竜の防具', 'ARMOR', NULL, '古竜の素材で作られた堅牢な防具。', 7500, 8, '{"defense": 180, "elementalResistance": "DARK", "elementalResistanceValue": 75}'::jsonb),
   (gen_random_uuid(), '古竜の装飾', 'ACCESSORY', NULL, '古竜の魔核を用いた装飾品。', 12000, 1, '{"attack": 75, "defense": 60, "elementalAttack": "LIGHT", "elementalAttackValue": 30, "elementalResistance": "DARK", "elementalResistanceValue": 30}'::jsonb);
@@ -931,7 +931,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '魔王の鋭牙', 'MATERIAL', '魔王の稀少な部位。', 4000, 1),
   (gen_random_uuid(), '魔王の魔核', 'MATERIAL', '魔王の体内にある幻の魔核。', 40000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '魔王の武器', 'WEAPON', 'WEAPON_SWORD', '魔王の素材で作られた強力な武器。', 10000, 5, '{"attack": 300, "elementalAttack": "DARK", "elementalAttackValue": 100}'::jsonb),
   (gen_random_uuid(), '魔王の防具', 'ARMOR', NULL, '魔王の素材で作られた堅牢な防具。', 10000, 8, '{"defense": 240, "elementalResistance": "FIRE", "elementalResistanceValue": 100}'::jsonb),
   (gen_random_uuid(), '魔王の装飾', 'ACCESSORY', NULL, '魔王の魔核を用いた装飾品。', 16000, 1, '{"attack": 100, "defense": 80, "elementalAttack": "DARK", "elementalAttackValue": 40, "elementalResistance": "FIRE", "elementalResistanceValue": 40}'::jsonb);
@@ -952,7 +952,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '死神の鋭牙', 'MATERIAL', '死神の稀少な部位。', 3600, 1),
   (gen_random_uuid(), '死神の魔核', 'MATERIAL', '死神の体内にある幻の魔核。', 36000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '死神の武器', 'WEAPON', 'WEAPON_SWORD', '死神の素材で作られた強力な武器。', 9000, 5, '{"attack": 270, "elementalAttack": "DARK", "elementalAttackValue": 90}'::jsonb),
   (gen_random_uuid(), '死神の防具', 'ARMOR', NULL, '死神の素材で作られた堅牢な防具。', 9000, 8, '{"defense": 216, "elementalResistance": "ICE", "elementalResistanceValue": 90}'::jsonb),
   (gen_random_uuid(), '死神の装飾', 'ACCESSORY', NULL, '死神の魔核を用いた装飾品。', 14400, 1, '{"attack": 90, "defense": 72, "elementalAttack": "DARK", "elementalAttackValue": 36, "elementalResistance": "ICE", "elementalResistanceValue": 36}'::jsonb);
@@ -973,7 +973,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '堕天使の鋭牙', 'MATERIAL', '堕天使の稀少な部位。', 3400, 1),
   (gen_random_uuid(), '堕天使の魔核', 'MATERIAL', '堕天使の体内にある幻の魔核。', 34000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '堕天使の武器', 'WEAPON', 'WEAPON_SWORD', '堕天使の素材で作られた強力な武器。', 8500, 5, '{"attack": 255, "elementalAttack": "LIGHT", "elementalAttackValue": 85}'::jsonb),
   (gen_random_uuid(), '堕天使の防具', 'ARMOR', NULL, '堕天使の素材で作られた堅牢な防具。', 8500, 8, '{"defense": 204, "elementalResistance": "DARK", "elementalResistanceValue": 85}'::jsonb),
   (gen_random_uuid(), '堕天使の装飾', 'ACCESSORY', NULL, '堕天使の魔核を用いた装飾品。', 13600, 1, '{"attack": 85, "defense": 68, "elementalAttack": "LIGHT", "elementalAttackValue": 34, "elementalResistance": "DARK", "elementalResistanceValue": 34}'::jsonb);
@@ -994,7 +994,7 @@ INSERT INTO item_templates (id, name, category, description, base_price, weight)
   (gen_random_uuid(), '混沌の神の鋭牙', 'MATERIAL', '混沌の神の稀少な部位。', 5000, 1),
   (gen_random_uuid(), '混沌の神の魔核', 'MATERIAL', '混沌の神の体内にある幻の魔核。', 50000, 1);
 
-INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, sub_parameters) VALUES
+INSERT INTO item_templates (id, name, category, weapon_category, description, base_price, weight, properties) VALUES
   (gen_random_uuid(), '混沌の神の武器', 'WEAPON', 'WEAPON_SWORD', '混沌の神の素材で作られた強力な武器。', 12500, 5, '{"attack": 375, "elementalAttack": "DARK", "elementalAttackValue": 125}'::jsonb),
   (gen_random_uuid(), '混沌の神の防具', 'ARMOR', NULL, '混沌の神の素材で作られた堅牢な防具。', 12500, 8, '{"defense": 300, "elementalResistance": "LIGHT", "elementalResistanceValue": 125}'::jsonb),
   (gen_random_uuid(), '混沌の神の装飾', 'ACCESSORY', NULL, '混沌の神の魔核を用いた装飾品。', 20000, 1, '{"attack": 125, "defense": 100, "elementalAttack": "DARK", "elementalAttackValue": 50, "elementalResistance": "LIGHT", "elementalResistanceValue": 50}'::jsonb);
