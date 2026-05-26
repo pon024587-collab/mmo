@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "nodePackages.pnpm"]
+nixPkgs = ["nodejs_20", "nodePackages.pnpm", "nginx"]
 
 [phases.install]
 cmds = ["pnpm install --no-frozen-lockfile"]
@@ -8,4 +8,4 @@ cmds = ["pnpm install --no-frozen-lockfile"]
 cmds = ["pnpm --filter frontend build"]
 
 [start]
-cmd = "pnpm --filter frontend preview --host --port $PORT"
+cmd = "nginx -g 'daemon off;'"

@@ -2,5 +2,5 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "pnpm --filter frontend preview --host --port $PORT"
+startCommand = "envsubst '$PORT' < /app/packages/frontend/nginx.conf > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
 restartPolicyType = "on_failure"
