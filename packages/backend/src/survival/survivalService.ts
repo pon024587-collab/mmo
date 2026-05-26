@@ -52,8 +52,8 @@ export async function drink(characterId: string, hasWaterSource: boolean, itemId
   let consumeItemId = itemId
   if (!consumeItemId && !hasWaterSource) {
     // 水Itemが必要
-    const waterItem = await sql<{ id: string }[]>`
-      SELECT i.id FROM items i
+    const waterItem = await sql<{ id: string; quantity: number }[]>`
+      SELECT i.id, i.quantity FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.owner_character_id = ${characterId} AND (it.name = 'WATER' OR it.name = '水') LIMIT 1
     `
@@ -61,6 +61,12 @@ export async function drink(characterId: string, hasWaterSource: boolean, itemId
       return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '近くに水源がなく、水も持っていません。' }
     }
     consumeItemId = waterItem[0].id
+    // 行動開始時にアイテムを消費する
+    if (waterItem[0].quantity > 1) {
+      await sql`UPDATE items SET quantity = quantity - 1 WHERE id = ${consumeItemId}`
+    } else {
+      await sql`DELETE FROM items WHERE id = ${consumeItemId}`
+    }
   }
   return registerAction({ characterId, actionType: 'DRINK', parameters: consumeItemId ? { itemId: consumeItemId } : undefined })
 }
@@ -120,12 +126,7 @@ export async function completeEat(characterId: string, itemId: string): Promise<
 
 /** 飲水完了時の処理 */
 export async function completeDrink(characterId: string, itemId?: string): Promise<string> {
-  if (itemId) {
-    const item = await sql<{ id: string }[]>`SELECT id FROM items WHERE id = ${itemId} LIMIT 1`
-    if (!item[0]) return '水が見つかりませんでした。'
-    await sql`DELETE FROM items WHERE id = ${itemId}`
-  }
-
+  // アイテムは drink() の行動開始時に消費済み。ここでは渇き回復のみ行う。
   await sql`
     UPDATE characters
     SET thirst_internal = LEAST(100, thirst_internal + 50),
