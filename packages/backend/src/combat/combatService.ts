@@ -174,28 +174,40 @@ export async function completeCombat(
   const mName = `${countText}${monster.name}`
   let battleLog = `【戦闘開始】 ${mName} が現れた！\n`
 
+  let damageTaken = 0
+  let fatigueGained = 10 // 基本の疲労度
+
   if (playerPower > monsterPower * 1.5) {
     battleLog += `▶ あなたの先制攻撃！ 圧倒的な力で一掃した！\n`
+    fatigueGained = 5 // 楽勝なら疲労軽減
   } else {
     battleLog += `▶ あなたの攻撃！ ${weaponCategory !== 'WEAPON_UNARMED' ? '武器の鋭い一撃！' : '素手による強烈な打撃！'}\n`
-    if (monsterPower > playerPower) {
-      battleLog += `▶ ${monster.name}の反撃！ 強烈なダメージを受けた！\n`
+    if (monsterPower > playerPower * 0.7) {
+      // 相手の力が自分の70%以上あればダメージを受ける
+      damageTaken = Math.floor(monsterPower - (playerPower * 0.5))
+      if (damageTaken < 1) damageTaken = 1
+      battleLog += `▶ ${monster.name}の反撃！ ${damageTaken}のダメージを受けた！\n`
+      fatigueGained = 20
     } else {
       battleLog += `▶ ${monster.name}の反撃！ しかしあなたは間一髪で回避した！\n`
+      fatigueGained = 15
     }
     battleLog += `▶ あなたの追撃！ 魔法と技が交差する！\n`
   }
 
   if (victory) {
-    // 戦闘Skill_Growth蓄積
-    const growthGain = Math.floor(totalPower / 8) + Math.floor(Math.random() * 3)
+    // 勝利時のステータス更新（ダメージと疲労）
     await sql`
       UPDATE characters
-      SET skill_combat_growth = skill_combat_growth + ${growthGain}
+      SET 
+        health = GREATEST(1, health - ${damageTaken}), 
+        fatigue_internal = LEAST(100, fatigue_internal + ${fatigueGained}),
+        skill_combat_growth = skill_combat_growth + ${Math.floor(totalPower / 8) + Math.floor(Math.random() * 3)}
       WHERE id = ${characterId}
     `
 
     // 詳細スキルの成長（魔法と武器）
+    const growthGain = Math.floor(totalPower / 8) + Math.floor(Math.random() * 3)
     const magicCategory = getMonsterMagicCategory(monsterType)
     await addSkillExp(characterId, magicCategory, growthGain)
     await addSkillExp(characterId, weaponCategory, growthGain)
