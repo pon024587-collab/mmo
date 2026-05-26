@@ -48,8 +48,9 @@ export async function eat(characterId: string, foodItemId: string): Promise<Regi
 }
 
 /** 飲水行動 */
-export async function drink(characterId: string, hasWaterSource: boolean): Promise<RegisterActionResult> {
-  if (!hasWaterSource) {
+export async function drink(characterId: string, hasWaterSource: boolean, itemId?: string): Promise<RegisterActionResult> {
+  let consumeItemId = itemId
+  if (!consumeItemId && !hasWaterSource) {
     // 水Itemが必要
     const waterItem = await sql<{ id: string }[]>`
       SELECT i.id FROM items i
@@ -59,8 +60,9 @@ export async function drink(characterId: string, hasWaterSource: boolean): Promi
     if (!waterItem[0]) {
       return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '近くに水源がなく、水も持っていません。' }
     }
+    consumeItemId = waterItem[0].id
   }
-  return registerAction({ characterId, actionType: 'DRINK' })
+  return registerAction({ characterId, actionType: 'DRINK', parameters: consumeItemId ? { itemId: consumeItemId } : undefined })
 }
 
 /** 睡眠行動 */
@@ -114,6 +116,24 @@ export async function completeEat(characterId: string, itemId: string): Promise<
     : t?.name === 'BREAD'
     ? 'パンを食べた。少し元気が出た。'
     : '食事をとった。'
+}
+
+/** 飲水完了時の処理 */
+export async function completeDrink(characterId: string, itemId?: string): Promise<string> {
+  if (itemId) {
+    const item = await sql<{ id: string }[]>`SELECT id FROM items WHERE id = ${itemId} LIMIT 1`
+    if (!item[0]) return '水が見つかりませんでした。'
+    await sql`DELETE FROM items WHERE id = ${itemId}`
+  }
+
+  await sql`
+    UPDATE characters
+    SET thirst_internal = LEAST(100, thirst_internal + 50),
+        updated_at = NOW()
+    WHERE id = ${characterId}
+  `
+
+  return itemId ? '水筒の水を飲んだ。喉の渇きが癒えた。' : '水を飲んだ。喉の渇きが癒えた。'
 }
 
 /** 睡眠完了時の処理 */

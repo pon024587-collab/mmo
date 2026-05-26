@@ -132,8 +132,22 @@ export async function completeAction(
   characterId: string,
   actionType: ActionType
 ): Promise<void> {
+  const actionRow = await sql<{ parameters: any }[]>`SELECT parameters FROM action_queue WHERE id = ${actionId} LIMIT 1`
+  const params = actionRow[0]?.parameters || {}
+
   // 行動結果テキストを生成
-  const resultText = generateResultText(actionType)
+  let resultText = generateResultText(actionType)
+
+  if (actionType === 'EAT') {
+    const { completeEat } = await import('../survival/survivalService.js')
+    resultText = await completeEat(characterId, params.itemId)
+  } else if (actionType === 'DRINK') {
+    const { completeDrink } = await import('../survival/survivalService.js')
+    resultText = await completeDrink(characterId, params.itemId)
+  } else if (actionType === 'SLEEP') {
+    const { completeSleep } = await import('../survival/survivalService.js')
+    resultText = await completeSleep(characterId)
+  }
 
   await sql.begin(async (tx) => {
     // Action_Queueを完了状態に更新

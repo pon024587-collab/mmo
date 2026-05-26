@@ -192,10 +192,13 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
   })
 
   app.post('/api/game/drink', async (request, reply) => {
+    const body = z.object({ itemId: z.string().optional() }).safeParse(request.body || {})
+    const itemId = body.success ? body.data.itemId : undefined
+
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
     const hasWater = await checkNearbyWaterSource(char.villageId)
-    return reply.send(await drink(char.id, hasWater))
+    return reply.send(await drink(char.id, hasWater, itemId))
   })
 
   app.post('/api/game/sleep', async (request, reply) => {
