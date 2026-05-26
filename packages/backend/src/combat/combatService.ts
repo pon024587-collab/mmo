@@ -131,8 +131,8 @@ export async function completeCombat(
   monsterType: MonsterType,
   count: number = 1
 ): Promise<{ resultText: string; victory: boolean; canSkin: boolean }> {
-  const char = await sql<{ skillCombatGrowth: number; fatigueInternal: number; health: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null }[]>`
-    SELECT skill_combat_growth, fatigue_internal, health, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ level: number; skillCombatGrowth: number; fatigueInternal: number; health: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null }[]>`
+    SELECT level, skill_combat_growth, fatigue_internal, health, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!char[0]) return { resultText: '戦闘結果を処理できませんでした。', victory: false, canSkin: false }
 
@@ -140,8 +140,12 @@ export async function completeCombat(
   // 疲労ペナルティ（疲労100で全ステータスが半減）
   const fatigue = Math.max(0, Math.min(100, char[0].fatigueInternal))
   const fatigueMultiplier = 1.0 - (fatigue * 0.5 / 100)
-  const skill = Math.floor(char[0].skillCombatGrowth * fatigueMultiplier)
+  // skillCombatGrowthの代わりにレベルベースで基礎戦闘力を計算 (1レベル = 30パワー)
+  const skill = Math.floor((char[0].level * 30) * fatigueMultiplier)
   const totalPower = monster.basePower * count
+
+  // 実質最大HPの計算 (既存キャラのDB値が古くても補正する)
+  const actualHealthMax = Math.max(char[0].healthMax, 100 + char[0].level * 20)
 
   // 武器ステータスと属性情報の取得
   let weaponAtk = 0
@@ -172,10 +176,10 @@ export async function completeCombat(
         if (c.MP) weaponMag += c.MP // 簡単のためMPボーナスを魔法力と見なす
       }
       
-      // 強化値(enhance)ボーナス (+1につき 基礎威力+5)
+      // 強化値(enhance)ボーナス (+1につき 基礎威力+30)
       const enhanceLv = w[0].metadata?.enhance || 0
-      weaponAtk += enhanceLv * 5
-      weaponMag += enhanceLv * 5
+      weaponAtk += enhanceLv * 30
+      weaponMag += enhanceLv * 30
     }
   }
 
@@ -205,9 +209,9 @@ export async function completeCombat(
         if (c.WATER_RES && armorElement === 'WATER') armorElementValue += c.WATER_RES
       }
       
-      // 強化値(enhance)ボーナス (+1につき 防御力相当のパワー+5)
+      // 強化値(enhance)ボーナス (+1につき 防御力相当のパワー+30)
       const enhanceLv = a[0].metadata?.enhance || 0
-      defBonus += enhanceLv * 5
+      defBonus += enhanceLv * 30
       
       // defBonusをグローバルに持たせるため、charのプロパティのように扱うか
       // 変数宣言を外に出す必要がある。
@@ -274,7 +278,8 @@ export async function completeCombat(
   }
 
   // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + 防御力ボーナス + スキル補正 + 属性ボーナス）
-  const playerPower = skill + weaponAtk + weaponMag + defBonus + skillBonus + elementalAtkBonus + Math.random() * 30
+  // 防御力がダメージ軽減に大きく寄与するよう、playerPowerへの加算倍率を高める
+  const playerPower = skill + weaponAtk + weaponMag + (defBonus * 1.5) + skillBonus + elementalAtkBonus + Math.random() * 30
   const monsterPower = totalPower + Math.random() * 10
   const victory = playerPower >= monsterPower * 0.5
   const elStr = randomElement && elementNames[randomElement] ? `【${elementNames[randomElement]}属性】` : ''
@@ -292,10 +297,11 @@ export async function completeCombat(
     battleLog += `▶ あなたの攻撃！ ${weaponCategory !== 'WEAPON_UNARMED' ? '武器の鋭い一撃！' : '素手による強烈な打撃！'}\n`
     if (elementalAtkMsg) battleLog += elementalAtkMsg + '\n'
     if (monsterPower > playerPower * 0.7) {
-      let rawDamage = Math.floor(monsterPower - (playerPower * 0.5))
+      // 敵が強い場合はダメージ計算 (防御力も加味して係数0.8)
+      let rawDamage = Math.floor(monsterPower - (playerPower * 0.8))
       if (rawDamage < 1) rawDamage = 1
       // 属性耐性でダメージ軽減
-      damageTaken = Math.max(0, rawDamage - elementalResVal)
+      damageTaken = Math.max(0, rawDamage - (elementalResVal * 5)) // 耐性の効果を5倍に
       if (elementalResMsg) battleLog += elementalResMsg + '\n'
       battleLog += `▶ ${monster.name}の反撃！ ${damageTaken}のダメージを受けた！\n`
       fatigueGained = 20
@@ -358,14 +364,21 @@ export async function completeCombat(
 
     // レベルアップ判定（累計growthが閾値を超えたら自動レベルアップ）
     // level N+1に必要な累計growth = N * N * 30
-    const charLevel = await sql<{ level: number; skillCombatGrowth: number }[]>`
-      SELECT level, skill_combat_growth FROM characters WHERE id = ${characterId} LIMIT 1
+    const charLevel = await sql<{ level: number; skillCombatGrowth: number; healthMax: number }[]>`
+      SELECT level, skill_combat_growth, health_max FROM characters WHERE id = ${characterId} LIMIT 1
     `
     if (charLevel[0]) {
-      const { level: lv, skillCombatGrowth: totalGrowth } = charLevel[0]
+      const { level: lv, skillCombatGrowth: totalGrowth, healthMax } = charLevel[0]
       const nextLvThreshold = lv * lv * 30
       if (totalGrowth >= nextLvThreshold && lv < 100) {
-        await sql`UPDATE characters SET level = level + 1, updated_at = NOW() WHERE id = ${characterId}`
+        // レベルアップ時に最大HPも増加（+20）し、現在HPも全回復
+        const newMax = Math.max(healthMax + 20, 100 + (lv + 1) * 20)
+        await sql`
+          UPDATE characters
+          SET level = level + 1, health_max = ${newMax}, health = ${newMax}, updated_at = NOW()
+          WHERE id = ${characterId}
+        `
+        battleLog += `\n🌟 レベルアップ！ レベルが ${lv + 1} になり、最大体力が ${newMax} に増加した！`
       }
     }
 
