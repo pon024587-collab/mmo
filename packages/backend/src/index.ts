@@ -43,11 +43,11 @@ const start = async () => {
       startWorldTickWorker()
       startActionWorker()
       app.log.info('バックグラウンドワーカー起動完了')
-    } catch (workerErr) {
-      app.log.warn({ err: workerErr }, 'ワーカー起動失敗（サーバーは継続）')
+    } catch {
+      console.warn('ワーカー起動失敗（サーバーは継続）')
     }
-  } catch (err) {
-    app.log.error({ err }, '起動エラー')
+  } catch {
+    console.error('起動エラー')
     process.exit(1)
   }
 }
