@@ -9,6 +9,7 @@ interface ItemMetadata {
   bonusDexterity?: number
   slots?: number
   crystals?: Record<string, number>[]
+  bonus?: Record<string, number>
 }
 
 interface InventoryItem {

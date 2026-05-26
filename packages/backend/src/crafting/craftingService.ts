@@ -176,7 +176,7 @@ export async function craftItem(
 
   await sql`
     INSERT INTO items (owner_character_id, item_template_id, quantity, metadata)
-    VALUES (${characterId}, ${r.resultItemTemplateId}, 1, ${metadata}::jsonb)
+    VALUES (${characterId}, ${r.resultItemTemplateId}, 1, ${JSON.stringify(metadata)}::jsonb)
   `
 
   // 工作スキル成長

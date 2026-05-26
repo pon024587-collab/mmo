@@ -78,7 +78,7 @@ export async function completeDungeonFloor(
 
     await sql`
       INSERT INTO items (owner_character_id, item_template_id, quantity, metadata)
-      VALUES (${characterId}, ${templates[0].id}, 1, ${metadata}::jsonb)
+      VALUES (${characterId}, ${templates[0].id}, 1, ${JSON.stringify(metadata)}::jsonb)
     `
     
     return `第${floor}層を突破し、宝箱から「クリスタル（${selectedBonus}+${bonusValue}）」を手に入れた！`
