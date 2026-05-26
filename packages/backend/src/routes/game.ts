@@ -258,6 +258,25 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await repayTaxDebt(char.id, body.data.amount))
   })
 
+  // ---- クラフト ----
+
+  app.get('/api/game/crafting/recipes', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { getRecipes } = await import('../crafting/craftingService.js')
+    const recipes = await getRecipes(char.id)
+    return reply.send({ success: true, recipes })
+  })
+
+  app.post('/api/game/crafting/craft', async (request, reply) => {
+    const body = z.object({ recipeId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { craftItem } = await import('../crafting/craftingService.js')
+    return reply.send(await craftItem(char.id, body.data.recipeId))
+  })
+
   // ---- クエスト ----
 
   app.get('/api/game/quests', async (request, reply) => {
