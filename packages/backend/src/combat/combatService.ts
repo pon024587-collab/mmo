@@ -94,7 +94,7 @@ export async function completeCombat(
 
     // ドロップアイテム処理（ハクスラ要素）
     let dropMsg = ''
-    if (monster.dropItems.length > 0 && Math.random() < 0.5) { // 50%ドロップ
+    if (monster.dropItems.length > 0 && Math.random() < 0.15) { // 15%ドロップ
       const dropName = monster.dropItems[Math.floor(Math.random() * monster.dropItems.length)]
       if (dropName) {
         const template = await sql<{ id: string; category: string }[]>`
@@ -227,10 +227,10 @@ function generateVictoryText(skillGrowth: number, monsterName: string, countText
 function generateHnsMetadata() {
   const r = Math.random()
   let rarity = 'NORMAL'
-  if (r < 0.05) rarity = 'LEGENDARY'
-  else if (r < 0.15) rarity = 'EPIC'
-  else if (r < 0.35) rarity = 'RARE'
-  else if (r < 0.60) rarity = 'MAGIC'
+  if (r < 0.005) rarity = 'LEGENDARY'       // 0.5%
+  else if (r < 0.02) rarity = 'EPIC'        // 1.5%
+  else if (r < 0.07) rarity = 'RARE'        // 5%
+  else if (r < 0.20) rarity = 'MAGIC'       // 13%
 
   const prefixes = ['鋭い', '重い', '呪われた', '祝福された', '炎の', '氷の', '雷の', '猛毒の', '神聖な', '血塗られた']
   const suffixes = ['・改', '・真', '・極', '・絶', '・幻']
