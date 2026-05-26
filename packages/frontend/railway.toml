@@ -2,5 +2,5 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "mkdir -p /etc/nginx/conf.d && envsubst '$PORT' < /app/packages/frontend/nginx.conf > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+startCommand = "mkdir -p /etc/nginx/conf.d && cp /app/packages/frontend/nginx.conf /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
 restartPolicyType = "on_failure"
