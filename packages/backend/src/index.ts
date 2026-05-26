@@ -50,10 +50,20 @@ const start = async () => {
       startWorldTickWorker()
       startActionWorker()
       
-      // 再起動等でキューから漏れた行動を復旧
+      // 起動時に漏れた行動を即復旧
       await recoverStuckActions()
+
+      // BullMQが発火しなかった場合のフォールバック:
+      // 30秒ごとにDBをポーリングして時間超過のACTIVE行動を強制完了させる
+      setInterval(async () => {
+        try {
+          await recoverStuckActions()
+        } catch (err) {
+          console.warn('[Polling] recoverStuckActions エラー:', err)
+        }
+      }, 30 * 1000)
       
-      app.log.info('バックグラウンドワーカー起動完了')
+      app.log.info('バックグラウンドワーカー起動完了（ポーリングフォールバック有効: 30秒間隔）')
     } catch {
       console.warn('ワーカー起動失敗（サーバーは継続）')
     }
