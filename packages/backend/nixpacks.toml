@@ -7,7 +7,7 @@ cmds = ["pnpm install --no-frozen-lockfile"]
 [phases.build]
 cmds = [
   "pnpm --filter backend build",
-  "cp -r packages/backend/src/db/migrations packages/backend/dist/db/migrations"
+  "cp -r src/db/migrations dist/db/migrations"
 ]
 
 [start]
