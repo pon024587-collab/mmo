@@ -692,6 +692,14 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await sendVillageChat(char.id, char.villageId, body.data.content))
   })
 
+  // ---- デバッグ: スタックした行動を手動で復旧 ----
+
+  app.get('/api/game/debug/recover', async (_request, reply) => {
+    const { recoverStuckActions } = await import('../action/actionService.js')
+    await recoverStuckActions()
+    return reply.send({ success: true, message: 'スタックした行動の復旧処理を実行しました。' })
+  })
+
 }
 
 
