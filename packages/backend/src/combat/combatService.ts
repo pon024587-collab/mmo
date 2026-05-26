@@ -92,9 +92,35 @@ export async function completeCombat(
       UPDATE characters SET strength_growth = strength_growth + 1 WHERE id = ${characterId}
     `
 
+    // ドロップアイテム処理（ハクスラ要素）
+    let dropMsg = ''
+    if (monster.dropItems.length > 0 && Math.random() < 0.5) { // 50%ドロップ
+      const dropName = monster.dropItems[Math.floor(Math.random() * monster.dropItems.length)]
+      if (dropName) {
+        const template = await sql<{ id: string; category: string }[]>`
+          SELECT id, category FROM item_templates WHERE name = ${dropName} LIMIT 1
+        `
+        if (template[0]) {
+          let meta = {}
+          if (template[0].category === 'WEAPON' || template[0].category === 'ARMOR') {
+            meta = generateHnsMetadata()
+          }
+          await sql`
+            INSERT INTO items (owner_character_id, item_template_id, quantity, metadata)
+            VALUES (${characterId}, ${template[0].id}, 1, ${meta})
+          `
+          const metaObj = meta as any
+          const fullName = metaObj.rarity && metaObj.rarity !== 'NORMAL'
+            ? `${metaObj.prefix || ''}${dropName}${metaObj.suffix || ''}`
+            : dropName
+          dropMsg = ` 戦利品: ${fullName} を手に入れた！`
+        }
+      }
+    }
+
     const countText = count > 1 ? `${count}体の` : ''
     return {
-      resultText: generateVictoryText(skill, monster.name, countText),
+      resultText: generateVictoryText(skill, monster.name, countText) + dropMsg,
       victory: true,
       canSkin: true, // 剥ぎ取り可能
     }
@@ -196,4 +222,40 @@ function generateVictoryText(skillGrowth: number, monsterName: string, countText
   if (skillGrowth < 200) return `${countText}${monsterName}を倒した。いい戦いだった。`
   if (skillGrowth < 500) return `${countText}${monsterName}を鮮やかに倒した。剣筋が冴えている。`
   return `${countText}${monsterName}を圧倒した。もはや敵ではない。`
+}
+
+function generateHnsMetadata() {
+  const r = Math.random()
+  let rarity = 'NORMAL'
+  if (r < 0.05) rarity = 'LEGENDARY'
+  else if (r < 0.15) rarity = 'EPIC'
+  else if (r < 0.35) rarity = 'RARE'
+  else if (r < 0.60) rarity = 'MAGIC'
+
+  const prefixes = ['鋭い', '重い', '呪われた', '祝福された', '炎の', '氷の', '雷の', '猛毒の', '神聖な', '血塗られた']
+  const suffixes = ['・改', '・真', '・極', '・絶', '・幻']
+
+  let namePrefix = ''
+  let nameSuffix = ''
+  let bonusStr = 0
+  let bonusDex = 0
+
+  if (rarity !== 'NORMAL') {
+    namePrefix = prefixes[Math.floor(Math.random() * prefixes.length)]
+    bonusStr += Math.floor(Math.random() * 5) + 1
+    bonusDex += Math.floor(Math.random() * 5) + 1
+  }
+  if (rarity === 'EPIC' || rarity === 'LEGENDARY') {
+    nameSuffix = suffixes[Math.floor(Math.random() * suffixes.length)]
+    bonusStr += Math.floor(Math.random() * 10) + 5
+    bonusDex += Math.floor(Math.random() * 10) + 5
+  }
+
+  return {
+    rarity,
+    prefix: namePrefix,
+    suffix: nameSuffix,
+    bonusStrength: bonusStr,
+    bonusDexterity: bonusDex
+  }
 }

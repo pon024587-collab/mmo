@@ -1,18 +1,45 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api/client.js'
 
+interface ItemMetadata {
+  rarity?: 'NORMAL' | 'MAGIC' | 'RARE' | 'EPIC' | 'LEGENDARY'
+  prefix?: string
+  suffix?: string
+  bonusStrength?: number
+  bonusDexterity?: number
+}
+
 interface InventoryItem {
   id: string
   name: string
   category: string
   quantity: number
   durability: number | null
+  metadata: ItemMetadata
 }
 
 interface Equipment {
   equippedWeaponId: string | null
   equippedArmorId: string | null
   equippedAccessoryId: string | null
+}
+
+const RARITY_STYLE: Record<string, { color: string; label: string; border: string }> = {
+  NORMAL:    { color: 'text-stone-200',  label: '',          border: 'border-stone-800' },
+  MAGIC:     { color: 'text-blue-400',   label: '✦ 魔法',   border: 'border-blue-800'  },
+  RARE:      { color: 'text-yellow-300', label: '★ レア',   border: 'border-yellow-700'},
+  EPIC:      { color: 'text-purple-400', label: '◆ エピック',border: 'border-purple-700'},
+  LEGENDARY: { color: 'text-orange-400', label: '🔥 伝説',  border: 'border-orange-600'},
+}
+
+function getDisplayName(item: InventoryItem): string {
+  const m = item.metadata
+  if (!m?.rarity || m.rarity === 'NORMAL') return item.name
+  return `${m.prefix ?? ''}${item.name}${m.suffix ?? ''}`
+}
+
+function getRarityStyle(rarity?: string) {
+  return RARITY_STYLE[rarity ?? 'NORMAL'] ?? RARITY_STYLE.NORMAL
 }
 
 export default function InventoryPanel() {
@@ -42,19 +69,13 @@ export default function InventoryPanel() {
   const handleEquip = async (itemId: string) => {
     const res = await api.post<{ success: boolean; message?: string }>('/game/equip', { itemId })
     setMessage(res.message ?? '')
-    if (res.success) {
-      fetchEquipment()
-      fetchInventory()
-    }
+    if (res.success) { fetchEquipment(); fetchInventory() }
   }
 
   const handleUnequip = async (slot: 'WEAPON' | 'ARMOR' | 'ACCESSORY') => {
     const res = await api.post<{ success: boolean; message?: string }>('/game/unequip', { slot })
     setMessage(res.message ?? '')
-    if (res.success) {
-      fetchEquipment()
-      fetchInventory()
-    }
+    if (res.success) { fetchEquipment(); fetchInventory() }
   }
 
   const handleUse = async (item: InventoryItem) => {
@@ -69,66 +90,74 @@ export default function InventoryPanel() {
   return (
     <div className="space-y-4">
       {message && (
-        <div className={`p-3 rounded text-sm ${message.includes('失敗') || message.includes('できません') ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300'}`}>
+        <div className={`p-3 rounded text-sm ${message.includes('失敗') || message.includes('できません') || message.includes('必要') ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300'}`}>
           {message}
         </div>
       )}
 
-      {/* 装備 */}
+      {/* 装備スロット */}
       <div className="bg-stone-900 border border-stone-700 rounded-lg p-4">
-        <h2 className="text-amber-400 font-bold mb-3">現在の装備</h2>
+        <h2 className="text-amber-400 font-bold mb-3">⚔️ 現在の装備</h2>
         <div className="space-y-2 text-sm">
-          <EquipSlot 
-            label="武器" 
-            item={items.find(i => i.id === equipment.equippedWeaponId)} 
-            onUnequip={() => handleUnequip('WEAPON')} 
-          />
-          <EquipSlot 
-            label="防具" 
-            item={items.find(i => i.id === equipment.equippedArmorId)} 
-            onUnequip={() => handleUnequip('ARMOR')} 
-          />
-          <EquipSlot 
-            label="装飾" 
-            item={items.find(i => i.id === equipment.equippedAccessoryId)} 
-            onUnequip={() => handleUnequip('ACCESSORY')} 
-          />
+          <EquipSlot label="武器" item={items.find(i => i.id === equipment.equippedWeaponId)} onUnequip={() => handleUnequip('WEAPON')} />
+          <EquipSlot label="防具" item={items.find(i => i.id === equipment.equippedArmorId)} onUnequip={() => handleUnequip('ARMOR')} />
+          <EquipSlot label="装飾" item={items.find(i => i.id === equipment.equippedAccessoryId)} onUnequip={() => handleUnequip('ACCESSORY')} />
         </div>
       </div>
 
       {/* 所持品一覧 */}
       <div className="bg-stone-900 border border-stone-700 rounded-lg p-4">
-        <h2 className="text-amber-400 font-bold mb-3">所持品</h2>
+        <h2 className="text-amber-400 font-bold mb-3">🎒 所持品 <span className="text-stone-500 font-normal text-xs">({items.length}/50)</span></h2>
         {items.length === 0 && <p className="text-stone-600 text-sm">アイテムを持っていません。</p>}
         <div className="space-y-2">
           {items.map(item => {
             const isEquipped = item.id === equipment.equippedWeaponId || item.id === equipment.equippedArmorId || item.id === equipment.equippedAccessoryId
+            const rStyle = getRarityStyle(item.metadata?.rarity)
+            const displayName = getDisplayName(item)
+            const meta = item.metadata
+            const hasBonus = (meta?.bonusStrength ?? 0) > 0 || (meta?.bonusDexterity ?? 0) > 0
+
             return (
-              <div key={item.id} className={`border ${isEquipped ? 'border-amber-700' : 'border-stone-800'} rounded p-2 flex justify-between items-center bg-stone-950`}>
-                <div>
-                  <span className={isEquipped ? 'text-amber-400 text-sm' : 'text-stone-200 text-sm'}>{item.name}</span>
-                  <span className="text-stone-500 text-xs ml-2">×{item.quantity}</span>
-                  <span className="text-stone-600 text-xs ml-2">[{item.category}]</span>
-                  {isEquipped && <span className="text-amber-600 text-xs ml-2">(装備中)</span>}
+              <div
+                key={item.id}
+                className={`border ${isEquipped ? 'border-amber-700 bg-amber-950/30' : rStyle.border + ' bg-stone-950'} rounded p-2`}
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    {/* レアリティラベル */}
+                    {meta?.rarity && meta.rarity !== 'NORMAL' && (
+                      <span className={`${rStyle.color} text-xs font-bold mr-1`}>{rStyle.label}</span>
+                    )}
+                    <span className={`${rStyle.color} text-sm font-medium`}>{displayName}</span>
+                    <span className="text-stone-500 text-xs ml-2">×{item.quantity}</span>
+                    {isEquipped && <span className="text-amber-500 text-xs ml-2">（装備中）</span>}
+                  </div>
+                  <div className="flex gap-2">
+                    {!isEquipped && (item.category === 'WEAPON' || item.category === 'ARMOR') && (
+                      <button
+                        onClick={() => handleEquip(item.id)}
+                        className="px-3 py-1 bg-amber-700 hover:bg-amber-600 text-white text-xs rounded"
+                      >
+                        装備
+                      </button>
+                    )}
+                    {item.category === 'FOOD' && (
+                      <button
+                        onClick={() => handleUse(item)}
+                        className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded"
+                      >
+                        食べる
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  {!isEquipped && (item.category === 'WEAPON' || item.category === 'ARMOR') && (
-                    <button 
-                      onClick={() => handleEquip(item.id)}
-                      className="px-3 py-1 bg-amber-700 hover:bg-amber-600 text-white text-xs rounded"
-                    >
-                      装備
-                    </button>
-                  )}
-                  {item.category === 'FOOD' && (
-                    <button 
-                      onClick={() => handleUse(item)}
-                      className="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs rounded"
-                    >
-                      食べる
-                    </button>
-                  )}
-                </div>
+                {/* ボーナスステータス表示 */}
+                {hasBonus && (
+                  <div className="mt-1 flex gap-3 text-xs text-stone-400 pl-1">
+                    {(meta?.bonusStrength ?? 0) > 0 && <span className="text-red-400">筋力 +{meta?.bonusStrength}</span>}
+                    {(meta?.bonusDexterity ?? 0) > 0 && <span className="text-green-400">器用さ +{meta?.bonusDexterity}</span>}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -139,12 +168,13 @@ export default function InventoryPanel() {
 }
 
 function EquipSlot({ label, item, onUnequip }: { label: string; item?: InventoryItem; onUnequip: () => void }) {
+  const rStyle = item ? getRarityStyle(item.metadata?.rarity) : RARITY_STYLE.NORMAL
   return (
-    <div className="flex justify-between items-center p-2 border border-stone-800 rounded bg-stone-950">
+    <div className={`flex justify-between items-center p-2 border ${item ? rStyle.border : 'border-stone-800'} rounded bg-stone-950`}>
       <div>
-        <span className="text-stone-500 w-12 inline-block">{label}</span>
-        <span className={item ? 'text-stone-200' : 'text-stone-600'}>
-          {item ? item.name : '（なし）'}
+        <span className="text-stone-500 w-10 inline-block text-xs">{label}</span>
+        <span className={item ? rStyle.color : 'text-stone-600'}>
+          {item ? getDisplayName(item) : '（なし）'}
         </span>
       </div>
       {item && (
