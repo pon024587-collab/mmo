@@ -136,8 +136,37 @@ export async function completeCombat(
   const skill = char[0].skillCombatGrowth
   const totalPower = monster.basePower * count
 
-  // 勝敗判定
-  const playerPower = skill + Math.random() * 30
+  // 武器ステータスと詳細スキルの取得
+  let weaponAtk = 0
+  let weaponMag = 0
+  let weaponCategory = 'WEAPON_UNARMED'
+  
+  if (char[0].equippedWeaponId) {
+    const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number }[]>`
+      SELECT it.weapon_category, it.attack_power, it.magic_power 
+      FROM items i
+      JOIN item_templates it ON i.item_template_id = it.id
+      WHERE i.id = ${char[0].equippedWeaponId}
+    `
+    if (w[0]) {
+      weaponCategory = w[0].weaponCategory || 'WEAPON_UNARMED'
+      weaponAtk = w[0].attackPower || 0
+      weaponMag = w[0].magicPower || 0
+    }
+  }
+
+  // 武器スキル・魔法スキルの補正値を取得
+  const skills = await sql<{ exp: number }[]>`
+    SELECT exp FROM character_skills 
+    WHERE character_id = ${characterId} AND (skill_category = ${weaponCategory} OR skill_category LIKE 'MAGIC_%')
+  `
+  let skillBonus = 0
+  for (const s of skills) {
+    skillBonus += Math.floor(Math.sqrt(s.exp)) // 経験値の平方根をボーナスに（神級10000EXP = +100パワー）
+  }
+
+  // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + スキル補正）
+  const playerPower = skill + weaponAtk + weaponMag + skillBonus + Math.random() * 30
   const monsterPower = totalPower + Math.random() * 10
   const victory = playerPower >= monsterPower * 0.5
 
@@ -153,17 +182,6 @@ export async function completeCombat(
     // 詳細スキルの成長（魔法と武器）
     const magicCategory = getMonsterMagicCategory(monsterType)
     await addSkillExp(characterId, magicCategory, growthGain)
-    
-    // 武器スキル成長
-    let weaponCategory = 'WEAPON_UNARMED'
-    if (char[0].equippedWeaponId) {
-      const w = await sql<{ weaponCategory: string | null }[]>`
-        SELECT it.weapon_category FROM items i
-        JOIN item_templates it ON i.item_template_id = it.id
-        WHERE i.id = ${char[0].equippedWeaponId}
-      `
-      if (w[0] && w[0].weaponCategory) weaponCategory = w[0].weaponCategory
-    }
     await addSkillExp(characterId, weaponCategory, growthGain)
 
     // 筋力成長（重い武器を使うほど成長）
