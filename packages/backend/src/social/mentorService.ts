@@ -34,11 +34,12 @@ export async function applyForApprenticeship(
 
   // プレイヤーが師匠の場合、Skill_Growth閾値を確認
   if (mentorCharacterId) {
-    const mentor = await sql<Record<string, number>[]>`
-      SELECT skill_${sql.unsafe(skillType)}_growth as skill_growth
+    const skillCol = `skill_${skillType}_growth`
+    const mentor = await sql<{ skillGrowth: number }[]>`
+      SELECT ${sql.unsafe(skillCol)} as skill_growth
       FROM characters WHERE id = ${mentorCharacterId} LIMIT 1
     `
-    if (!mentor[0] || (mentor[0]['skill_growth'] ?? 0) < MENTOR_THRESHOLD) {
+    if (!mentor[0] || (mentor[0].skillGrowth ?? 0) < MENTOR_THRESHOLD) {
       return { success: false, message: 'その人はまだ指導できるほどの腕前ではないようだ。' }
     }
 
@@ -123,18 +124,18 @@ export async function completeTraining(
 
   // 独学より多いSkill_Growth蓄積（1.5倍）
   const growthGain = Math.floor(Math.random() * 8) + 5
-  const col = `skill_${skillType}_growth`
+  const skillCol = `skill_${skillType}_growth`
   await sql`
     UPDATE characters
-    SET ${sql.unsafe(col)} = ${sql.unsafe(col)} + ${growthGain},
+    SET ${sql.unsafe(skillCol)} = ${sql.unsafe(skillCol)} + ${growthGain},
         updated_at = NOW()
     WHERE id = ${apprenticeId}
   `
 
-  const currentGrowth = await sql<Record<string, number>[]>`
-    SELECT ${sql.unsafe(col)} as g FROM characters WHERE id = ${apprenticeId} LIMIT 1
+  const currentGrowth = await sql<{ g: number }[]>`
+    SELECT ${sql.unsafe(skillCol)} as g FROM characters WHERE id = ${apprenticeId} LIMIT 1
   `
-  const g = currentGrowth[0]?.['g'] ?? 0
+  const g = currentGrowth[0]?.g ?? 0
 
   if (g < 100) return '師匠の動きを真似ながら練習した。何かが少し掴めた気がする。'
   if (g < 300) return '師匠の教えが少しずつ体に染み込んできた。'
