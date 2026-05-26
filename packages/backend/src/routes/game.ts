@@ -125,6 +125,42 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await buyItem(char.id, body.data.itemTemplateId, char.villageId))
   })
 
+  // ---- プレイヤーマーケット（露店） ----
+
+  app.get('/api/game/market/player', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { getPlayerMarketListings } = await import('../market/playerMarketService.js')
+    return reply.send({ success: true, listings: await getPlayerMarketListings(char.villageId), myCharacterId: char.id })
+  })
+
+  app.post('/api/game/market/player/list', async (request, reply) => {
+    const body = z.object({ itemId: z.string(), price: z.number().min(1) }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { listPlayerItem } = await import('../market/playerMarketService.js')
+    return reply.send(await listPlayerItem(char.id, char.villageId, body.data.itemId, body.data.price))
+  })
+
+  app.post('/api/game/market/player/buy', async (request, reply) => {
+    const body = z.object({ listingId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { buyPlayerItem } = await import('../market/playerMarketService.js')
+    return reply.send(await buyPlayerItem(char.id, body.data.listingId))
+  })
+
+  app.post('/api/game/market/player/cancel', async (request, reply) => {
+    const body = z.object({ listingId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { cancelPlayerItemListing } = await import('../market/playerMarketService.js')
+    return reply.send(await cancelPlayerItemListing(char.id, body.data.listingId))
+  })
+
   // ---- NPC ----
 
   app.post('/api/game/npc/talk', async (request, reply) => {
@@ -504,6 +540,23 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
     return reply.send(await joinGuild(char.id, body.data.guildId))
+  })
+
+  // ---- チャット ----
+  app.get('/api/game/chat', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { getVillageChat } = await import('../social/chatService.js')
+    return reply.send({ success: true, messages: await getVillageChat(char.villageId) })
+  })
+
+  app.post('/api/game/chat/send', async (request, reply) => {
+    const body = z.object({ content: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { sendVillageChat } = await import('../social/chatService.js')
+    return reply.send(await sendVillageChat(char.id, char.villageId, body.data.content))
   })
 
   // ---- 料理・ダンジョン・家畜 ----
