@@ -113,7 +113,20 @@ export async function startCombat(
 
   // 群れの数をランダムに決定
   const count = Math.floor(Math.random() * (monster.maxCount - monster.minCount + 1)) + monster.minCount
-  const totalPower = monster.basePower * count
+
+  // 強化種・超強化種の抽選（超強化種 1%、強化種 10%）
+  const eliteRoll = Math.random()
+  let eliteMultiplier = 1
+  let eliteLabel = ''
+  if (eliteRoll < 0.01) {
+    eliteMultiplier = 4
+    eliteLabel = 'SUPER_ELITE'
+  } else if (eliteRoll < 0.11) {
+    eliteMultiplier = 2
+    eliteLabel = 'ELITE'
+  }
+
+  const totalPower = monster.basePower * count * eliteMultiplier
 
   // 戦闘所要時間（群れが多いほど長い）
   const durationMinutes = Math.max(3, Math.min(60, Math.floor(totalPower / 3)))
@@ -121,7 +134,7 @@ export async function startCombat(
   return registerAction({
     characterId,
     actionType: 'COMBAT_MONSTER',
-    parameters: { monsterType, count },
+    parameters: { monsterType, count, eliteMultiplier, eliteLabel },
     durationOverrideMinutes: durationMinutes,
   })
 }
@@ -130,7 +143,9 @@ export async function startCombat(
 export async function completeCombat(
   characterId: string,
   monsterType: MonsterType,
-  count: number = 1
+  count: number = 1,
+  eliteMultiplier: number = 1,
+  eliteLabel: string = ''
 ): Promise<{ resultText: string; victory: boolean; canSkin: boolean }> {
   const char = await sql<{ level: number; skillCombatGrowth: number; fatigueInternal: number; health: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null }[]>`
     SELECT level, skill_combat_growth, fatigue_internal, health, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${characterId} LIMIT 1
@@ -147,7 +162,7 @@ export async function completeCombat(
   // 例: Lv10=~244, Lv50=~1810, Lv100=~4500
   const baseSkill = char[0].level * 15 + Math.floor(Math.pow(char[0].level, 1.5) * 3)
   const skill = Math.floor(baseSkill * fatigueMultiplier)
-  const totalPower = monster.basePower * count
+  const totalPower = monster.basePower * count * eliteMultiplier
 
   // 実質最大HPの計算 (後半ほどHPが大きく伸びる)
   // 例: Lv10=~313, Lv50=~1557, Lv100=~3600
@@ -302,10 +317,15 @@ export async function completeCombat(
   const playerPower = ((skill + weaponAtk + weaponMag + skillBonus) * atkMultiplier * elementalAtkMultiplier) + (defBonus * 1.5 * defMultiplier) + Math.random() * 30
   const monsterPower = totalPower + Math.random() * 10
   const victory = playerPower >= monsterPower * 0.5
-  const elStr = randomElement && elementNames[randomElement] ? `【${elementNames[randomElement]}属性】` : ''
+  const elStr = randomElement && elementNames[randomElement] ? `「${elementNames[randomElement]}属性」` : ''
   const countText = count > 1 ? `${count}体の` : ''
-  const mName = `${elStr}${countText}${monster.name}`
-  let battleLog = `【戦闘開始】 ${mName} が現れた！\n`
+  // 強化種・超強化種の名前プレフィックス
+  const elitePrefix = eliteLabel === 'SUPER_ELITE' ? '⚡超強化種⚡ ' : eliteLabel === 'ELITE' ? '🔴強化種 ' : ''
+  const mName = `${elitePrefix}${elStr}${countText}${monster.name}`
+  let battleLog = `》戦闘開始《 ${mName}が現れた！`
+  if (eliteLabel === 'SUPER_ELITE') battleLog += '\n⚡ 警告！この魔物は通常の４倍の強さを持つ超強化種だ！ドロップ率大幅アップ！'
+  else if (eliteLabel === 'ELITE') battleLog += '\n🔴 この魔物は強化種！通常の２倍強い！その分素材が多く手に入る！'
+  battleLog += '\n'
 
   let damageTaken = 0
   let fatigueGained = 10
@@ -406,8 +426,8 @@ export async function completeCombat(
 
     battleLog += `\n【戦闘終了】 ${generateVictoryText(skill, monster.name, countText)}`
 
-    // 自動で剥ぎ取りを実行
-    const skinningResult = await completeSkinning(characterId, monsterType)
+    // 自動で剥ぎ取りを実行（強化種は素材量僕アップ）
+    const skinningResult = await completeSkinning(characterId, monsterType, eliteMultiplier)
     battleLog += `\n💀 剥ぎ取り: ${skinningResult}`
 
     return {
@@ -442,7 +462,8 @@ export async function startSkinning(
 /** 剥ぎ取り完了時の処理 */
 export async function completeSkinning(
   characterId: string,
-  monsterType: MonsterType
+  monsterType: MonsterType,
+  eliteMultiplier: number = 1
 ): Promise<string> {
   const monster = MONSTERS[monsterType]
   if (!monster) return '剥ぎ取れませんでした。'
@@ -452,8 +473,8 @@ export async function completeSkinning(
   `
   const skill = char[0]?.skillSkinningGrowth ?? 0
 
-  // スキルに応じて取得素材数が増える
-  const baseAmount = 1
+  // スキルに応じて取得素材数が増える（強化種は倍率分増加）
+  const baseAmount = Math.ceil(eliteMultiplier)
   const bonusAmount = Math.floor(skill / 100)
   const amount = baseAmount + bonusAmount
 
@@ -465,10 +486,13 @@ export async function completeSkinning(
 
   const drops: string[] = [c1, c2]
   const r = Math.random()
-  if (r < 0.002) {
-    drops.push(ur1) // 激レア 0.2%
-  } else if (r < 0.052) {
-    drops.push(r1) // レア 5%
+  // 強化種・超強化種はレアドロップ確率がeliteMultiplier倍
+  const rareThreshold = 0.002 * eliteMultiplier   // 通常0.2% → 強化種0.4% → 超強化種0.8%
+  const uncommonThreshold = 0.052 * eliteMultiplier // 通常5.2% → 強化種10.4% → 超強化種20.8%
+  if (r < rareThreshold) {
+    drops.push(ur1) // 激レア（強化種で確率UP）
+  } else if (r < uncommonThreshold) {
+    drops.push(r1) // レア（強化種で確率UP）
   }
 
   // 素材をインベントリに追加

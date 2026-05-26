@@ -171,7 +171,9 @@ export async function completeAction(
       const { completeCombat } = await import('../combat/combatService.js')
       const monsterType = params.monsterType || 'SLIME'
       const count = params.count || 1
-      const combatResult = await completeCombat(characterId, monsterType, count)
+      const eliteMultiplier = params.eliteMultiplier || 1
+      const eliteLabel = params.eliteLabel || ''
+      const combatResult = await completeCombat(characterId, monsterType, count, eliteMultiplier, eliteLabel)
       resultText = combatResult.resultText
     } else if (actionType === 'COOK') {
       const { completeCook } = await import('../social/dungeonService.js')
