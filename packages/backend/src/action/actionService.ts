@@ -197,6 +197,10 @@ export async function completeAction(
       WHERE id = ${characterId}
     `
   })
+
+  // 行動完了時に賞金首であれば一定確率で衛兵遭遇フラグを立てる（ポーリング抽選からの移行）
+  const { triggerGuardEncounterIfWanted } = await import('../pvp/pvpService.js')
+  await triggerGuardEncounterIfWanted(characterId)
 }
 
 /**

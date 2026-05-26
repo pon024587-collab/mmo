@@ -21,21 +21,11 @@ export async function pvpRoutes(app: FastifyInstance): Promise<void> {
 
   // ---- 衛兵遭遇 ----
 
-  // 衛兵遭遇ペンディング状態確認（フロントが30秒ごとにポーリング）
+  // 衛兵遭遇ペンディング状態確認（フロントが30秒ごとにポーリングまたは行動完了時に確認）
   app.get('/api/pvp/guard/status', async (request, reply) => {
     const char = await getActiveChar((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
-    let status = await getGuardEncounterStatus(char.id)
-    
-    // 賞金首なのにフラグが立っていなければ、一定確率で遭遇フラグを立てる（ポーリングで遭遇）
-    if (!status.pending && status.bountyAmount > 0) {
-      const { triggerGuardEncounterIfWanted } = await import('../pvp/pvpService.js')
-      const triggered = await triggerGuardEncounterIfWanted(char.id)
-      if (triggered) {
-        status.pending = true
-      }
-    }
-    
+    const status = await getGuardEncounterStatus(char.id)
     return reply.send({ success: true, ...status })
   })
 
