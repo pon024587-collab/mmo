@@ -16,6 +16,7 @@ export default defineConfig({
   preview: {
     port: parseInt(process.env['PORT'] ?? '3000'),
     host: '0.0.0.0',
+    allowedHosts: 'all',
     proxy: {
       '/api': {
         target: process.env['VITE_API_URL'] ?? 'http://localhost:4000',
@@ -24,7 +25,6 @@ export default defineConfig({
     },
   },
   define: {
-    // ビルド時にAPIのURLを埋め込む
     __API_URL__: JSON.stringify(process.env['VITE_API_URL'] ?? ''),
   },
 })
