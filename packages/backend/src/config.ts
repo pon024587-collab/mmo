@@ -1,17 +1,23 @@
 /**
  * アプリケーション設定
- * 環境変数から設定値を読み込む
  */
+
+// デバッグ: 環境変数を出力
+console.log('[config] DATABASE_URL:', process.env['DATABASE_URL'] ? 'SET' : 'NOT SET')
+console.log('[config] REDIS_URL:', process.env['REDIS_URL'] ? 'SET' : 'NOT SET')
+console.log('[config] NODE_ENV:', process.env['NODE_ENV'])
+
+const databaseUrl = process.env['DATABASE_URL'] ??
+  process.env['POSTGRES_URL'] ??
+  process.env['DATABASE_PRIVATE_URL'] ??
+  'postgresql://medieval:medieval_pass@localhost:5432/medieval_life'
+
+console.log('[config] Using DB host:', new URL(databaseUrl).hostname)
 
 export const config = {
   port: parseInt(process.env['PORT'] ?? '4000', 10),
   nodeEnv: process.env['NODE_ENV'] ?? 'development',
-  databaseUrl: (
-    process.env['DATABASE_URL'] ??
-    process.env['POSTGRES_URL'] ??
-    process.env['DATABASE_PRIVATE_URL'] ??
-    'postgresql://medieval:medieval_pass@localhost:5432/medieval_life'
-  ),
+  databaseUrl,
   redisUrl: (
     process.env['REDIS_URL'] ??
     process.env['REDIS_PRIVATE_URL'] ??
@@ -20,4 +26,3 @@ export const config = {
   jwtSecret: process.env['JWT_SECRET'] ?? 'dev-secret-change-in-production',
   isDev: process.env['NODE_ENV'] !== 'production',
 } as const
-// force rebuild 05/26/2026 11:46:16
