@@ -19,7 +19,7 @@ export default function ResultLog({ results }: Props) {
             <span className="text-stone-500 text-xs">{r.actionType}</span>
             <span className="text-stone-600 text-xs">{new Date(r.completedAt).toLocaleString('ja-JP')}</span>
           </div>
-          <p className="text-stone-300 text-sm leading-relaxed">{r.resultText}</p>
+          <p className="text-stone-300 text-sm leading-relaxed whitespace-pre-wrap">{r.resultText}</p>
         </div>
       ))}
     </div>

@@ -170,6 +170,22 @@ export async function completeCombat(
   const monsterPower = totalPower + Math.random() * 10
   const victory = playerPower >= monsterPower * 0.5
 
+  const countText = count > 1 ? `${count}体の` : ''
+  const mName = `${countText}${monster.name}`
+  let battleLog = `【戦闘開始】 ${mName} が現れた！\n`
+
+  if (playerPower > monsterPower * 1.5) {
+    battleLog += `▶ あなたの先制攻撃！ 圧倒的な力で一掃した！\n`
+  } else {
+    battleLog += `▶ あなたの攻撃！ ${weaponCategory !== 'WEAPON_UNARMED' ? '武器の鋭い一撃！' : '素手による強烈な打撃！'}\n`
+    if (monsterPower > playerPower) {
+      battleLog += `▶ ${monster.name}の反撃！ 強烈なダメージを受けた！\n`
+    } else {
+      battleLog += `▶ ${monster.name}の反撃！ しかしあなたは間一髪で回避した！\n`
+    }
+    battleLog += `▶ あなたの追撃！ 魔法と技が交差する！\n`
+  }
+
   if (victory) {
     // 戦闘Skill_Growth蓄積
     const growthGain = Math.floor(totalPower / 8) + Math.floor(Math.random() * 3)
@@ -216,16 +232,17 @@ export async function completeCombat(
       }
     }
 
-    const countText = count > 1 ? `${count}体の` : ''
+    battleLog += `\n【戦闘終了】 ${generateVictoryText(skill, monster.name, countText)}${dropMsg}`
     return {
-      resultText: generateVictoryText(skill, monster.name, countText) + dropMsg,
+      resultText: battleLog,
       victory: true,
       canSkin: true, // 剥ぎ取り可能
     }
   } else {
     await sql`UPDATE characters SET health = 0, updated_at = NOW() WHERE id = ${characterId}`
+    battleLog += `\n【戦闘敗北】 ${mName}との戦いに敗れた。意識が遠のいていく…`
     return {
-      resultText: `${count > 1 ? `${count}体の` : ''}${monster.name}との戦いに敗れた。意識が遠のいていく…`,
+      resultText: battleLog,
       victory: false,
       canSkin: false,
     }
