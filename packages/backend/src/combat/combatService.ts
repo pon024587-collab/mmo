@@ -320,7 +320,7 @@ export async function completeCombat(
       let rawDamage = Math.floor(monsterPower - (playerPower * 0.8))
       if (rawDamage < 1) rawDamage = 1
       // 属性耐性でダメージを割合軽減
-      damageTaken = Math.floor(rawDamage * elementalResMultiplier)
+      damageTaken = Math.max(1, Math.floor(rawDamage * elementalResMultiplier))
       if (elementalResMsg) battleLog += elementalResMsg + '\n'
       battleLog += `▶ ${monster.name}の反撃！ ${damageTaken}のダメージを受けた！\n`
       fatigueGained = 20
