@@ -59,13 +59,15 @@ export async function fleeFromGuard(characterId: string): Promise<{
   success: boolean
   resultText: string
 }> {
-  const char = await sql<{ skillCombatGrowth: number; dexterityGrowth: number }[]>`
-    SELECT skill_combat_growth, dexterity_growth FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ skillCombatGrowth: number; dexterityGrowth: number; fatigueInternal: number }[]>`
+    SELECT skill_combat_growth, dexterity_growth, fatigue_internal FROM characters WHERE id = ${characterId} LIMIT 1
   `
   const dex = char[0]?.dexterityGrowth ?? 0
+  const fatigue = Math.max(0, Math.min(100, char[0]?.fatigueInternal ?? 0))
+  const fatigueMultiplier = 1.0 - (fatigue * 0.5 / 100)
 
-  // 器用さが高いほど逃げやすい
-  const fleeChance = 0.3 + (dex / 500)
+  // 器用さが高いほど逃げやすい（疲労で大幅減）
+  const fleeChance = (0.3 + (dex / 500)) * fatigueMultiplier
   const success = Math.random() < fleeChance
 
   if (success) {

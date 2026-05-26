@@ -89,8 +89,8 @@ export async function completeFarmHarvest(characterId: string): Promise<string> 
   const plot = await getFarmPlot(characterId)
   if (!plot || !plot.cropType) return '収穫できるものがありませんでした。'
 
-  const char = await sql<{ skillFarmingGrowth: number; villageId: string }[]>`
-    SELECT skill_farming_growth, village_id FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ skillFarmingGrowth: number; fatigueInternal: number; villageId: string }[]>`
+    SELECT skill_farming_growth, fatigue_internal, village_id FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!char[0]) return '収穫できませんでした。'
 
@@ -99,12 +99,16 @@ export async function completeFarmHarvest(characterId: string): Promise<string> 
   `
   const weather = village[0]?.currentWeather ?? 'CLEAR'
 
+  // 疲労ペナルティ（疲労100で全効果が半減）
+  const fatigue = Math.max(0, Math.min(100, char[0].fatigueInternal))
+  const fatigueMultiplier = 1.0 - (fatigue * 0.5 / 100)
+
   // 収穫量計算（内部）
   const base = 10
   const seasonBonus = (CROP_SEASONS[plot.cropType] ?? []).includes(plot.plantedSeason ?? '') ? 1.0 : 0.5
   const waterBonus = Math.min(plot.waterCount / (CROP_WATER_NEEDED[plot.cropType] ?? 3), 1.2)
   const weatherPenalty = weather === 'STORM' ? 0.7 : 1.0
-  const skillBonus = 1 + (char[0].skillFarmingGrowth / 1000)
+  const skillBonus = (1 + (char[0].skillFarmingGrowth / 1000)) * fatigueMultiplier
   const amount = Math.floor(base * seasonBonus * waterBonus * weatherPenalty * skillBonus)
 
   // アイテムをインベントリに追加

@@ -57,16 +57,18 @@ export async function completeGather(
   characterId: string,
   gatherType: GatherType
 ): Promise<string> {
-  const char = await sql<{ skillMiningGrowth: number; villageId: string }[]>`
-    SELECT skill_mining_growth, village_id FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ skillMiningGrowth: number; fatigueInternal: number; villageId: string }[]>`
+    SELECT skill_mining_growth, fatigue_internal, village_id FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!char[0]) return '採集できませんでした。'
 
   const { itemName } = GATHER_YIELDS[gatherType]
-  const skill = char[0].skillMiningGrowth
+  const fatigue = Math.max(0, Math.min(100, char[0].fatigueInternal))
+  const fatigueMultiplier = 1.0 - (fatigue * 0.5 / 100)
+  const skill = Math.floor(char[0].skillMiningGrowth * fatigueMultiplier)
 
   // 採集量（スキルに応じて増加）
-  const amount = Math.max(1, Math.floor(1 + skill / 100 + Math.random()))
+  const amount = Math.max(1, Math.floor((1 + skill / 100 + Math.random()) * fatigueMultiplier))
 
   // アイテム追加
   const template = await sql<{ id: string }[]>`

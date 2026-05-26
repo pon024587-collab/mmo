@@ -148,7 +148,7 @@ export async function completeCombat(
   let weaponElementValue = 0
 
   if (char[0].equippedWeaponId) {
-    const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number; subParameters: any }[]>`
+    const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number; properties: any }[]>`
       SELECT it.weapon_category, it.attack_power, it.magic_power, it.properties
       FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
@@ -158,7 +158,7 @@ export async function completeCombat(
       weaponCategory = w[0].weaponCategory || 'WEAPON_UNARMED'
       weaponAtk = w[0].attackPower || 0
       weaponMag = w[0].magicPower || 0
-      const sp = w[0].subParameters || {}
+      const sp = w[0].properties || {}
       weaponElement = sp.elementalAttack || ''
       weaponElementValue = sp.elementalAttackValue || 0
     }
@@ -171,25 +171,25 @@ export async function completeCombat(
   let accElementValue = 0
 
   if (char[0].equippedArmorId) {
-    const a = await sql<{ subParameters: any }[]>`
+    const a = await sql<{ properties: any }[]>`
       SELECT it.properties FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedArmorId}
     `
     if (a[0]) {
-      const sp = a[0].subParameters || {}
+      const sp = a[0].properties || {}
       armorElement = sp.elementalResistance || ''
       armorElementValue = sp.elementalResistanceValue || 0
     }
   }
   if (char[0].equippedAccessoryId) {
-    const ac = await sql<{ subParameters: any }[]>`
+    const ac = await sql<{ properties: any }[]>`
       SELECT it.properties FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedAccessoryId}
     `
     if (ac[0]) {
-      const sp = ac[0].subParameters || {}
+      const sp = ac[0].properties || {}
       accElement = sp.elementalResistance || ''
       accElementValue = sp.elementalResistanceValue || 0
     }

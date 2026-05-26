@@ -21,8 +21,9 @@ export async function calcCombatStats(characterId: string): Promise<CombatStats>
     equippedWeaponId: string | null
     equippedArmorId: string | null
     equippedAccessoryId: string | null
+    fatigueInternal: number
   }[]>`
-    SELECT skill_combat_growth, equipped_weapon_id, equipped_armor_id, equipped_accessory_id
+    SELECT skill_combat_growth, equipped_weapon_id, equipped_armor_id, equipped_accessory_id, fatigue_internal
     FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!char[0]) return { power: 0, weaponElement: '', weaponElementValue: 0, armorElement: '', armorElementValue: 0, accAtkElement: '', accAtkValue: 0, accResElement: '', accResValue: 0 }
@@ -35,7 +36,7 @@ export async function calcCombatStats(characterId: string): Promise<CombatStats>
   let accResElement = '', accResValue = 0
 
   if (char[0].equippedWeaponId) {
-    const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number; subParameters: any }[]>`
+    const w = await sql<{ weaponCategory: string | null; attackPower: number; magicPower: number; properties: any }[]>`
       SELECT it.weapon_category, it.attack_power, it.magic_power, it.properties
       FROM items i JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedWeaponId}
@@ -44,31 +45,31 @@ export async function calcCombatStats(characterId: string): Promise<CombatStats>
       weaponCategory = w[0].weaponCategory || 'WEAPON_UNARMED'
       weaponAtk = w[0].attackPower || 0
       weaponMag = w[0].magicPower || 0
-      const sp = w[0].subParameters || {}
+      const sp = w[0].properties || {}
       weaponElement = sp.elementalAttack || ''
       weaponElementValue = sp.elementalAttackValue || 0
     }
   }
 
   if (char[0].equippedArmorId) {
-    const a = await sql<{ subParameters: any }[]>`
+    const a = await sql<{ properties: any }[]>`
       SELECT it.properties FROM items i JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedArmorId}
     `
     if (a[0]) {
-      const sp = a[0].subParameters || {}
+      const sp = a[0].properties || {}
       armorElement = sp.elementalResistance || ''
       armorElementValue = sp.elementalResistanceValue || 0
     }
   }
 
   if (char[0].equippedAccessoryId) {
-    const ac = await sql<{ subParameters: any }[]>`
+    const ac = await sql<{ properties: any }[]>`
       SELECT it.properties FROM items i JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.id = ${char[0].equippedAccessoryId}
     `
     if (ac[0]) {
-      const sp = ac[0].subParameters || {}
+      const sp = ac[0].properties || {}
       accAtkElement = sp.elementalAttack || ''
       accAtkValue = sp.elementalAttackValue || 0
       accResElement = sp.elementalResistance || ''
@@ -84,7 +85,15 @@ export async function calcCombatStats(characterId: string): Promise<CombatStats>
   let skillBonus = 0
   for (const s of skills) skillBonus += Math.floor(Math.sqrt(s.exp))
 
-  const power = skill + weaponAtk + weaponMag + skillBonus
+  // 疲労度によるペナルティ計算（疲労100で全ステータスが半減）
+  const fatigue = Math.max(0, Math.min(100, char[0].fatigueInternal || 0))
+  const multiplier = 1.0 - (fatigue * 0.5 / 100)
+
+  const power = Math.floor((skill + weaponAtk + weaponMag + skillBonus) * multiplier)
+  weaponElementValue = Math.floor(weaponElementValue * multiplier)
+  armorElementValue = Math.floor(armorElementValue * multiplier)
+  accAtkValue = Math.floor(accAtkValue * multiplier)
+  accResValue = Math.floor(accResValue * multiplier)
 
   return { power, weaponElement, weaponElementValue, armorElement, armorElementValue, accAtkElement, accAtkValue, accResElement, accResValue }
 }

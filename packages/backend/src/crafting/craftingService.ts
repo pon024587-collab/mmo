@@ -63,10 +63,10 @@ export async function getRecipes(characterId: string): Promise<RecipeWithStock[]
     ORDER BY cr.required_crafting_skill ASC, cr.name ASC
   `
 
-  const char = await sql<{ skillCraftingGrowth: number }[]>`
-    SELECT skill_crafting_growth FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ skillCraftingGrowth: number; fatigueInternal: number }[]>`
+    SELECT skill_crafting_growth, fatigue_internal FROM characters WHERE id = ${characterId} LIMIT 1
   `
-  const craftingSkill = char[0]?.skillCraftingGrowth ?? 0
+  const base = char[0]?.skillCraftingGrowth ?? 0; const fat = Math.max(0, Math.min(100, char[0]?.fatigueInternal ?? 0)); const craftingSkill = Math.floor(base * (1.0 - fat * 0.5 / 100));
 
   // 所持素材を一括取得
   const owned = await sql<{ name: string; qty: number }[]>`
@@ -114,10 +114,10 @@ export async function craftItem(
   const r = recipe[0]
 
   // スキル確認
-  const char = await sql<{ skillCraftingGrowth: number }[]>`
-    SELECT skill_crafting_growth FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ skillCraftingGrowth: number; fatigueInternal: number }[]>`
+    SELECT skill_crafting_growth, fatigue_internal FROM characters WHERE id = ${characterId} LIMIT 1
   `
-  const skill = char[0]?.skillCraftingGrowth ?? 0
+  const base = char[0]?.skillCraftingGrowth ?? 0; const fat = Math.max(0, Math.min(100, char[0]?.fatigueInternal ?? 0)); const skill = Math.floor(base * (1.0 - fat * 0.5 / 100));
   if (skill < r.requiredCraftingSkill) {
     return {
       success: false,

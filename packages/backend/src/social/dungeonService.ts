@@ -75,10 +75,12 @@ export async function cook(
 }
 
 export async function completeCook(characterId: string, recipeType: string): Promise<string> {
-  const skill = await sql<{ skillCookingGrowth: number }[]>`
-    SELECT skill_cooking_growth FROM characters WHERE id = ${characterId} LIMIT 1
+  const skill = await sql<{ skillCookingGrowth: number; fatigueInternal: number }[]>`
+    SELECT skill_cooking_growth, fatigue_internal FROM characters WHERE id = ${characterId} LIMIT 1
   `
-  const s = skill[0]?.skillCookingGrowth ?? 0
+  const rawSkill = skill[0]?.skillCookingGrowth ?? 0
+  const fatigue = Math.max(0, Math.min(100, skill[0]?.fatigueInternal ?? 0))
+  const s = Math.floor(rawSkill * (1.0 - fatigue * 0.5 / 100))
 
   // 完成品をインベントリに追加
   const outputMap: Record<string, string> = { BREAD: 'BREAD', STEW: 'MEAT', HERBAL_TEA: 'HERB' }
