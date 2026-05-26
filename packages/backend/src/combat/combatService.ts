@@ -28,69 +28,73 @@ export type MonsterType =
 interface MonsterStats {
   name: string
   basePower: number
-  dropMaterials: string[]
-  dropItems: string[]
+  elements: string[]
+  terrains: string[]
   minCount: number
   maxCount: number
 }
 
 const MONSTERS: Record<MonsterType, MonsterStats> = {
   // --- Tier1 (basePower 5-15) ---
-  SLIME:        { name: 'スライム',       basePower: 5,   dropMaterials: ['スライムの核'],                       dropItems: [],         minCount: 1, maxCount: 3  },
-  BAT:          { name: 'コウモリ',       basePower: 8,   dropMaterials: ['コウモリの翼'],                       dropItems: [],         minCount: 1, maxCount: 8  },
-  GIANT_RAT:    { name: '大ネズミ',       basePower: 8,   dropMaterials: ['ネズミの毛皮'],                       dropItems: [],         minCount: 1, maxCount: 6  },
-  GOBLIN:       { name: 'ゴブリン',       basePower: 10,  dropMaterials: ['ゴブリンの耳'],                       dropItems: ['鉄鉱石'], minCount: 1, maxCount: 5  },
-  SKELETON:     { name: 'スケルトン',     basePower: 10,  dropMaterials: ['古びた骨'],                           dropItems: [],         minCount: 1, maxCount: 4  },
-  ZOMBIE:       { name: 'ゾンビ',         basePower: 10,  dropMaterials: ['腐敗した肉'],                         dropItems: [],         minCount: 1, maxCount: 5  },
-  HOBGOBLIN:    { name: 'ホブゴブリン',   basePower: 13,  dropMaterials: ['ゴブリンの耳', 'ホブゴブリンの牙'],   dropItems: [],         minCount: 1, maxCount: 3  },
-  KOBOLD:       { name: 'コボルト',       basePower: 12,  dropMaterials: ['コボルトの鱗'],                       dropItems: [],         minCount: 1, maxCount: 5  },
-  WOLF:         { name: '狼',             basePower: 15,  dropMaterials: ['狼の毛皮'],                           dropItems: ['肉'],     minCount: 1, maxCount: 6  },
-  POISON_SPIDER:{ name: '毒蜘蛛',         basePower: 12,  dropMaterials: ['蜘蛛の糸', '毒の牙'],                 dropItems: [],         minCount: 1, maxCount: 4  },
+  SLIME:        { name: 'スライム',       basePower: 5,   elements: ['WATER','ICE'], terrains: ['RIVER','FOREST','PLAIN'], minCount: 1, maxCount: 3 },
+  BAT:          { name: 'コウモリ',       basePower: 8,   elements: ['WIND','DARK'], terrains: ['MOUNTAIN','FOREST'], minCount: 1, maxCount: 8 },
+  GIANT_RAT:    { name: '大ネズミ',       basePower: 8,   elements: ['EARTH','DARK'], terrains: ['PLAIN','FOREST','DESERT'], minCount: 1, maxCount: 6 },
+  GOBLIN:       { name: 'ゴブリン',       basePower: 10,  elements: ['EARTH','FIRE'], terrains: ['FOREST','MOUNTAIN'], minCount: 1, maxCount: 5 },
+  SKELETON:     { name: 'スケルトン',     basePower: 10,  elements: ['DARK','EARTH'], terrains: ['SNOWFIELD','DESERT'], minCount: 1, maxCount: 4 },
+  ZOMBIE:       { name: 'ゾンビ',         basePower: 10,  elements: ['DARK','WATER'], terrains: ['FOREST','RIVER'], minCount: 1, maxCount: 5 },
+  HOBGOBLIN:    { name: 'ホブゴブリン',   basePower: 13,  elements: ['EARTH','FIRE','THUNDER'], terrains: ['FOREST','MOUNTAIN'], minCount: 1, maxCount: 3 },
+  KOBOLD:       { name: 'コボルト',       basePower: 12,  elements: ['EARTH','WIND'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 5 },
+  WOLF:         { name: '狼',             basePower: 15,  elements: ['WIND','ICE'], terrains: ['SNOWFIELD','FOREST','PLAIN'], minCount: 1, maxCount: 6 },
+  POISON_SPIDER:{ name: '毒蜘蛛',         basePower: 12,  elements: ['DARK','EARTH'], terrains: ['FOREST','MOUNTAIN'], minCount: 1, maxCount: 4 },
+  
   // --- Tier2 (basePower 16-35) ---
-  ORC:          { name: 'オーク',         basePower: 25,  dropMaterials: ['オークの牙'],                         dropItems: ['肉'],     minCount: 1, maxCount: 3  },
-  BANDIT:       { name: '盗賊',           basePower: 20,  dropMaterials: ['盗賊のナイフ'],                       dropItems: ['銅の剣'], minCount: 1, maxCount: 4  },
-  LIZARDMAN:    { name: 'リザードマン',   basePower: 22,  dropMaterials: ['リザードの鱗'],                       dropItems: [],         minCount: 1, maxCount: 3  },
-  HARPY:        { name: 'ハーピー',       basePower: 20,  dropMaterials: ['ハーピーの羽根'],                     dropItems: [],         minCount: 1, maxCount: 4  },
-  GIANT_SNAKE:  { name: '大蛇',           basePower: 25,  dropMaterials: ['蛇の皮', '蛇の毒腺'],                 dropItems: [],         minCount: 1, maxCount: 2  },
-  HELLHOUND:    { name: '魔犬',           basePower: 28,  dropMaterials: ['魔犬の牙'],                           dropItems: [],         minCount: 1, maxCount: 3  },
-  GREMLIN:      { name: 'グレムリン',     basePower: 18,  dropMaterials: ['グレムリンの爪'],                     dropItems: [],         minCount: 2, maxCount: 6  },
-  MUMMY:        { name: 'ミイラ',         basePower: 22,  dropMaterials: ['包帯布', '呪いの砂'],                 dropItems: [],         minCount: 1, maxCount: 3  },
-  GOLEM:        { name: 'ゴーレム',       basePower: 35,  dropMaterials: ['魔法の石'],                           dropItems: ['石材'],   minCount: 1, maxCount: 1  },
-  ORC_WARRIOR:  { name: 'オーク戦士',     basePower: 30,  dropMaterials: ['オークの牙', 'オークの角'],           dropItems: ['肉'],     minCount: 1, maxCount: 2  },
+  ORC:          { name: 'オーク',         basePower: 25,  elements: ['EARTH','FIRE'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 3 },
+  BANDIT:       { name: '盗賊',           basePower: 20,  elements: ['DARK','EARTH'], terrains: ['FOREST','DESERT','PLAIN'], minCount: 1, maxCount: 4 },
+  LIZARDMAN:    { name: 'リザードマン',   basePower: 22,  elements: ['WATER','EARTH'], terrains: ['RIVER','PLAIN'], minCount: 1, maxCount: 3 },
+  HARPY:        { name: 'ハーピー',       basePower: 20,  elements: ['WIND','THUNDER'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 4 },
+  GIANT_SNAKE:  { name: '大蛇',           basePower: 25,  elements: ['WATER','DARK'], terrains: ['FOREST','RIVER'], minCount: 1, maxCount: 2 },
+  HELLHOUND:    { name: '魔犬',           basePower: 28,  elements: ['FIRE','DARK'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 3 },
+  GREMLIN:      { name: 'グレムリン',     basePower: 18,  elements: ['THUNDER','WIND'], terrains: ['MOUNTAIN','DESERT'], minCount: 2, maxCount: 6 },
+  MUMMY:        { name: 'ミイラ',         basePower: 22,  elements: ['DARK','EARTH','FIRE'], terrains: ['DESERT'], minCount: 1, maxCount: 3 },
+  GOLEM:        { name: 'ゴーレム',       basePower: 35,  elements: ['EARTH'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 1 },
+  ORC_WARRIOR:  { name: 'オーク戦士',     basePower: 30,  elements: ['EARTH','FIRE'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 2 },
+
   // --- Tier3 (basePower 36-65) ---
-  UNDEAD:       { name: 'アンデッド',     basePower: 30,  dropMaterials: ['アンデッドの骨'],                     dropItems: ['薬草'],   minCount: 2, maxCount: 8  },
-  DARK_ELF:     { name: 'ダークエルフ',   basePower: 35,  dropMaterials: ['ダークエルフの弓'],                   dropItems: ['魔石'],   minCount: 1, maxCount: 3  },
-  TROLL:        { name: 'トロル',         basePower: 40,  dropMaterials: ['トロルの皮'],                         dropItems: ['石材'],   minCount: 1, maxCount: 2  },
-  GRIFFIN:      { name: 'グリフィン',     basePower: 45,  dropMaterials: ['グリフィンの羽根', 'グリフィンの爪'], dropItems: [],         minCount: 1, maxCount: 2  },
-  BASILISK:     { name: 'バジリスク',     basePower: 48,  dropMaterials: ['バジリスクの石眼', '石化の体液'],     dropItems: [],         minCount: 1, maxCount: 1  },
-  VAMPIRE:      { name: 'ヴァンパイア',   basePower: 50,  dropMaterials: ['ヴァンパイアの血', 'ヴァンパイアの牙'],dropItems: [],        minCount: 1, maxCount: 2  },
-  OGRE:         { name: 'オーガ',         basePower: 45,  dropMaterials: ['オーガの角'],                         dropItems: ['石材'],   minCount: 1, maxCount: 2  },
-  CHIMERA:      { name: 'キマイラ',       basePower: 55,  dropMaterials: ['キマイラの角', 'キマイラの爪'],       dropItems: [],         minCount: 1, maxCount: 1  },
-  WEREWOLF:     { name: 'ウェアウルフ',   basePower: 48,  dropMaterials: ['銀の毛皮'],                           dropItems: [],         minCount: 1, maxCount: 2  },
-  GARGOYLE:     { name: 'ガーゴイル',     basePower: 42,  dropMaterials: ['ガーゴイルの翼'],                     dropItems: ['石材'],   minCount: 1, maxCount: 3  },
-  CYCLOPS:      { name: 'サイクロプス',   basePower: 50,  dropMaterials: ['サイクロプスの目'],                   dropItems: [],         minCount: 1, maxCount: 1  },
-  ZOMBIE_KNIGHT:{ name: 'ゾンビナイト',   basePower: 40,  dropMaterials: ['錆びた鎧の破片', '死者の魂石'],       dropItems: [],         minCount: 1, maxCount: 2  },
-  DARK_MAGE:    { name: '闇魔法使い',     basePower: 45,  dropMaterials: ['闇の魔石', '禁書の欠片'],             dropItems: [],         minCount: 1, maxCount: 2  },
-  STONE_GOLEM:  { name: 'ストーンゴーレム',basePower: 55, dropMaterials: ['魔法の石', '古代石'],                 dropItems: ['石材'],   minCount: 1, maxCount: 1  },
-  DOPPELGANGER: { name: 'ドッペルゲンガー',basePower: 52, dropMaterials: ['幻影の結晶'],                         dropItems: [],         minCount: 1, maxCount: 1  },
-  DARK_KNIGHT:  { name: '暗黒騎士',       basePower: 60,  dropMaterials: ['暗黒の鎧片', '呪われた剣の欠片'],     dropItems: [],         minCount: 1, maxCount: 1  },
+  UNDEAD:       { name: 'アンデッド',     basePower: 30,  elements: ['DARK','ICE'], terrains: ['SNOWFIELD','FOREST'], minCount: 2, maxCount: 8 },
+  DARK_ELF:     { name: 'ダークエルフ',   basePower: 35,  elements: ['DARK','WIND','ICE'], terrains: ['FOREST','SNOWFIELD'], minCount: 1, maxCount: 3 },
+  TROLL:        { name: 'トロル',         basePower: 40,  elements: ['EARTH','WATER'], terrains: ['MOUNTAIN','RIVER'], minCount: 1, maxCount: 2 },
+  GRIFFIN:      { name: 'グリフィン',     basePower: 45,  elements: ['WIND','THUNDER','LIGHT'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 2 },
+  BASILISK:     { name: 'バジリスク',     basePower: 48,  elements: ['EARTH','POISON','DARK'], terrains: ['DESERT','MOUNTAIN'], minCount: 1, maxCount: 1 },
+  VAMPIRE:      { name: 'ヴァンパイア',   basePower: 50,  elements: ['DARK','ICE','WIND'], terrains: ['FOREST','SNOWFIELD'], minCount: 1, maxCount: 2 },
+  OGRE:         { name: 'オーガ',         basePower: 45,  elements: ['EARTH','FIRE'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 2 },
+  CHIMERA:      { name: 'キマイラ',       basePower: 55,  elements: ['THUNDER','FIRE'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 1 },
+  WEREWOLF:     { name: 'ウェアウルフ',   basePower: 48,  elements: ['WIND','DARK','ICE'], terrains: ['FOREST','SNOWFIELD'], minCount: 1, maxCount: 2 },
+  GARGOYLE:     { name: 'ガーゴイル',     basePower: 42,  elements: ['EARTH','WIND'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 3 },
+  CYCLOPS:      { name: 'サイクロプス',   basePower: 50,  elements: ['EARTH','THUNDER'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 1 },
+  ZOMBIE_KNIGHT:{ name: 'ゾンビナイト',   basePower: 40,  elements: ['DARK','ICE'], terrains: ['SNOWFIELD','DESERT'], minCount: 1, maxCount: 2 },
+  DARK_MAGE:    { name: '闇魔法使い',     basePower: 45,  elements: ['DARK','FIRE','ICE'], terrains: ['FOREST','DESERT'], minCount: 1, maxCount: 2 },
+  STONE_GOLEM:  { name: 'ストーンゴーレム',basePower: 55, elements: ['EARTH'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 1 },
+  DOPPELGANGER: { name: 'ドッペルゲンガー',basePower: 52, elements: ['DARK','LIGHT'], terrains: ['PLAIN','FOREST'], minCount: 1, maxCount: 1 },
+  DARK_KNIGHT:  { name: '暗黒騎士',       basePower: 60,  elements: ['DARK','FIRE','ICE'], terrains: ['MOUNTAIN','SNOWFIELD'], minCount: 1, maxCount: 1 },
+
   // --- Tier4 (basePower 66-100) ---
-  PHOENIX:      { name: 'フェニックス',   basePower: 70,  dropMaterials: ['不死鳥の羽根', '炎の心臓'],           dropItems: [],         minCount: 1, maxCount: 2  },
-  LICH:         { name: 'リッチ',         basePower: 80,  dropMaterials: ['リッチの杖', '死の魔石'],             dropItems: [],         minCount: 1, maxCount: 2  },
-  HYDRA:        { name: 'ヒュドラ',       basePower: 75,  dropMaterials: ['ヒュドラの頭', '再生の血'],           dropItems: [],         minCount: 1, maxCount: 2  },
-  MINOTAUR:     { name: 'ミノタウロス',   basePower: 70,  dropMaterials: ['ミノタウロスの角', '迷宮の牛革'],     dropItems: [],         minCount: 1, maxCount: 3  },
-  DRAGON:       { name: 'ドラゴン',       basePower: 100, dropMaterials: ['竜の鱗', '竜の血'],                   dropItems: ['竜の杖'], minCount: 1, maxCount: 2  },
-  GORGON:       { name: 'ゴルゴン',       basePower: 72,  dropMaterials: ['ゴルゴンの蛇髪', '石化の瞳'],         dropItems: [],         minCount: 1, maxCount: 2  },
-  WYVERN:       { name: 'ワイバーン',     basePower: 85,  dropMaterials: ['ワイバーンの翼', '竜の血'],           dropItems: [],         minCount: 1, maxCount: 3  },
-  DEMON_MINION: { name: '魔王の手下',     basePower: 88,  dropMaterials: ['悪魔の角', '魔界の石'],               dropItems: [],         minCount: 2, maxCount: 4  },
-  ABYSS_WALKER: { name: '深淵の歩者',     basePower: 90,  dropMaterials: ['深淵の結晶'],                         dropItems: [],         minCount: 1, maxCount: 2  },
-  TITAN:        { name: 'タイタン',       basePower: 95,  dropMaterials: ['タイタンの骨', '巨人の心臓'],         dropItems: [],         minCount: 1, maxCount: 2  },
+  PHOENIX:      { name: 'フェニックス',   basePower: 70,  elements: ['FIRE','LIGHT'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 2 },
+  LICH:         { name: 'リッチ',         basePower: 80,  elements: ['DARK','ICE','EARTH'], terrains: ['SNOWFIELD','DESERT'], minCount: 1, maxCount: 2 },
+  HYDRA:        { name: 'ヒュドラ',       basePower: 75,  elements: ['WATER','DARK','POISON'], terrains: ['RIVER'], minCount: 1, maxCount: 2 },
+  MINOTAUR:     { name: 'ミノタウロス',   basePower: 70,  elements: ['EARTH','FIRE'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 3 },
+  DRAGON:       { name: 'ドラゴン',       basePower: 100, elements: ['FIRE','WIND','EARTH'], terrains: ['MOUNTAIN','DESERT'], minCount: 1, maxCount: 2 },
+  GORGON:       { name: 'ゴルゴン',       basePower: 72,  elements: ['EARTH','DARK','WATER'], terrains: ['RIVER','MOUNTAIN'], minCount: 1, maxCount: 2 },
+  WYVERN:       { name: 'ワイバーン',     basePower: 85,  elements: ['WIND','THUNDER'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 3 },
+  DEMON_MINION: { name: '魔王の手下',     basePower: 88,  elements: ['DARK','FIRE'], terrains: ['MOUNTAIN','SNOWFIELD','DESERT'], minCount: 2, maxCount: 4 },
+  ABYSS_WALKER: { name: '深淵の歩者',     basePower: 90,  elements: ['DARK','ICE','WATER'], terrains: ['SNOWFIELD','RIVER'], minCount: 1, maxCount: 2 },
+  TITAN:        { name: 'タイタン',       basePower: 95,  elements: ['EARTH','THUNDER'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 2 },
+
   // --- Tier5 (basePower 120+, ボス) ---
-  ANCIENT_DRAGON:{ name: '古竜',          basePower: 150, dropMaterials: ['古竜の鱗', '古竜の心臓', '竜の血'],   dropItems: [],         minCount: 1, maxCount: 2  },
-  DEMON_KING:   { name: '魔王',           basePower: 200, dropMaterials: ['魔王の核', '魔界の王冠'],             dropItems: [],         minCount: 1, maxCount: 1  },
-  DEATH_GOD:    { name: '死神',           basePower: 180, dropMaterials: ['死者の魂石', '死の結晶'],             dropItems: [],         minCount: 1, maxCount: 1  },
-  FALLEN_ANGEL: { name: '堕天使',         basePower: 170, dropMaterials: ['堕天使の翼', '聖なる羽根'],           dropItems: [],         minCount: 1, maxCount: 2  },
-  CHAOS_GOD:    { name: '混沌の神',       basePower: 250, dropMaterials: ['混沌の欠片', '世界樹の欠片', '神の眼'],dropItems: [],        minCount: 1, maxCount: 1  },
+  ANCIENT_DRAGON:{ name: '古竜',          basePower: 150, elements: ['LIGHT','DARK','FIRE'], terrains: ['MOUNTAIN'], minCount: 1, maxCount: 2 },
+  DEMON_KING:   { name: '魔王',           basePower: 200, elements: ['DARK','FIRE','ICE'], terrains: ['DESERT','MOUNTAIN'], minCount: 1, maxCount: 1 },
+  DEATH_GOD:    { name: '死神',           basePower: 180, elements: ['DARK','ICE'], terrains: ['SNOWFIELD'], minCount: 1, maxCount: 1 },
+  FALLEN_ANGEL: { name: '堕天使',         basePower: 170, elements: ['LIGHT','DARK','WIND'], terrains: ['MOUNTAIN','PLAIN'], minCount: 1, maxCount: 2 },
+  CHAOS_GOD:    { name: '混沌の神',       basePower: 250, elements: ['DARK','LIGHT','FIRE'], terrains: ['MOUNTAIN','DESERT','SNOWFIELD'], minCount: 1, maxCount: 1 },
 }
 
 /** 戦闘開始（群れ対応） */
@@ -170,8 +174,11 @@ export async function completeCombat(
   const monsterPower = totalPower + Math.random() * 10
   const victory = playerPower >= monsterPower * 0.5
 
+  const randomElement = monster.elements[Math.floor(Math.random() * monster.elements.length)] || '無'
+  const elementNames: Record<string, string> = { FIRE: '炎', WATER: '水', WIND: '風', EARTH: '土', THUNDER: '雷', ICE: '氷', LIGHT: '光', DARK: '闇', POISON: '毒' }
+  const elStr = elementNames[randomElement] ? `【${elementNames[randomElement]}属性】` : ''
   const countText = count > 1 ? `${count}体の` : ''
-  const mName = `${countText}${monster.name}`
+  const mName = `${elStr}${countText}${monster.name}`
   let battleLog = `【戦闘開始】 ${mName} が現れた！\n`
 
   let damageTaken = 0
@@ -320,8 +327,23 @@ export async function completeSkinning(
   const bonusAmount = Math.floor(skill / 100)
   const amount = baseAmount + bonusAmount
 
+  // 素材の決定
+  const c1 = `${monster.name}の皮`
+  const c2 = `${monster.name}の骨`
+  const r1 = `${monster.name}の鋭牙`
+  const ur1 = `${monster.name}の魔核`
+
+  const drops: string[] = [c1, c2]
+  const r = Math.random()
+  if (r < 0.002) {
+    drops.push(ur1) // 激レア 0.2%
+  } else if (r < 0.052) {
+    drops.push(r1) // レア 5%
+  }
+
   // 素材をインベントリに追加
-  for (const materialName of monster.dropMaterials) {
+  const droppedText = []
+  for (const materialName of drops) {
     const template = await sql<{ id: string }[]>`
       SELECT id FROM item_templates WHERE name = ${materialName} LIMIT 1
     `
@@ -330,6 +352,7 @@ export async function completeSkinning(
         INSERT INTO items (owner_character_id, item_template_id, quantity)
         VALUES (${characterId}, ${template[0].id}, ${amount})
       `
+      droppedText.push(`${materialName}x${amount}`)
     }
   }
 
@@ -343,9 +366,10 @@ export async function completeSkinning(
     UPDATE characters SET dexterity_growth = dexterity_growth + 1 WHERE id = ${characterId}
   `
 
-  if (skill < 50) return `${monster.name}から素材を剥ぎ取った。まだ慣れていないが、なんとか取れた。`
-  if (skill < 200) return `${monster.name}から手際よく素材を剥ぎ取った。`
-  return `${monster.name}から無駄なく素材を剥ぎ取った。良質な素材が取れた。`
+  const lootMsg = droppedText.length > 0 ? ` 獲得: ${droppedText.join(', ')}` : ''
+  if (skill < 50) return `${monster.name}から素材を剥ぎ取った。まだ慣れていないが、なんとか取れた。${lootMsg}`
+  if (skill < 200) return `${monster.name}から手際よく素材を剥ぎ取った。${lootMsg}`
+  return `${monster.name}から無駄なく素材を剥ぎ取った。良質な素材が取れた。${lootMsg}`
 }
 
 /** 装備可能かチェック（隠しステータス） */

@@ -65,7 +65,7 @@ const ACTION_GROUPS: ActionGroup[] = [
 export default function ActionPanel({ isBusy, onActionStart }: Props) {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  const [monsters, setMonsters] = useState<{ id: string; name: string; basePower: number; minCount: number; maxCount: number }[]>([])
+  const [monsters, setMonsters] = useState<{ id: string; name: string; basePower: number; minCount: number; maxCount: number; elements: string[] }[]>([])
   const [selectedMonster, setSelectedMonster] = useState('')
 
   useEffect(() => {
@@ -122,16 +122,21 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
       {/* 魔物討伐セクション */}
       <div className="bg-stone-900 border border-red-900/50 rounded-lg p-4">
         <h3 className="text-red-400 font-bold mb-3">⚔️ 魔物討伐</h3>
-        <p className="text-xs text-stone-400 mb-3">戦いたい魔物を選択して討伐に向かいます。難易度が高いほど戦闘力が必要です。</p>
+        <p className="text-xs text-stone-400 mb-3">
+          滞在中の「国・地域（地形）」に出現する魔物のみ表示されています。<br/>
+          魔物は戦闘時にランダムな属性を帯びます。
+        </p>
         <div className="flex gap-2">
           <select
             className="flex-1 bg-stone-950 border border-stone-700 rounded px-3 py-2 text-sm text-stone-200"
             value={selectedMonster}
             onChange={(e) => setSelectedMonster(e.target.value)}
-            disabled={isBusy || loading}
+            disabled={isBusy || loading || monsters.length === 0}
           >
             {monsters.map(m => {
-              const display = `${m.name} (難易度: ${m.basePower}) ${m.maxCount > 1 ? `[1〜${m.maxCount}体]` : ''}`
+              const elementNames: Record<string, string> = { FIRE: '炎', WATER: '水', WIND: '風', EARTH: '土', THUNDER: '雷', ICE: '氷', LIGHT: '光', DARK: '闇', POISON: '毒' }
+              const els = m.elements.map(e => elementNames[e] || '').join('/')
+              const display = `${m.name} (難度: ${m.basePower}) [${els}] ${m.maxCount > 1 ? `${m.minCount}〜${m.maxCount}体` : ''}`
               return (
                 <option key={m.id} value={m.id}>
                   {display}

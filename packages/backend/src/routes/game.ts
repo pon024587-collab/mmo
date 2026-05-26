@@ -250,13 +250,22 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
 
-    const monsterList = Object.entries(MONSTERS).map(([key, data]) => ({
-      id: key,
-      name: data.name,
-      basePower: data.basePower,
-      minCount: data.minCount,
-      maxCount: data.maxCount,
-    }))
+    const village = await sql<{ terrainType: string }[]>`
+      SELECT terrain_type FROM villages WHERE id = ${char.villageId} LIMIT 1
+    `
+    const terrain = village[0]?.terrainType || 'PLAIN'
+
+    // 現在の村の地形で出現する魔物だけに絞り込む
+    const monsterList = Object.entries(MONSTERS)
+      .filter(([, data]) => (data as any).terrains.includes(terrain))
+      .map(([key, data]) => ({
+        id: key,
+        name: data.name,
+        basePower: data.basePower,
+        minCount: data.minCount,
+        maxCount: data.maxCount,
+        elements: (data as any).elements,
+      }))
     
     // 難易度順にソート
     monsterList.sort((a, b) => a.basePower - b.basePower)
