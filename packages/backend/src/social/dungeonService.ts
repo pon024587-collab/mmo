@@ -114,14 +114,21 @@ export async function cook(
 
   for (const ing of needed) {
     const aliases = nameAliases[ing] ?? [ing]
-    const item = await sql<{ id: string }[]>`
-      SELECT i.id FROM items i
+    const item = await sql<{ id: string; quantity: number }[]>`
+      SELECT i.id, i.quantity FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.owner_character_id = ${characterId} AND it.name = ANY(${aliases}::text[]) LIMIT 1
     `
     if (!item[0]) {
       const label = ing === 'WHEAT' ? '小麦' : ing === 'MEAT' ? '肉' : ing === 'CARROT' ? 'ニンジン' : ing === 'HERB' ? '薬草' : ing
       return { success: false, errorCode: 'MISSING_PREREQUISITE', message: `素材が足りません：${label}` }
+    }
+    
+    // 素材を消費する
+    if (item[0].quantity > 1) {
+      await sql`UPDATE items SET quantity = quantity - 1 WHERE id = ${item[0].id}`
+    } else {
+      await sql`DELETE FROM items WHERE id = ${item[0].id}`
     }
   }
 
