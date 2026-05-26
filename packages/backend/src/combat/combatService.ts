@@ -196,18 +196,46 @@ export async function completeCombat(
   }
 
   if (victory) {
-    // 勝利時のステータス更新（ダメージと疲労）
+    // ===== EXP効率計算（強すぎると弱い敵からは成長しない）=====
+    const ratio = playerPower / Math.max(monsterPower, 1)
+    let expEfficiency: number
+    let efficiencyMsg = ''
+
+    if (ratio >= 4) {
+      expEfficiency = 0
+      efficiencyMsg = '\n⚠️ 弱すぎてスキルは全く鍛えられない。'
+    } else if (ratio >= 3) {
+      expEfficiency = 0.1
+      efficiencyMsg = '\n💤 相手が弱すぎる。成長効率: 10%'
+    } else if (ratio >= 2) {
+      expEfficiency = 0.3
+      efficiencyMsg = '\n💤 相手が弱い。成長効率: 30%'
+    } else if (ratio >= 1.5) {
+      expEfficiency = 0.6
+      efficiencyMsg = '\n⚡ 少し物足りない相手。成長効率: 60%'
+    } else if (ratio >= 1.0) {
+      expEfficiency = 1.0
+      efficiencyMsg = '\n⭐ 良い訓練相手。成長効率: 100%'
+    } else {
+      expEfficiency = 1.3
+      efficiencyMsg = '\n🔥 危険な相手で負けにくい！成長効率: 130%'
+    }
+    battleLog += efficiencyMsg
+
+    const baseGrowth = Math.floor(totalPower / 8) + Math.floor(Math.random() * 3)
+    const growthGain = Math.max(0, Math.round(baseGrowth * expEfficiency))
+
+    // 勝利時のステータス更新（ダメージと疲労、基礎戦闘スキル）
     await sql`
       UPDATE characters
       SET 
         health = GREATEST(1, health - ${damageTaken}), 
         fatigue_internal = LEAST(100, fatigue_internal + ${fatigueGained}),
-        skill_combat_growth = skill_combat_growth + ${Math.floor(totalPower / 8) + Math.floor(Math.random() * 3)}
+        skill_combat_growth = skill_combat_growth + ${growthGain}
       WHERE id = ${characterId}
     `
 
     // 詳細スキルの成長（魔法と武器）
-    const growthGain = Math.floor(totalPower / 8) + Math.floor(Math.random() * 3)
     const magicCategory = getMonsterMagicCategory(monsterType)
     await addSkillExp(characterId, magicCategory, growthGain)
     await addSkillExp(characterId, weaponCategory, growthGain)
