@@ -60,6 +60,10 @@ export async function registerAction(req: RegisterActionRequest): Promise<Regist
     return { success: false, errorCode: 'CHARACTER_INACTIVE', message: 'このキャラクターは死亡しています。' }
   }
 
+  if (char.status === 'IMPRISONED') {
+    return { success: false, errorCode: 'CHARACTER_INACTIVE', message: '牢獄に捕らえられているため、行動できません。' }
+  }
+
   // 行動中チェック（排他制御）
   if (char.status === 'ACTIVE_ACTION') {
     const current = await sql<{ actionType: string; scheduledCompletionAt: Date }[]>`

@@ -31,6 +31,7 @@ interface CharacterStatus {
   nationName: string
   gold: number
   taxDebt: number
+  status: string
   currentAction: string | null
   actionCompletesAt: string | null
   skills?: { category: string; exp: number; rank: string }[]
@@ -139,6 +140,13 @@ export default function GamePage() {
           <button onClick={handleLogout} className="text-stone-600 hover:text-stone-400 text-xs">ログアウト</button>
         </div>
       </header>
+
+      {/* 投獄バナー */}
+      {character.status === 'IMPRISONED' && (
+        <div className="bg-red-900 border-b border-red-700 px-4 py-2 text-sm text-red-100 flex items-center justify-center font-bold">
+          ⛓️ 牢獄に捕まっています ⛓️
+        </div>
+      )}
 
       {/* 現在の行動バナー */}
       {character.currentAction && (

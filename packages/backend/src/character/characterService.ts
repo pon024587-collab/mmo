@@ -123,6 +123,7 @@ export async function getCharacterStatus(characterId: string): Promise<{
   villageName: string
   nationName: string
   taxDebt: number
+  status: string
   currentAction: string | null
   actionCompletesAt: Date | null
   skills: { category: string; exp: number; rank: string }[]
@@ -187,6 +188,7 @@ export async function getCharacterStatus(characterId: string): Promise<{
     villageName: c.villageName,
     nationName: c.nationName,
     taxDebt,
+    status: c.status,
     currentAction: action?.actionType ?? null,
     actionCompletesAt: action?.scheduledCompletionAt ?? null,
     skills: detailedSkills,
