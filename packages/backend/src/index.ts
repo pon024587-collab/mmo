@@ -51,8 +51,8 @@ const start = async () => {
     } catch {
       console.warn('ワーカー起動失敗（サーバーは継続）')
     }
-  } catch {
-    console.error('起動エラー')
+  } catch (error) {
+    console.error('起動エラー:', error)
     process.exit(1)
   }
 }
