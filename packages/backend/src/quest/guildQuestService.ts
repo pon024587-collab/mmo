@@ -188,7 +188,18 @@ export async function getDailyQuestsForCharacter(guildId: string, characterId: s
   `
   const completedIds = new Set(completions.map(c => c.questId))
   const questsWithHints = await Promise.all(quests.map(async q => {
-    const hint = await getVillageHint(q.itemName)
+    const vHint = await getVillageHint(q.itemName)
+    const baseHint = ITEM_MONSTER_HINT[q.itemName]
+    
+    let hint = null
+    if (vHint && baseHint) {
+      hint = `${vHint} / ${baseHint}`
+    } else if (vHint) {
+      hint = vHint
+    } else if (baseHint) {
+      hint = baseHint
+    }
+    
     return { ...q, hint, isCompleted: completedIds.has(q.id) }
   }))
   return questsWithHints
