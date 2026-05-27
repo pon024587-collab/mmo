@@ -107,8 +107,14 @@ export async function completeEat(characterId: string, itemId: string): Promise<
   const t = template[0]
   const name = t?.name ?? ''
 
-  // アイテム削除
-  await sql`DELETE FROM items WHERE id = ${itemId}`
+  // アイテム消費（スタック対応: 1個だけ消費）
+  const itemRow = await sql<{ quantity: number }[]>`SELECT quantity FROM items WHERE id = ${itemId}`
+  if (!itemRow[0]) return '食事できませんでした。'
+  if (itemRow[0].quantity > 1) {
+    await sql`UPDATE items SET quantity = quantity - 1 WHERE id = ${itemId}`
+  } else {
+    await sql`DELETE FROM items WHERE id = ${itemId}`
+  }
 
   // --- 料理済み専用アイテム ---
   if (name === '焼きたてのパン') {
