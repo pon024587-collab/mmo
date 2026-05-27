@@ -24,7 +24,7 @@ export default function InventoryPanel() {
             </div>
           </div>
           <div className="flex gap-2">
-            {i.category === 'FOOD' && (
+            {(i.category === 'FOOD' || i.category === 'CONSUMABLE') && !['WATER', '水', '薬草茶'].includes(i.name) && (
               <button
                 onClick={() => {
                   api.post<{ success: boolean; message?: string }>('/game/eat', { itemId: i.id }).then(r => {
@@ -32,8 +32,6 @@ export default function InventoryPanel() {
                       api.get<{ success: boolean; items?: Item[] }>('/game/inventory').then(res => {
                         if (res.success && res.items) setItems(res.items)
                       })
-                      // The action has been queued, so we just let the main GamePage handle state refreshes.
-                      // Alert is a bit intrusive, but we can do a simple page reload or let the parent know.
                       alert('食事を開始しました。行動タブを確認してください。')
                     } else {
                       alert(r.message || 'エラーが発生しました')
@@ -45,7 +43,7 @@ export default function InventoryPanel() {
                 食べる
               </button>
             )}
-            {i.category === 'CONSUMABLE' && (
+            {(i.category === 'CONSUMABLE' || i.category === 'FOOD') && ['WATER', '水', '薬草茶'].includes(i.name) && (
               <button
                 onClick={() => {
                   api.post<{ success: boolean; message?: string }>('/game/drink', { itemId: i.id }).then(r => {
