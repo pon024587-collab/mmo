@@ -51,7 +51,7 @@ export async function completeTreatment(characterId: string): Promise<string> {
   await sql`
     UPDATE characters
     SET is_injured = false, is_sick = false,
-        health = LEAST(health_max, health + 20),
+        health = LEAST(health_max, health + FLOOR(health_max * 0.30)),
         updated_at = NOW()
     WHERE id = ${characterId}
   `

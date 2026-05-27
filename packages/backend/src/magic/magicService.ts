@@ -59,8 +59,11 @@ export async function castActiveSpell(
 
     // 効果適用
     if (spellId === 'HEAL') {
-      const healAmount = 20 + powerBonus
-      await tx`UPDATE characters SET health = LEAST(health_max, health + ${healAmount}) WHERE id = ${characterId}`
+      await tx`
+        UPDATE characters 
+        SET health = LEAST(health_max, health + FLOOR(health_max * 0.20) + ${powerBonus}) 
+        WHERE id = ${characterId}
+      `
     } else if (spellId === 'PURIFY') {
       const cureAmount = 15 + Math.floor(powerBonus / 2)
       await tx`
