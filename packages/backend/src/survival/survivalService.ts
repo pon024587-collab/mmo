@@ -144,7 +144,8 @@ export async function completeEat(characterId: string, itemId: string): Promise<
     await sql`
       UPDATE characters
       SET hunger_internal = LEAST(100, hunger_internal + 60),
-          health = LEAST(health_max, health + FLOOR(health_max * 0.15))
+          health = LEAST(health_max, health + FLOOR(health_max * 0.15)),
+          updated_at = NOW()
       WHERE id = ${characterId}
     `
     return '肉シチューを食べた。栄養満点で体が温まった。空腹が完全に癒え、傷も少し回復した。'
