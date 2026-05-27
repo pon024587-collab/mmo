@@ -11,6 +11,8 @@ interface ItemMetadata {
   crystals?: Record<string, number>[]
   bonus?: Record<string, number>
   enhance?: number
+  substats?: { type: string; value: number }[]
+  rerollCount?: number
 }
 
 interface ItemProperties {
@@ -229,6 +231,22 @@ export default function InventoryPanel() {
                   <div className="mt-1 flex gap-3 text-xs text-stone-400 pl-1 items-center">
                     {(meta?.bonusStrength ?? 0) > 0 && <span className="text-red-400">筋力 +{meta?.bonusStrength}</span>}
                     {(meta?.bonusDexterity ?? 0) > 0 && <span className="text-green-400">器用さ +{meta?.bonusDexterity}</span>}
+                  </div>
+                )}
+                {/* サブステータス一覧 */}
+                {meta?.substats && meta.substats.length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1 pl-1">
+                    {meta.substats.map((s, idx) => {
+                      const labels: Record<string, string> = {
+                        ATK: '攻撃力', DEF: '防御力', MAG: '魔法力',
+                        HP: '最大HP', CRIT: '会心率', SPEED: '行動速度'
+                      }
+                      return (
+                        <span key={idx} className="text-pink-400 bg-pink-900/30 px-1 rounded text-xs">
+                          {labels[s.type] || s.type} +{s.value}
+                        </span>
+                      )
+                    })}
                   </div>
                 )}
                 {/* クリスタル一覧 */}
