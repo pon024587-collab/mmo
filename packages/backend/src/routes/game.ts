@@ -478,7 +478,40 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await acceptQuest(char.id, body.data.npcId, body.data.title, body.data.description, body.data.rewardGold, []))
   })
 
-  // ---- 犯罪 ----
+  // 転生（死亡後に新キャラ作成）
+  app.post('/api/game/reborn', async (request, reply) => {
+    const { playerId } = request.user as { playerId: string }
+
+    // 死亡済みキャラクターがあるか確認
+    const dead = await sql<{ id: string }[]>`
+      SELECT id FROM characters WHERE player_id = ${playerId} AND status = 'INACTIVE' LIMIT 1
+    `
+    if (!dead[0]) {
+      return reply.status(400).send({ success: false, message: 'キャラクターはまだ生きています。' })
+    }
+
+    // アクティブなキャラクターがいないか確認
+    const alive = await sql<{ id: string }[]>`
+      SELECT id FROM characters WHERE player_id = ${playerId} AND status != 'INACTIVE' LIMIT 1
+    `
+    if (alive[0]) {
+      return reply.status(400).send({ success: false, message: 'すでにアクティブなキャラクターがいます。' })
+    }
+
+    const { createCharacter } = await import('../character/characterService.js')
+    const result = await createCharacter(playerId)
+
+    if (!result.success) {
+      return reply.status(500).send(result)
+    }
+
+    return reply.status(201).send({
+      success: true,
+      message: `新しい人生が始まりました。${result.nationName}の${result.villageName}に生まれました。`,
+      villageName: result.villageName,
+      nationName: result.nationName,
+    })
+  })
 
   app.post('/api/game/steal', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)

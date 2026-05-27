@@ -141,6 +141,9 @@ export default function GamePage() {
         <div className="text-center space-y-4">
           <p className="text-stone-400">キャラクターが見つかりません。</p>
           {error && <p className="text-red-400 text-sm">{error}</p>}
+          <button onClick={() => { navigate('/death') }} className="block w-full py-3 bg-amber-700 hover:bg-amber-600 text-white rounded-lg font-bold">
+            ✨ 新しい人生を始める
+          </button>
           <button onClick={() => { fetchCharacter(); setError('') }} className="text-amber-400 hover:underline text-sm">再試行</button>
           <br />
           <button onClick={handleLogout} className="text-stone-500 hover:text-stone-300 text-sm">ログアウト</button>
