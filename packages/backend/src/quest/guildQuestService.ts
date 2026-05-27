@@ -125,10 +125,54 @@ export async function getDailyQuestsForCharacter(guildId: string, characterId: s
   `
   const completedIds = new Set(completions.map(c => c.questId))
 
-  return quests.map(q => ({
-    ...q,
-    isCompleted: completedIds.has(q.id),
+  // 村名ヒントを生成（並列処理）
+  const questsWithHints = await Promise.all(quests.map(async q => {
+    const hint = await getVillageHint(q.itemName)
+    return { ...q, hint, isCompleted: completedIds.has(q.id) }
   }))
+
+  return questsWithHints
+}
+
+/** アイテムに対応する村名ヒントを取得 */
+async function getVillageHint(itemName: string): Promise<string | null> {
+  const ITEM_TERRAIN: Record<string, string[]> = {
+    'ゴブリンの耳':     ['FOREST', 'MOUNTAIN'],
+    'オークの牙':       ['MOUNTAIN', 'PLAIN'],
+    '狼の毛皮':         ['SNOWFIELD', 'FOREST', 'PLAIN'],
+    '盗賊のナイフ':     ['FOREST', 'DESERT', 'PLAIN'],
+    'トロルの皮':       ['MOUNTAIN', 'RIVER'],
+    'ダークエルフの弓': ['FOREST', 'SNOWFIELD'],
+    '竜の鱗':           ['MOUNTAIN', 'DESERT'],
+    'アンデッドの骨':   ['SNOWFIELD', 'FOREST'],
+    '魔石':             ['FOREST', 'DESERT'],
+    '毒の牙':           ['FOREST', 'RIVER'],
+    '鉄鉱石':           ['MOUNTAIN'],
+    '木材':             ['FOREST'],
+    '石材':             ['MOUNTAIN'],
+    '薬草':             ['FOREST', 'PLAIN'],
+    '肉':               ['FOREST', 'RIVER'],
+    'ジャガイモ':       ['PLAIN', 'RIVER'],
+    '小麦':             ['PLAIN'],
+    'ニンジン':         ['PLAIN', 'RIVER'],
+    'キャベツ':         ['PLAIN'],
+    'パン':             ['PLAIN'],
+  }
+
+  const terrains = ITEM_TERRAIN[itemName]
+  if (!terrains) return null
+
+  const villages = await sql<{ name: string }[]>`
+    SELECT name FROM villages
+    WHERE terrain_type = ANY(${terrains})
+      AND is_abandoned = false
+    ORDER BY development_level DESC
+    LIMIT 3
+  `
+
+  if (villages.length === 0) return null
+  return villages.map(v => v.name).join('・') + ' 周辺'
+}
 
 /** ギルドクエストを納品して完了する */
 export async function completeGuildQuest(
