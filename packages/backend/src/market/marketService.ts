@@ -132,6 +132,15 @@ export async function sellItem(
     `
   })
 
+  // クエスト進捗更新（アイテム納品）
+  const itemName = await sql<{ name: string }[]>`
+    SELECT name FROM item_templates WHERE id = ${item.itemTemplateId} LIMIT 1
+  `
+  if (itemName[0]) {
+    const { updateQuestProgress } = await import('../quest/questService.js')
+    await updateQuestProgress(characterId, 'DELIVER_ITEM', itemName[0].name, quantity)
+  }
+
   return { success: true, goldEarned: sellPrice }
 }
 
