@@ -27,11 +27,11 @@ export async function completeDungeonFloor(
   floor: number = 1
 ): Promise<string> {
   // 1. キャラクターのステータス取得
-  const charRows = await sql<{ hp: number; hpMax: number; mp: number; mpMax: number; level: number }[]>`
-    SELECT hp, hp_max, mp, mp_max, level FROM characters WHERE id = ${characterId} LIMIT 1
+  const charRows = await sql<{ health: number; healthMax: number; mana: number; manaMax: number; level: number }[]>`
+    SELECT health, health_max, mana, mana_max, level FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!charRows[0]) return 'キャラクターが見つかりません。'
-  let { hp, hpMax, level } = charRows[0]
+  let { health, healthMax, level } = charRows[0]
 
   // 2. 簡易戦闘シミュレーション（3回）
   let battleCount = 0
@@ -47,15 +47,15 @@ export async function completeDungeonFloor(
     const turnsToKill = Math.ceil(enemyHp / playerAtk)
     const damageTaken = turnsToKill * enemyAtk
 
-    hp -= damageTaken
-    if (hp <= 0) {
+    health -= damageTaken
+    if (health <= 0) {
       break // 死亡・撤退
     }
     battleCount++
   }
 
   // ステータス保存
-  await sql`UPDATE characters SET hp = ${Math.max(0, hp)} WHERE id = ${characterId}`
+  await sql`UPDATE characters SET health = ${Math.max(0, health)} WHERE id = ${characterId}`
 
   if (battleCount < 3) {
     return `第${floor}層の魔物に敗北し、逃げ帰った。（HPが尽きた）`
