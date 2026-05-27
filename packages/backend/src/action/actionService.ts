@@ -149,7 +149,7 @@ export async function completeAction(
       const resolvedItemId = params.itemId ?? params.item_id
       console.log(`[ActionService] EAT params:`, JSON.stringify(params), `resolvedItemId:`, resolvedItemId)
       if (!resolvedItemId) {
-        resultText = '食事できませんでした。アイテム情報が見つかりません。'
+        resultText = `[DEBUG] params keys: ${Object.keys(params).join(',') || '(none)'} | raw: ${JSON.stringify(params)}`
       } else {
         resultText = await completeEat(characterId, resolvedItemId)
       }
