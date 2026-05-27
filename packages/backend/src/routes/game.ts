@@ -192,6 +192,17 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ success: true, npcs })
   })
 
+  // NPC別クエスト取得
+  app.get('/api/game/npc/quests', async (request, reply) => {
+    const npcId = (request.query as { npcId?: string }).npcId
+    if (!npcId) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { getAvailableQuests } = await import('../quest/questService.js')
+    const quests = await getAvailableQuests(char.id, npcId)
+    return reply.send({ success: true, quests })
+  })
+
   // ---- 生存 ----
 
   app.post('/api/game/eat', async (request, reply) => {
