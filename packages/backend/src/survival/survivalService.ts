@@ -50,8 +50,22 @@ export async function eat(characterId: string, foodItemId: string): Promise<Regi
 /** 飲水行動 */
 export async function drink(characterId: string, hasWaterSource: boolean, itemId?: string): Promise<RegisterActionResult> {
   let consumeItemId = itemId
-  if (!consumeItemId && !hasWaterSource) {
-    // 水Itemが必要
+
+  if (consumeItemId) {
+    // インベントリから明示的に選択した水アイテムを消費（スタック対応）
+    const waterItem = await sql<{ quantity: number }[]>`
+      SELECT quantity FROM items WHERE id = ${consumeItemId} AND owner_character_id = ${characterId} LIMIT 1
+    `
+    if (!waterItem[0]) {
+      return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '水アイテムが見つかりません。' }
+    }
+    if (waterItem[0].quantity > 1) {
+      await sql`UPDATE items SET quantity = quantity - 1 WHERE id = ${consumeItemId}`
+    } else {
+      await sql`DELETE FROM items WHERE id = ${consumeItemId}`
+    }
+  } else if (!hasWaterSource) {
+    // 水アイテムを自動検索して消費
     const waterItem = await sql<{ id: string; quantity: number }[]>`
       SELECT i.id, i.quantity FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
@@ -61,13 +75,13 @@ export async function drink(characterId: string, hasWaterSource: boolean, itemId
       return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '近くに水源がなく、水も持っていません。' }
     }
     consumeItemId = waterItem[0].id
-    // 行動開始時にアイテムを消費する
     if (waterItem[0].quantity > 1) {
       await sql`UPDATE items SET quantity = quantity - 1 WHERE id = ${consumeItemId}`
     } else {
       await sql`DELETE FROM items WHERE id = ${consumeItemId}`
     }
   }
+
   return registerAction({ characterId, actionType: 'DRINK', parameters: consumeItemId ? { itemId: consumeItemId } : undefined })
 }
 
