@@ -10,6 +10,7 @@ export async function getPlayerMarketListings(villageId: string) {
     itemName: string
     category: string
     metadata: any
+    quantity: number
     durability: number | null
   }[]>`
     SELECT 
@@ -21,6 +22,7 @@ export async function getPlayerMarketListings(villageId: string) {
       it.name as item_name,
       it.category,
       i.metadata,
+      i.quantity,
       i.durability
     FROM player_market_listings p
     JOIN characters c ON p.seller_character_id = c.id
@@ -32,7 +34,7 @@ export async function getPlayerMarketListings(villageId: string) {
   return listings
 }
 
-export async function listPlayerItem(characterId: string, villageId: string, itemId: string, price: number) {
+export async function listPlayerItem(characterId: string, villageId: string, itemId: string, price: number, quantity: number = 1) {
   // Check if player has a house in this village
   const housing = await sql<{ id: string }[]>`
     SELECT h.id FROM housing h
@@ -53,11 +55,16 @@ export async function listPlayerItem(characterId: string, villageId: string, ite
   }
 
   // Check item ownership and unequip if needed
-  const items = await sql<{ id: string }[]>`
-    SELECT id FROM items WHERE id = ${itemId} AND owner_character_id = ${characterId}
+  const items = await sql<{ id: string; quantity: number; itemTemplateId: string; metadata: any; durability: number | null; qualityInternal: number }[]>`
+    SELECT id, quantity, item_template_id, metadata, durability, quality_internal
+    FROM items WHERE id = ${itemId} AND owner_character_id = ${characterId}
   `
   if (items.length === 0) {
     return { success: false, message: 'アイテムが見つかりません。' }
+  }
+  const item = items[0]
+  if (item.quantity < quantity || quantity <= 0) {
+    return { success: false, message: '指定した個数がありません。' }
   }
 
   // 行動中に使用予定のアイテムは出品不可
@@ -88,10 +95,24 @@ export async function listPlayerItem(characterId: string, villageId: string, ite
   // The simplest is to transfer owner_character_id to NULL to hide from inventory, and the market listing holds it.
   
   await sql.begin(async tx => {
-    await tx`UPDATE items SET owner_character_id = NULL WHERE id = ${itemId}`
+    let listedItemId = itemId
+    if (item.quantity > quantity) {
+      // 一部のみ出品する場合はスタックを分割
+      await tx`UPDATE items SET quantity = quantity - ${quantity} WHERE id = ${itemId}`
+      const newItems = await tx<{ id: string }[]>`
+        INSERT INTO items (owner_character_id, owner_housing_id, item_template_id, metadata, quantity, durability, quality_internal)
+        VALUES (NULL, NULL, ${item.itemTemplateId}, ${item.metadata}, ${quantity}, ${item.durability}, ${item.qualityInternal})
+        RETURNING id
+      `
+      listedItemId = newItems[0].id
+    } else {
+      // 全部出品する場合は所有者をNULLに
+      await tx`UPDATE items SET owner_character_id = NULL WHERE id = ${itemId}`
+    }
+
     await tx`
       INSERT INTO player_market_listings (seller_character_id, village_id, item_id, price)
-      VALUES (${characterId}, ${villageId}, ${itemId}, ${price})
+      VALUES (${characterId}, ${villageId}, ${listedItemId}, ${price})
     `
   })
 

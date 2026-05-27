@@ -122,19 +122,19 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
   })
 
   app.post('/api/game/market/sell', async (request, reply) => {
-    const body = z.object({ itemId: z.string() }).safeParse(request.body)
+    const body = z.object({ itemId: z.string(), quantity: z.number().min(1).optional().default(1) }).safeParse(request.body)
     if (!body.success) return reply.status(400).send({ success: false })
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
-    return reply.send(await sellItem(char.id, body.data.itemId, char.villageId))
+    return reply.send(await sellItem(char.id, body.data.itemId, char.villageId, body.data.quantity))
   })
 
   app.post('/api/game/market/buy', async (request, reply) => {
-    const body = z.object({ itemTemplateId: z.string() }).safeParse(request.body)
+    const body = z.object({ itemTemplateId: z.string(), quantity: z.number().min(1).optional().default(1) }).safeParse(request.body)
     if (!body.success) return reply.status(400).send({ success: false })
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
-    return reply.send(await buyItem(char.id, body.data.itemTemplateId, char.villageId))
+    return reply.send(await buyItem(char.id, body.data.itemTemplateId, char.villageId, body.data.quantity))
   })
 
   // ---- プレイヤーマーケット（露店） ----
@@ -147,12 +147,12 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
   })
 
   app.post('/api/game/market/player/list', async (request, reply) => {
-    const body = z.object({ itemId: z.string(), price: z.number().min(1) }).safeParse(request.body)
+    const body = z.object({ itemId: z.string(), price: z.number().min(1), quantity: z.number().min(1).optional().default(1) }).safeParse(request.body)
     if (!body.success) return reply.status(400).send({ success: false })
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
     const { listPlayerItem } = await import('../market/playerMarketService.js')
-    return reply.send(await listPlayerItem(char.id, char.villageId, body.data.itemId, body.data.price))
+    return reply.send(await listPlayerItem(char.id, char.villageId, body.data.itemId, body.data.price, body.data.quantity))
   })
 
   app.post('/api/game/market/player/buy', async (request, reply) => {

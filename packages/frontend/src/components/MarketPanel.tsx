@@ -32,19 +32,37 @@ export default function MarketPanel() {
     })
   }, [])
 
+  const [buyQuantities, setBuyQuantities] = useState<Record<string, number>>({})
+  const [sellQuantities, setSellQuantities] = useState<Record<string, number>>({})
+
   const handleBuy = async (itemTemplateId: string, name: string, price: number) => {
+    const qty = buyQuantities[itemTemplateId] || 1
     const res = await api.post<{ success: boolean; message?: string }>(
-      '/game/market/buy', { itemTemplateId }
+      '/game/market/buy', { itemTemplateId, quantity: qty }
     )
-    setMessage(res.success ? `${name}を${price}Gで購入しました。` : (res.message ?? '購入失敗'))
+    setMessage(res.success ? `${name}を${qty}個(${price * qty}G)で購入しました。` : (res.message ?? '購入失敗'))
+    if (res.success) {
+      // 在庫を減らすなどリフレッシュが必要なら再取得
+      api.get<{ success: boolean; listings?: MarketItem[] }>('/game/market').then(r => {
+        if (r.success && r.listings) setListings(r.listings)
+      })
+      api.get<{ success: boolean; items?: InventoryItem[] }>('/game/inventory').then(r => {
+        if (r.success && r.items) setInventory(r.items)
+      })
+    }
   }
 
   const handleSell = async (itemId: string, name: string) => {
+    const qty = sellQuantities[itemId] || 1
     const res = await api.post<{ success: boolean; goldEarned?: number; message?: string }>(
-      '/game/market/sell', { itemId }
+      '/game/market/sell', { itemId, quantity: qty }
     )
-    setMessage(res.success ? `${name}を${res.goldEarned}Gで売却しました。` : (res.message ?? '売却失敗'))
-    if (res.success) setInventory(prev => prev.filter(i => i.id !== itemId))
+    setMessage(res.success ? `${name}を${qty}個売却し、${res.goldEarned}G得ました。` : (res.message ?? '売却失敗'))
+    if (res.success) {
+      api.get<{ success: boolean; items?: InventoryItem[] }>('/game/inventory').then(r => {
+        if (r.success && r.items) setInventory(r.items)
+      })
+    }
   }
 
   return (
@@ -70,14 +88,26 @@ export default function MarketPanel() {
                 <span className="text-stone-500 text-xs ml-2">在庫: {item.stockQuantity}</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-amber-300 text-sm">{item.currentPrice}G</span>
-                <button
-                  onClick={() => handleBuy(item.itemTemplateId, item.name, item.currentPrice)}
-                  disabled={item.stockQuantity === 0}
-                  className="px-3 py-1 bg-amber-700 hover:bg-amber-600 disabled:opacity-40 text-white text-xs rounded"
-                >
-                  購入
-                </button>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-amber-300 text-sm">単価: {Math.ceil(item.currentPrice * 1.2)}G</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      max={item.stockQuantity}
+                      value={buyQuantities[item.itemTemplateId] || 1}
+                      onChange={e => setBuyQuantities(prev => ({ ...prev, [item.itemTemplateId]: parseInt(e.target.value) || 1 }))}
+                      className="w-16 bg-stone-800 border border-stone-600 rounded px-2 py-1 text-xs text-white text-right"
+                    />
+                    <button
+                      onClick={() => handleBuy(item.itemTemplateId, item.name, Math.ceil(item.currentPrice * 1.2))}
+                      disabled={item.stockQuantity === 0}
+                      className="px-3 py-1 bg-amber-700 hover:bg-amber-600 disabled:opacity-40 text-white text-xs rounded"
+                    >
+                      購入
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -94,12 +124,22 @@ export default function MarketPanel() {
                 <span className="text-stone-500 text-xs ml-2">×{item.quantity}</span>
                 {item.durability !== null && <span className="text-stone-600 text-xs ml-1">耐久:{item.durability}</span>}
               </div>
-              <button
-                onClick={() => handleSell(item.id, item.name)}
-                className="px-3 py-1 bg-stone-700 hover:bg-stone-600 text-stone-300 text-xs rounded"
-              >
-                売却
-              </button>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max={item.quantity}
+                  value={sellQuantities[item.id] || 1}
+                  onChange={e => setSellQuantities(prev => ({ ...prev, [item.id]: parseInt(e.target.value) || 1 }))}
+                  className="w-16 bg-stone-800 border border-stone-600 rounded px-2 py-1 text-xs text-white text-right"
+                />
+                <button
+                  onClick={() => handleSell(item.id, item.name)}
+                  className="px-3 py-1 bg-stone-700 hover:bg-stone-600 text-stone-300 text-xs rounded"
+                >
+                  売却
+                </button>
+              </div>
             </div>
           ))}
         </div>

@@ -56,11 +56,11 @@ export async function getMarketListings(villageId: string): Promise<MarketItem[]
   return rows
 }
 
-/** アイテムを売却する */
 export async function sellItem(
   characterId: string,
   itemId: string,
-  villageId: string
+  villageId: string,
+  quantity: number = 1
 ): Promise<{ success: boolean; goldEarned?: number; message?: string }> {
   // アイテム確認
   const items = await sql<{ id: string; itemTemplateId: string; quantity: number }[]>`
@@ -68,6 +68,9 @@ export async function sellItem(
     FROM items WHERE id = ${itemId} AND owner_character_id = ${characterId} LIMIT 1
   `
   if (!items[0]) return { success: false, message: 'アイテムが見つかりません。' }
+  if (items[0].quantity < quantity || quantity <= 0) {
+    return { success: false, message: '指定した個数がありません。' }
+  }
 
   // 行動中に使用予定のアイテムは売却不可（EAT等のparametersにitemIdが含まれているケース）
   const activeAction = await sql<{ id: string }[]>`
@@ -92,7 +95,8 @@ export async function sellItem(
   `
   if (!listings[0]) return { success: false, message: 'この村では取引できません。' }
 
-  const sellPrice = Math.floor(listings[0].currentPrice * 0.7) // 売却価格は市場価格の70%
+  const unitPrice = Math.floor(listings[0].currentPrice * 0.7) // 売却価格は市場価格の70%
+  const sellPrice = unitPrice * quantity
 
   await sql.begin(async (tx) => {
     // 所持金増加と商売スキルの成長
@@ -103,10 +107,14 @@ export async function sellItem(
           updated_at = NOW()
       WHERE id = ${characterId}
     `
-    // アイテム削除
-    await tx`DELETE FROM items WHERE id = ${itemId}`
+    // アイテム削除または消費
+    if (item.quantity > quantity) {
+      await tx`UPDATE items SET quantity = quantity - ${quantity} WHERE id = ${itemId}`
+    } else {
+      await tx`DELETE FROM items WHERE id = ${itemId}`
+    }
     // 市場在庫更新・価格再計算
-    const newStock = listings[0]!.stockQuantity + 1
+    const newStock = listings[0]!.stockQuantity + quantity
     const newPrice = calculateMarketPrice(
       await getBasePrice(item.itemTemplateId),
       newStock,
@@ -127,11 +135,11 @@ export async function sellItem(
   return { success: true, goldEarned: sellPrice }
 }
 
-/** アイテムを購入する */
 export async function buyItem(
   characterId: string,
   itemTemplateId: string,
-  villageId: string
+  villageId: string,
+  quantity: number = 1
 ): Promise<{ success: boolean; goldSpent?: number; message?: string }> {
   const char = await sql<{ gold: number }[]>`
     SELECT gold FROM characters WHERE id = ${characterId} LIMIT 1
@@ -144,11 +152,12 @@ export async function buyItem(
     WHERE village_id = ${villageId} AND item_template_id = ${itemTemplateId}
     LIMIT 1
   `
-  if (!listing[0] || listing[0].stockQuantity <= 0) {
-    return { success: false, message: '在庫がありません。' }
+  if (!listing[0] || listing[0].stockQuantity < quantity || quantity <= 0) {
+    return { success: false, message: '在庫が足りません。' }
   }
 
-  const buyPrice = Math.ceil(listing[0].currentPrice * 1.2) // 購入価格は市場価格の120%
+  const unitPrice = Math.ceil(listing[0].currentPrice * 1.2) // 購入価格は市場価格の120%
+  const buyPrice = unitPrice * quantity
   if (char[0].gold < buyPrice) {
     return { success: false, message: `所持金が足りません。必要: ${buyPrice}G` }
   }
@@ -169,9 +178,9 @@ export async function buyItem(
           updated_at = NOW()
       WHERE id = ${characterId}
     `
-    await giveItem(characterId, itemTemplateId, 1, {}, 50, tx)
-    const newStock = listing[0]!.stockQuantity - 1
-    const newPrice = calculateMarketPrice(listing[0]!.basePrice, newStock, 1)
+    await giveItem(characterId, itemTemplateId, quantity, {}, 50, tx)
+    const newStock = listing[0]!.stockQuantity - quantity
+    const newPrice = calculateMarketPrice(listing[0]!.basePrice, newStock, quantity)
     await tx`
       UPDATE market_listings
       SET stock_quantity = ${newStock}, current_price = ${newPrice}, updated_at = NOW()

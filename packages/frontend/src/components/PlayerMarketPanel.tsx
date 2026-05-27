@@ -16,6 +16,7 @@ interface MarketListing {
     bonusStrength?: number
     bonusDexterity?: number
   }
+  quantity: number
 }
 
 interface InventoryItem {
@@ -39,6 +40,7 @@ export default function PlayerMarketPanel() {
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [message, setMessage] = useState('')
   const [listPrice, setListPrice] = useState<string>('')
+  const [listQuantity, setListQuantity] = useState<string>('1')
   const [selectedItem, setSelectedItem] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<'BUY' | 'SELL'>('BUY')
@@ -70,12 +72,14 @@ export default function PlayerMarketPanel() {
     setLoading(true)
     const res = await api.post<{ success: boolean; message?: string }>('/game/market/player/list', { 
       itemId: selectedItem, 
-      price: Number(listPrice) 
+      price: Number(listPrice),
+      quantity: Number(listQuantity)
     })
     setMessage(res.message ?? '')
     if (res.success) {
       setSelectedItem('')
       setListPrice('')
+      setListQuantity('1')
       fetchData()
     }
     setLoading(false)
@@ -132,6 +136,7 @@ export default function PlayerMarketPanel() {
                       <span className={`${rStyle?.color ?? 'text-stone-200'} font-bold text-sm`}>
                         {rStyle?.label} {fullName}
                       </span>
+                      <span className="text-stone-400 text-xs">×{l.quantity}</span>
                     </div>
                     {hasBonus && (
                       <div className="mt-1 flex gap-3 text-xs text-stone-400">
@@ -179,16 +184,29 @@ export default function PlayerMarketPanel() {
                   })}
                 </select>
               </div>
-              <div>
-                <label className="block text-stone-400 text-xs mb-1">価格 (G)</label>
-                <input 
-                  type="number"
-                  min="1"
-                  className="w-full bg-stone-950 border border-stone-700 rounded p-2 text-sm text-stone-200"
-                  value={listPrice}
-                  onChange={e => setListPrice(e.target.value)}
-                  placeholder="例: 500"
-                />
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-stone-400 text-xs mb-1">個数</label>
+                  <input 
+                    type="number"
+                    min="1"
+                    max={inventory.find(i => i.id === selectedItem)?.quantity || 1}
+                    className="w-full bg-stone-950 border border-stone-700 rounded p-2 text-sm text-stone-200"
+                    value={listQuantity}
+                    onChange={e => setListQuantity(e.target.value)}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-stone-400 text-xs mb-1">価格 (G)</label>
+                  <input 
+                    type="number"
+                    min="1"
+                    className="w-full bg-stone-950 border border-stone-700 rounded p-2 text-sm text-stone-200"
+                    value={listPrice}
+                    onChange={e => setListPrice(e.target.value)}
+                    placeholder="例: 500"
+                  />
+                </div>
               </div>
               <button
                 onClick={handleList}
