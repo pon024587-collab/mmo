@@ -25,6 +25,9 @@ import { runForMayor, petition } from '../social/politicsService.js'
 import { joinGuild } from '../social/guildService.js'
 import { cook, buyLivestock, exploreDungeon } from '../social/dungeonService.js'
 import { getRumorsForVillage } from '../world/rumorService.js'
+import { getRecipes, craftItem as doCraftItem } from '../crafting/craftingService.js'
+import { enhanceEquipment } from '../crafting/enhanceService.js'
+import { rerollSubstats } from '../craft/craftService.js'
 import type { ActionType } from '../action/actionTypes.js'
 import type { CropType } from '../farming/farmingService.js'
 import type { MonsterType } from '../combat/combatService.js'
@@ -485,6 +488,38 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     const result = await getItemSubstats(itemId)
     if (!result) return reply.status(404).send({ success: false })
     return reply.send({ success: true, ...result })
+  })
+
+  // ---- クラフト・強化・リロール ----
+
+  app.get('/api/game/craft/recipes', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send({ success: true, recipes: await getRecipes(char.id) })
+  })
+
+  app.post('/api/game/craft', async (request, reply) => {
+    const body = z.object({ recipeId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await doCraftItem(char.id, body.data.recipeId))
+  })
+
+  app.post('/api/game/equipment/enhance', async (request, reply) => {
+    const body = z.object({ itemId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await enhanceEquipment(char.id, body.data.itemId))
+  })
+
+  app.post('/api/game/reroll', async (request, reply) => {
+    const body = z.object({ itemId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await rerollSubstats(char.id, body.data.itemId))
   })
 
   // ---- ギルドクエスト ----
