@@ -197,19 +197,24 @@ export async function completeCombat(
       const crystals = w[0].metadata?.crystals || []
       for (const c of crystals) {
         if (c.ATK) weaponAtk += c.ATK
-        if (c.MP) weaponMag += c.MP // 簡単のためMPボーナスを魔法力と見なす
+        if (c.MP) weaponMag += c.MP
         if (c.ATK_PERCENT) atkPercent += c.ATK_PERCENT
       }
       
-      // 強化値(enhance)ボーナス: 後半ほど強力になる二次関数 (enhanceLv^2 * 10)
-      // 例: +1=+10, +5=+250, +9=+810
+      // 強化値(enhance)ボーナス
       const enhanceLv = w[0].metadata?.enhance || 0
       const enhancePower = Math.pow(enhanceLv, 2) * 10
       weaponAtk += enhancePower
       weaponMag += enhancePower
-
-      // 強化によって属性値も成長
       if (weaponElement) weaponElementValue += enhanceLv * 5
+
+      // サブステータスボーナス
+      const substats = w[0].metadata?.substats || []
+      for (const s of substats) {
+        if (s.type === 'ATK')   weaponAtk += s.value
+        if (s.type === 'MAG')   weaponMag += s.value
+        if (s.type === 'CRIT')  atkPercent += s.value
+      }
     }
   }
 
@@ -243,9 +248,15 @@ export async function completeCombat(
       // 防具強化ボーナス: (enhanceLv^2 * 10)
       const enhanceLv = a[0].metadata?.enhance || 0
       defBonus += Math.pow(enhanceLv, 2) * 10
-      
-      // 強化によって属性耐性値も成長
       if (armorElement) armorElementValue += enhanceLv * 5
+
+      // 防具サブステータスボーナス
+      const armorSubstats = a[0].metadata?.substats || []
+      for (const s of armorSubstats) {
+        if (s.type === 'DEF') defBonus += s.value
+        if (s.type === 'HP')  defBonus += Math.floor(s.value / 10)
+        if (s.type === 'DEF_PERCENT') defPercent += s.value
+      }
       
       // defBonusをグローバルに持たせるため、charのプロパティのように扱うか
       // 変数宣言を外に出す必要がある。
