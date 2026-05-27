@@ -46,38 +46,38 @@ export type ActionType =
   | 'PROPOSE'          // 求婚する (30分)
   | 'TREAT'            // 治療を受ける (60〜240分)
 
-/** 行動の基本所要時間（分）*/
+/** 行動の基本所要時間（分）- 全体的に半減済み */
 export const ACTION_DURATION_MINUTES: Record<ActionType, number> = {
-  FARM_PLOW:       120,
-  FARM_SOW:        60,
-  FARM_WATER:      30,
-  FARM_HARVEST:    60,
-  COMBAT_MONSTER:  15,  // 魔物強度で変動
-  COMBAT_PRACTICE: 30,
-  MOVE:            30,  // 距離で変動
-  EAT:             20,
-  DRINK:           5,
-  SLEEP:           420, // 7時間
-  NAP:             90,
-  REST:            30,
-  CAMPFIRE:        15,
-  MINE:            120,
-  CHOP_WOOD:       90,
-  GATHER_HERBS:    60,
-  FISH:            90,
-  TALK_NPC:        15,
-  TRADE_MARKET:    30,
-  PRAY:            30,
-  STUDY_MAGIC:     240,
-  MENTOR_TEACH:    120,
-  MENTOR_LEARN:    120,
-  BUILD_HOUSE:     480,
-  BUILD_BRIDGE:    720,
-  COOK:            60,
-  SMITH:           120,
-  DUNGEON_EXPLORE: 30,
-  WRITE_BOOK:      240,
-  MAKE_MAP:        120,
-  PROPOSE:         30,
-  TREAT:           120,
+  FARM_PLOW:       60,   // 120→60
+  FARM_SOW:        30,   // 60→30
+  FARM_WATER:      15,   // 30→15
+  FARM_HARVEST:    30,   // 60→30
+  COMBAT_MONSTER:  8,    // 15→8（魔物強度で変動）
+  COMBAT_PRACTICE: 15,   // 30→15
+  MOVE:            15,   // 30→15（距離で変動）
+  EAT:             10,   // 20→10
+  DRINK:           3,    // 5→3
+  SLEEP:           210,  // 420→210（3.5時間）
+  NAP:             45,   // 90→45
+  REST:            15,   // 30→15
+  CAMPFIRE:        8,    // 15→8
+  MINE:            60,   // 120→60
+  CHOP_WOOD:       45,   // 90→45
+  GATHER_HERBS:    30,   // 60→30
+  FISH:            45,   // 90→45
+  TALK_NPC:        8,    // 15→8
+  TRADE_MARKET:    15,   // 30→15
+  PRAY:            15,   // 30→15
+  STUDY_MAGIC:     120,  // 240→120
+  MENTOR_TEACH:    60,   // 120→60
+  MENTOR_LEARN:    60,   // 120→60
+  BUILD_HOUSE:     240,  // 480→240
+  BUILD_BRIDGE:    360,  // 720→360
+  COOK:            30,   // 60→30
+  SMITH:           60,   // 120→60
+  DUNGEON_EXPLORE: 15,   // 30→15
+  WRITE_BOOK:      120,  // 240→120
+  MAKE_MAP:        60,   // 120→60
+  PROPOSE:         15,   // 30→15
+  TREAT:           60,   // 120→60
 }
