@@ -454,6 +454,39 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await craftItem(char.id, body.data.recipeId))
   })
 
+  // ---- クラフト・リロール ----
+
+  app.get('/api/game/craft/recipes', async (_request, reply) => {
+    const { getCraftRecipes } = await import('../craft/craftService.js')
+    return reply.send({ success: true, recipes: await getCraftRecipes() })
+  })
+
+  app.post('/api/game/craft', async (request, reply) => {
+    const body = z.object({ recipeId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { craftItem } = await import('../craft/craftService.js')
+    return reply.send(await craftItem(char.id, body.data.recipeId))
+  })
+
+  app.post('/api/game/reroll', async (request, reply) => {
+    const body = z.object({ itemId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { rerollSubstats } = await import('../craft/craftService.js')
+    return reply.send(await rerollSubstats(char.id, body.data.itemId))
+  })
+
+  app.get('/api/game/item/:itemId/substats', async (request, reply) => {
+    const { itemId } = request.params as { itemId: string }
+    const { getItemSubstats } = await import('../craft/craftService.js')
+    const result = await getItemSubstats(itemId)
+    if (!result) return reply.status(404).send({ success: false })
+    return reply.send({ success: true, ...result })
+  })
+
   // ---- ギルドクエスト ----
 
   app.get('/api/game/guild/quests', async (request, reply) => {
