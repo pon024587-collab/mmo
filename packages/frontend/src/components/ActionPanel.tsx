@@ -18,47 +18,46 @@ const ACTION_GROUPS: ActionGroup[] = [
   {
     label: '⚔️ 基礎訓練',
     actions: [
-      { label: '素振り（30分）', endpoint: '/game/action', body: { actionType: 'COMBAT_PRACTICE' } },
+      { label: '素振り（15分）', endpoint: '/game/action', body: { actionType: 'COMBAT_PRACTICE' } },
     ],
   },
   {
     label: '🦹 犯罪行為',
     actions: [
-      { label: 'NPCから盗む', endpoint: '/game/action', body: { actionType: 'STEAL_NPC' }, confirm: '⚠️ 犯罪行為です。賞金首になります。本当に実行しますか？' },
-      { label: '道中に潜む（盗賊）', endpoint: '/pvp/ambush', body: { routeVillageA: '', routeVillageB: '', maxAttacks: 3 }, confirm: '⚠️ 犯罪行為です。賞金首になります。本当に実行しますか？' },
+      { label: 'NPCから盗む', endpoint: '/game/steal', body: {}, confirm: '⚠️ 犯罪行為です。賞金首になります。本当に実行しますか？' },
     ],
   },
   {
     label: '🪨 採集',
     actions: [
-      { label: '採掘（2時間）', endpoint: '/game/gather', body: { gatherType: 'MINE' } },
-      { label: '木を切る（1.5時間）', endpoint: '/game/gather', body: { gatherType: 'CHOP_WOOD' } },
-      { label: '薬草を摘む（1時間）', endpoint: '/game/gather', body: { gatherType: 'GATHER_HERBS' } },
-      { label: '釣り（1.5時間）', endpoint: '/game/gather', body: { gatherType: 'FISH' } },
+      { label: '採掘（1時間）', endpoint: '/game/gather', body: { gatherType: 'MINE' } },
+      { label: '木を切る（45分）', endpoint: '/game/gather', body: { gatherType: 'CHOP_WOOD' } },
+      { label: '薬草を摘む（30分）', endpoint: '/game/gather', body: { gatherType: 'GATHER_HERBS' } },
+      { label: '釣り（45分）', endpoint: '/game/gather', body: { gatherType: 'FISH' } },
     ],
   },
   {
     label: '🍞 生存',
     actions: [
-      { label: '水を飲む（5分）', endpoint: '/game/drink' },
-      { label: '睡眠（7時間）', endpoint: '/game/sleep' },
-      { label: '仮眠（1.5時間）', endpoint: '/game/nap' },
-      { label: '休息（30分）', endpoint: '/game/action', body: { actionType: 'REST' } },
+      { label: '水を飲む（3分）', endpoint: '/game/drink' },
+      { label: '睡眠（3.5時間）', endpoint: '/game/sleep' },
+      { label: '仮眠（45分）', endpoint: '/game/nap' },
+      { label: '休息（15分）', endpoint: '/game/action', body: { actionType: 'REST' } },
     ],
   },
   {
     label: '🍽️ 料理',
     actions: [
-      { label: 'パンを作る（1時間）', endpoint: '/game/cook', body: { recipeType: 'BREAD' } },
-      { label: 'シチューを作る（1時間）', endpoint: '/game/cook', body: { recipeType: 'STEW' } },
-      { label: '薬草茶を作る（1時間）', endpoint: '/game/cook', body: { recipeType: 'HERBAL_TEA' } },
+      { label: 'パンを作る（30分）', endpoint: '/game/cook', body: { recipeType: 'BREAD' } },
+      { label: 'シチューを作る（30分）', endpoint: '/game/cook', body: { recipeType: 'STEW' } },
+      { label: '薬草茶を作る（30分）', endpoint: '/game/cook', body: { recipeType: 'HERBAL_TEA' } },
     ],
   },
   {
     label: '🙏 その他',
     actions: [
-      { label: '神殿に参拝（30分）', endpoint: '/game/pray', body: { deityType: 'HARVEST' } },
-      { label: '治療を受ける（2時間）', endpoint: '/game/treat' },
+      { label: '神殿に参拝（15分）', endpoint: '/game/pray', body: { deityType: 'HARVEST' } },
+      { label: '治療を受ける（1時間）', endpoint: '/game/treat' },
     ],
   },
 ]
@@ -190,10 +189,10 @@ export default function ActionPanel({ isBusy, onActionStart }: Props) {
           </select>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <button onClick={() => handleAction('/game/farm/plow')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">畑を耕す（2時間）</button>
-          <button onClick={() => handleAction('/game/farm/sow', { cropType: selectedCrop })} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">種をまく（1時間）</button>
-          <button onClick={() => handleAction('/game/farm/water')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">水やり（30分）</button>
-          <button onClick={() => handleAction('/game/farm/harvest')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">収穫（1時間）</button>
+          <button onClick={() => handleAction('/game/farm/plow')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">畑を耕す（1時間）</button>
+          <button onClick={() => handleAction('/game/farm/sow', { cropType: selectedCrop })} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">種をまく（30分）</button>
+          <button onClick={() => handleAction('/game/farm/water')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">水やり（15分）</button>
+          <button onClick={() => handleAction('/game/farm/harvest')} disabled={isBusy || loading} className="text-left px-3 py-2 bg-stone-800 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-stone-300 transition-colors">収穫（30分）</button>
         </div>
       </div>
 
