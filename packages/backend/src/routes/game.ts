@@ -366,6 +366,35 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ success: true, housing: await getHousing(char.id) })
   })
 
+  // ---- 倉庫 ----
+
+  app.get('/api/game/storage', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { getStorageItems } = await import('../land/storageService.js')
+    return reply.send(await getStorageItems(char.id))
+  })
+
+  app.post('/api/game/storage/deposit', async (request, reply) => {
+    const body = z.object({ itemId: z.string(), quantity: z.number().min(1).optional().default(1) }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { depositItem } = await import('../land/storageService.js')
+    return reply.send(await depositItem(char.id, body.data.itemId, body.data.quantity).catch((e: Error) => ({
+      success: false, message: e.message === 'STORAGE_FULL' ? '倉庫が満杯です。' : '預け入れに失敗しました。'
+    })))
+  })
+
+  app.post('/api/game/storage/withdraw', async (request, reply) => {
+    const body = z.object({ itemId: z.string(), quantity: z.number().min(1).optional().default(1) }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { withdrawItem } = await import('../land/storageService.js')
+    return reply.send(await withdrawItem(char.id, body.data.itemId, body.data.quantity))
+  })
+
   // ---- 宗教 ----
 
   app.post('/api/game/pray', async (request, reply) => {

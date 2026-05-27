@@ -18,6 +18,7 @@ import CraftingPanel from '../components/CraftingPanel.js'
 import PlayerMarketPanel from '../components/PlayerMarketPanel.js'
 import ChatPanel from '../components/ChatPanel.js'
 import MagicPanel from '../components/MagicPanel.js'
+import StoragePanel from '../components/StoragePanel.js'
 
 interface CharacterStatus {
   name: string
@@ -43,7 +44,7 @@ interface Result {
   completedAt: string
 }
 
-type Tab = 'status' | 'action' | 'village' | 'map' | 'npc' | 'quest' | 'market' | 'playerMarket' | 'inventory' | 'craft' | 'magic' | 'pvp' | 'chat' | 'log' | 'records'
+type Tab = 'status' | 'action' | 'village' | 'map' | 'npc' | 'quest' | 'market' | 'playerMarket' | 'storage' | 'inventory' | 'craft' | 'magic' | 'pvp' | 'chat' | 'log' | 'records'
 
 const TAB_LABELS: Record<Tab, string> = {
   status:  '状態',
@@ -54,6 +55,7 @@ const TAB_LABELS: Record<Tab, string> = {
   quest:   'クエスト',
   market:  'NPC市場',
   playerMarket: '露店',
+  storage:      '倉庫',
   inventory: '所持品',
   craft:     'クラフト',
   magic:     '魔法',
@@ -256,6 +258,7 @@ export default function GamePage() {
         {activeTab === 'quest'   && <QuestPanel />}
         {activeTab === 'market'  && <MarketPanel />}
         {activeTab === 'playerMarket' && <PlayerMarketPanel />}
+        {activeTab === 'storage'      && <StoragePanel />}
         {activeTab === 'inventory' && <InventoryPanel />}
         {activeTab === 'craft'     && <CraftingPanel />}
         {activeTab === 'magic'     && <MagicPanel />}
