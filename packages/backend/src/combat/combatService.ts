@@ -311,12 +311,26 @@ export async function completeCombat(
   }
 
   // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + 防御力ボーナス + スキル補正 + 属性ボーナス）
-  // 割合増加クリスタルの効果と、属性一致効果を適用する
   const atkMultiplier = 1 + (atkPercent / 100)
   const defMultiplier = 1 + (defPercent / 100)
   const playerPower = ((skill + weaponAtk + weaponMag + skillBonus) * atkMultiplier * elementalAtkMultiplier) + (defBonus * 1.5 * defMultiplier) + Math.random() * 30
   const monsterPower = totalPower + Math.random() * 10
-  const victory = playerPower >= monsterPower * 0.5
+
+  // Tierに応じて必要な戦力比率を変える
+  // Tier1(〜15): 0.4倍あれば勝てる（初心者向け）
+  // Tier2(〜35): 0.6倍必要
+  // Tier3(〜300): 0.75倍必要（装備必須）
+  // Tier4(〜1200): 0.85倍必要（強化装備必須）
+  // Tier5(3750〜): 0.95倍必要（最強装備+スキル必須）
+  let requiredRatio: number
+  const basePower = monster.basePower * eliteMultiplier
+  if (basePower <= 15)        requiredRatio = 0.40
+  else if (basePower <= 35)   requiredRatio = 0.60
+  else if (basePower <= 300)  requiredRatio = 0.75
+  else if (basePower <= 1200) requiredRatio = 0.85
+  else                        requiredRatio = 0.95
+
+  const victory = playerPower >= monsterPower * requiredRatio
   const elStr = randomElement && elementNames[randomElement] ? `「${elementNames[randomElement]}属性」` : ''
   const countText = count > 1 ? `${count}体の` : ''
   // 強化種・超強化種の名前プレフィックス
