@@ -3,6 +3,30 @@
  */
 import { sql } from '../db/client.js'
 
+// 素材→魔物→出現地形のマッピング
+const ITEM_MONSTER_HINT: Record<string, string> = {
+  'ゴブリンの耳':     'ゴブリン（森・山岳地帯）',
+  'オークの牙':       'オーク・オーク戦士（山岳・平野）',
+  '狼の毛皮':         '狼（雪原・森・平野）',
+  '盗賊のナイフ':     '盗賊（森・砂漠・平野）',
+  'トロルの皮':       'トロル（山岳・川沿い）',
+  'ダークエルフの弓': 'ダークエルフ（森・雪原）',
+  '竜の鱗':           'ドラゴン（山岳・砂漠）※超強敵',
+  'アンデッドの骨':   'アンデッド・スケルトン・ゾンビ（雪原・森）',
+  '魔石':             'ダークエルフ・闇魔法使い（森・砂漠）',
+  '毒の牙':           '毒蜘蛛・大蛇（森・川沿い）',
+  '鉄鉱石':           '採掘（山岳地帯）',
+  '木材':             '木こり（森）',
+  '石材':             '採掘（山岳地帯）',
+  '薬草':             '薬草採取（森・平野）',
+  '肉':               '狩り・釣り（森・川）',
+  'ジャガイモ':       '農業（平野）',
+  '小麦':             '農業（平野）',
+  'ニンジン':         '農業（平野）',
+  'キャベツ':         '農業（平野）',
+  'パン':             '料理（小麦から作成）',
+}
+
 // 納品クエストのテンプレート（アイテム名と報酬）
 const DELIVERY_QUEST_TEMPLATES = [
   // 農作物
@@ -76,6 +100,7 @@ export async function getOrCreateDailyQuests(guildId: string): Promise<{
     itemName: q.itemName,
     requiredQuantity: q.requiredQuantity,
     rewardGold: q.rewardGold,
+    hint: ITEM_MONSTER_HINT[q.itemName] ?? null,
     isCompleted: false, // 後でキャラクターごとに確認
   }))
 }
@@ -104,7 +129,6 @@ export async function getDailyQuestsForCharacter(guildId: string, characterId: s
     ...q,
     isCompleted: completedIds.has(q.id),
   }))
-}
 
 /** ギルドクエストを納品して完了する */
 export async function completeGuildQuest(
@@ -196,4 +220,6 @@ export async function getGuildsInVillage(villageId: string): Promise<{
     WHERE village_id = ${villageId}
     ORDER BY guild_type
   `
+}
+  })
 }

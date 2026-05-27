@@ -8,6 +8,7 @@ interface GuildQuest {
   itemName: string
   requiredQuantity: number
   rewardGold: number
+  hint: string | null
   isCompleted: boolean
 }
 
@@ -105,6 +106,9 @@ export default function GuildQuestPanel() {
                     </span>
                     <span className="text-amber-400 text-xs">+{quest.rewardGold}G</span>
                   </div>
+                  {quest.hint && (
+                    <p className="text-stone-600 text-xs mt-0.5">📍 {quest.hint}</p>
+                  )}
                 </div>
 
                 {!quest.isCompleted && (
