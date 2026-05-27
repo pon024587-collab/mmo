@@ -137,7 +137,9 @@ export async function completeAction(
   actionType: ActionType
 ): Promise<void> {
   const actionRow = await sql<{ parameters: any }[]>`SELECT parameters FROM action_queue WHERE id = ${actionId} LIMIT 1`
-  const params = actionRow[0]?.parameters || {}
+  const rawParams = actionRow[0]?.parameters || {}
+  // DBからJSONBではなくtext文字列で返ってくる場合があるためparseする
+  const params: Record<string, any> = typeof rawParams === 'string' ? JSON.parse(rawParams) : rawParams
 
   // 行動結果テキストを生成
   let resultText = generateResultText(actionType)
@@ -145,11 +147,9 @@ export async function completeAction(
   try {
     if (actionType === 'EAT') {
       const { completeEat } = await import('../survival/survivalService.js')
-      // JSONBのキーはスネークケースで返ってくる場合があるので両方対応
       const resolvedItemId = params.itemId ?? params.item_id
-      console.log(`[ActionService] EAT params:`, JSON.stringify(params), `resolvedItemId:`, resolvedItemId)
       if (!resolvedItemId) {
-        resultText = `[DEBUG] params keys: ${Object.keys(params).join(',') || '(none)'} | raw: ${JSON.stringify(params)}`
+        resultText = '食事できませんでした。（アイテム情報を取得できませんでした）'
       } else {
         resultText = await completeEat(characterId, resolvedItemId)
       }
