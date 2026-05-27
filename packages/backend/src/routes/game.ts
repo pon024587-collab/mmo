@@ -438,58 +438,6 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await repayTaxDebt(char.id, body.data.amount))
   })
 
-  // ---- クラフト ----
-
-  app.get('/api/game/crafting/recipes', async (request, reply) => {
-    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
-    if (!char) return reply.status(404).send({ success: false })
-    const { getRecipes } = await import('../crafting/craftingService.js')
-    const recipes = await getRecipes(char.id)
-    return reply.send({ success: true, recipes })
-  })
-
-  app.post('/api/game/crafting/craft', async (request, reply) => {
-    const body = z.object({ recipeId: z.string() }).safeParse(request.body)
-    if (!body.success) return reply.status(400).send({ success: false })
-    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
-    if (!char) return reply.status(404).send({ success: false })
-    const { craftItem } = await import('../crafting/craftingService.js')
-    return reply.send(await craftItem(char.id, body.data.recipeId))
-  })
-
-  // ---- クラフト・リロール ----
-
-  app.get('/api/game/craft/recipes', async (_request, reply) => {
-    const { getCraftRecipes } = await import('../craft/craftService.js')
-    return reply.send({ success: true, recipes: await getCraftRecipes() })
-  })
-
-  app.post('/api/game/craft', async (request, reply) => {
-    const body = z.object({ recipeId: z.string() }).safeParse(request.body)
-    if (!body.success) return reply.status(400).send({ success: false })
-    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
-    if (!char) return reply.status(404).send({ success: false })
-    const { craftItem } = await import('../craft/craftService.js')
-    return reply.send(await craftItem(char.id, body.data.recipeId))
-  })
-
-  app.post('/api/game/reroll', async (request, reply) => {
-    const body = z.object({ itemId: z.string() }).safeParse(request.body)
-    if (!body.success) return reply.status(400).send({ success: false })
-    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
-    if (!char) return reply.status(404).send({ success: false })
-    const { rerollSubstats } = await import('../craft/craftService.js')
-    return reply.send(await rerollSubstats(char.id, body.data.itemId))
-  })
-
-  app.get('/api/game/item/:itemId/substats', async (request, reply) => {
-    const { itemId } = request.params as { itemId: string }
-    const { getItemSubstats } = await import('../craft/craftService.js')
-    const result = await getItemSubstats(itemId)
-    if (!result) return reply.status(404).send({ success: false })
-    return reply.send({ success: true, ...result })
-  })
-
   // ---- クラフト・強化・リロール ----
 
   app.get('/api/game/craft/recipes', async (request, reply) => {
@@ -757,17 +705,6 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     })
 
     return reply.send({ success: true, message: 'クリスタルを装備にはめ込みました。' })
-  })
-
-  app.post('/api/game/equipment/enhance', async (request, reply) => {
-    const body = z.object({ itemId: z.string() }).safeParse(request.body)
-    if (!body.success) return reply.status(400).send({ success: false, message: '入力が正しくありません。' })
-    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
-    if (!char) return reply.status(404).send({ success: false })
-
-    const { enhanceEquipment } = await import('../crafting/enhanceService.js')
-    const result = await enhanceEquipment(char.id, body.data.itemId)
-    return reply.send(result)
   })
 
   // ---- 世界情報 ----
