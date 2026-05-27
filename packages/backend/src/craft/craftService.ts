@@ -163,7 +163,7 @@ export async function craftItem(
     // アイテム生成（サブステータス付き）
     await tx`
       INSERT INTO items (owner_character_id, item_template_id, metadata)
-      VALUES (${characterId}, ${recipe[0]!.resultItemTemplateId}, ${JSON.stringify({ substats, rerollCount: 0 })})
+      VALUES (${characterId}, ${recipe[0]!.resultItemTemplateId}, ${ { substats, rerollCount: 0 } as any })
     `
 
     // クラフトスキル成長
@@ -222,7 +222,7 @@ export async function rerollSubstats(
 
   await sql.begin(async (tx) => {
     await tx`UPDATE characters SET gold = gold - ${cost}, updated_at = NOW() WHERE id = ${characterId}`
-    await tx`UPDATE items SET metadata = ${JSON.stringify(newMetadata)} WHERE id = ${itemId}`
+    await tx`UPDATE items SET metadata = ${newMetadata as any} WHERE id = ${itemId}`
   })
 
   const substatText = newSubstats.map(s => `${SUBSTAT_LABELS[s.type]}+${s.value}`).join('、')
