@@ -145,7 +145,14 @@ export async function completeAction(
   try {
     if (actionType === 'EAT') {
       const { completeEat } = await import('../survival/survivalService.js')
-      resultText = await completeEat(characterId, params.itemId)
+      // JSONBのキーはスネークケースで返ってくる場合があるので両方対応
+      const resolvedItemId = params.itemId ?? params.item_id
+      console.log(`[ActionService] EAT params:`, JSON.stringify(params), `resolvedItemId:`, resolvedItemId)
+      if (!resolvedItemId) {
+        resultText = '食事できませんでした。アイテム情報が見つかりません。'
+      } else {
+        resultText = await completeEat(characterId, resolvedItemId)
+      }
     } else if (actionType === 'DRINK') {
       const { completeDrink } = await import('../survival/survivalService.js')
       resultText = await completeDrink(characterId, params.itemId)
@@ -186,8 +193,9 @@ export async function completeAction(
       resultText = await completeMove(characterId, params.targetVillageId, params.tradeItemIds)
     }
   } catch (err) {
-    console.error(`[ActionService] completeAction error for ${actionId}:`, err)
-    resultText = 'エラーが発生したため、行動を中断しました。'
+    const errMsg = err instanceof Error ? err.message : String(err)
+    console.error(`[ActionService] completeAction error for ${actionId} (${actionType}):`, err)
+    resultText = `エラーが発生したため、行動を中断しました。[${actionType}] ${errMsg}`
   }
 
   await sql.begin(async (tx) => {
