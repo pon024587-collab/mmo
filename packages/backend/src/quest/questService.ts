@@ -85,6 +85,23 @@ export async function acceptQuest(
     return { success: false, message: 'クエストを10件以上同時に受けることはできません。' }
   }
 
+  // 同じNPCから同じタイトルのクエストを既に受けていないか確認（完了済み含む）
+  const duplicate = await sql<{ id: string; status: string }[]>`
+    SELECT id, status FROM quests
+    WHERE character_id = ${characterId}
+      AND npc_id = ${npcId}
+      AND title = ${title}
+      AND status IN ('ACTIVE', 'COMPLETED')
+      AND created_at > NOW() - INTERVAL '24 hours'
+    LIMIT 1
+  `
+  if (duplicate[0]) {
+    const msg = duplicate[0].status === 'COMPLETED'
+      ? 'このクエストは本日すでに完了しています。明日また話しかけてください。'
+      : 'このクエストはすでに受けています。'
+    return { success: false, message: msg }
+  }
+
   // 期限は現実72時間後
   const deadline = new Date(Date.now() + 72 * 60 * 60 * 1000)
 
