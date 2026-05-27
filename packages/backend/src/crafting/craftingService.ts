@@ -58,6 +58,7 @@ export async function getRecipes(characterId: string): Promise<RecipeWithStock[]
       COALESCE(it.magic_power, 0) AS magic_power,
       cr.materials,
       cr.required_crafting_skill,
+      COALESCE(cr.gold_cost, 0) AS gold_cost,
       cr.description
     FROM crafting_recipes cr
     JOIN item_templates it ON cr.result_item_template_id = it.id
@@ -123,8 +124,8 @@ export async function craftItem(
   const r = recipe[0]
 
   // スキル確認
-  const char = await sql<{ skillCraftingGrowth: number; fatigueInternal: number }[]>`
-    SELECT skill_crafting_growth, fatigue_internal FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ skillCraftingGrowth: number; fatigueInternal: number; gold: number }[]>`
+    SELECT skill_crafting_growth, fatigue_internal, gold FROM characters WHERE id = ${characterId} LIMIT 1
   `
   const base = char[0]?.skillCraftingGrowth ?? 0; const fat = Math.max(0, Math.min(100, char[0]?.fatigueInternal ?? 0)); const skill = Math.floor(base * (1.0 - fat * 0.5 / 100));
   if (skill < r.requiredCraftingSkill) {
@@ -132,6 +133,12 @@ export async function craftItem(
       success: false,
       message: `工作スキルが足りません。（必要: ${r.requiredCraftingSkill} / 現在: ${skill}）`,
     }
+  }
+
+  // 金コスト確認
+  const goldCost = (r as any).goldCost ?? 0
+  if (goldCost > 0 && (char[0]?.gold ?? 0) < goldCost) {
+    return { success: false, message: `所持金が足りません。必要: ${goldCost}G` }
   }
 
   // 素材確認と消費
@@ -172,15 +179,20 @@ export async function craftItem(
   if (!resultTemplate[0]) return { success: false, message: 'クラフト結果の登録に失敗しました。' }
 
   const cat = resultTemplate[0].category
-  let metadata: Record<string, any> = {}
+  let metadata: Record<string, unknown> = {}
   
   if (cat === 'WEAPON' || cat === 'ARMOR') {
-    const r = Math.random()
-    if (r < 0.001) {
+    const rnd = Math.random()
+    if (rnd < 0.001) {
       metadata.slots = 2
-    } else if (r < 0.1) {
+    } else if (rnd < 0.1) {
       metadata.slots = 1
     }
+  }
+
+  // 金を消費
+  if (goldCost > 0) {
+    await sql`UPDATE characters SET gold = gold - ${goldCost} WHERE id = ${characterId}`
   }
 
   await giveItem(characterId, r.resultItemTemplateId, 1, metadata)
