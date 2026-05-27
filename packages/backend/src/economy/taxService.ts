@@ -25,9 +25,18 @@ export async function collectTaxes(): Promise<void> {
   `
 
   for (const char of chars) {
-    // 基礎税（所持金の割合） + 固定資産税（土地1つにつき200G）
+    // 基礎税（所持金の割合） + 土地税（1つにつき200G）
     const baseTax = Math.floor(char.gold * (char.taxRate / 100))
-    const propertyTax = char.landCount * 200
+    let propertyTax = char.landCount * 200
+
+    // 家屋の税金を加算
+    const houses = await sql<{ housingType: string }[]>`SELECT housing_type FROM housings WHERE character_id = ${char.id}`
+    for (const h of houses) {
+      if (h.housingType === 'NORMAL') propertyTax += 200
+      else if (h.housingType === 'RICH') propertyTax += 1000
+      else if (h.housingType === 'MANSION') propertyTax += 4000
+    }
+
     const taxAmount = baseTax + propertyTax
 
     if (taxAmount <= 0) continue

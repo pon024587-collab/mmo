@@ -316,11 +316,12 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/game/lands', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
-    const lands = await sql<{ id: string; landType: string; status: string; purchasePrice: number }[]>`
-      SELECT id, land_type, status, purchase_price 
-      FROM lands 
-      WHERE village_id = ${char.villageId}
-      ORDER BY purchase_price ASC
+    const lands = await sql<{ id: string; landType: string; status: string; purchasePrice: number; isOwner: boolean; housingType: string | null }[]>`
+      SELECT l.id, l.land_type, l.status, l.purchase_price, (l.owner_character_id = ${char.id}) as is_owner, h.housing_type
+      FROM lands l
+      LEFT JOIN housings h ON h.land_id = l.id
+      WHERE l.village_id = ${char.villageId}
+      ORDER BY l.purchase_price ASC
     `
     return reply.send({ success: true, lands })
   })
@@ -339,6 +340,24 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
     return reply.send(await buildHouse(char.id, body.data.landId))
+  })
+
+  app.post('/api/game/house/upgrade', async (request, reply) => {
+    const body = z.object({ landId: z.string(), houseType: z.enum(['NORMAL', 'RICH', 'MANSION']) }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false, message: '入力が正しくありません。' })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { upgradeHouse } = await import('../land/landService.js')
+    return reply.send(await upgradeHouse(char.id, body.data.landId, body.data.houseType))
+  })
+
+  app.post('/api/game/land/sell', async (request, reply) => {
+    const body = z.object({ landId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false, message: '入力が正しくありません。' })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const { sellLand } = await import('../land/landService.js')
+    return reply.send(await sellLand(char.id, body.data.landId))
   })
 
   app.get('/api/game/house', async (request, reply) => {
@@ -463,7 +482,7 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
       WHERE i.owner_character_id = ${char.id}
       ORDER BY it.category, it.name
     `
-    return reply.send({ success: true, items, count: items.length, max: 50 })
+    return reply.send({ success: true, items, count: items.length, max: 30 })
   })
 
   app.get('/api/game/equipment', async (request, reply) => {
