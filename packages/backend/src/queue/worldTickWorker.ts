@@ -117,12 +117,14 @@ async function getEpoch(): Promise<Date> {
 }
 
 async function updateVillageWeather(): Promise<void> {
+  // 全村の天気を一括更新（ランダム関数をSQL内で処理）
   const villages = await sql<{ id: string; terrainType: string }[]>`
     SELECT id, terrain_type FROM villages WHERE is_abandoned = false
   `
-  for (const v of villages) {
-    const weather = pickWeather(v.terrainType)
-    await sql`UPDATE villages SET current_weather = ${weather}, updated_at = NOW() WHERE id = ${v.id}`
+  // バッチ更新（個別クエリを避ける）
+  const updates = villages.map(v => ({ id: v.id, weather: pickWeather(v.terrainType) }))
+  for (const u of updates) {
+    await sql`UPDATE villages SET current_weather = ${u.weather} WHERE id = ${u.id}`
   }
 }
 
@@ -147,23 +149,25 @@ function pickWeather(terrain: string): string {
 }
 
 async function updateCharacterSurvivalParams(): Promise<void> {
-  // Hunger: 1時間ごとに-5、Thirst: 30分ごとに-10（1時間Tickで-10）
+  // IDLE状態のキャラクターのみ更新（行動中・INACTIVE除外）
   await sql`
     UPDATE characters
     SET hunger_internal = GREATEST(0, hunger_internal - 5),
         thirst_internal = GREATEST(0, thirst_internal - 10),
         updated_at = NOW()
-    WHERE status != 'INACTIVE'
+    WHERE status = 'IDLE'
   `
-  // Hunger/Thirstが0なら体力減少
+  // Hunger/Thirstが0なら体力減少（緩やかに）
   await sql`
     UPDATE characters
-    SET health = GREATEST(0, health - 5), updated_at = NOW()
-    WHERE status != 'INACTIVE' AND (hunger_internal = 0 OR thirst_internal = 0)
+    SET health = GREATEST(1, health - 3), updated_at = NOW()
+    WHERE status = 'IDLE' AND (hunger_internal = 0 OR thirst_internal = 0)
   `
-  // 体力0なら死亡
+  // 体力が1以下で長時間放置（24時間以上）なら死亡
   const dying = await sql<{ id: string }[]>`
-    SELECT id FROM characters WHERE status != 'INACTIVE' AND health = 0
+    SELECT id FROM characters
+    WHERE status = 'IDLE' AND health <= 1
+      AND updated_at < NOW() - INTERVAL '24 hours'
   `
   for (const c of dying) {
     const { processCharacterDeath } = await import('../character/lifeRecordService.js')
@@ -172,8 +176,7 @@ async function updateCharacterSurvivalParams(): Promise<void> {
 }
 
 async function updateCharacterFatigue(): Promise<void> {
-  // 睡眠中でないキャラクターのFatigueは自然には増えない（行動時に増加）
-  // 強制睡眠チェック
+  // 強制睡眠チェック（IDLE状態のみ）
   const exhausted = await sql<{ id: string }[]>`
     SELECT id FROM characters WHERE status = 'IDLE' AND fatigue_internal >= 100
   `
@@ -184,17 +187,45 @@ async function updateCharacterFatigue(): Promise<void> {
 }
 
 async function updateBodyTemperatures(): Promise<void> {
-  const chars = await sql<{ id: string; villageId: string }[]>`
-    SELECT id, village_id FROM characters WHERE status != 'INACTIVE'
-  `
-  for (const c of chars) {
-    const village = await sql<{ currentWeather: string; terrainType: string }[]>`
-      SELECT current_weather, terrain_type FROM villages WHERE id = ${c.villageId} LIMIT 1
+  // 一括でJOINして処理（N+1クエリを回避）
+  const season = await getCurrentSeason()
+  const isCold = season === 'WINTER'
+  const isHot = season === 'SUMMER'
+
+  if (isCold) {
+    // 冬：防寒装備なしのキャラクターの体温を下げる（一括）
+    await sql`
+      UPDATE characters
+      SET body_temp_internal = GREATEST(32, body_temp_internal - 1),
+          updated_at = NOW()
+      WHERE status != 'INACTIVE'
     `
-    if (!village[0]) continue
-    const { updateBodyTemperature } = await import('../survival/survivalService.js')
-    const season = await getCurrentSeason()
-    await updateBodyTemperature(c.id, village[0].currentWeather, season, false)
+    // 体温が危険域なら体力減少
+    await sql`
+      UPDATE characters
+      SET health = GREATEST(1, health - 2), updated_at = NOW()
+      WHERE status != 'INACTIVE' AND body_temp_internal <= 34
+    `
+  } else if (isHot) {
+    // 夏：体温を少し上げる
+    await sql`
+      UPDATE characters
+      SET body_temp_internal = LEAST(40, body_temp_internal + 1),
+          updated_at = NOW()
+      WHERE status != 'INACTIVE'
+    `
+  } else {
+    // 春・秋：体温を正常に戻す
+    await sql`
+      UPDATE characters
+      SET body_temp_internal = CASE
+        WHEN body_temp_internal < 36 THEN body_temp_internal + 1
+        WHEN body_temp_internal > 38 THEN body_temp_internal - 1
+        ELSE body_temp_internal
+      END,
+      updated_at = NOW()
+      WHERE status != 'INACTIVE' AND (body_temp_internal < 36 OR body_temp_internal > 38)
+    `
   }
 }
 
