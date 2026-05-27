@@ -14,6 +14,7 @@ import WorldMapPanel from '../components/WorldMapPanel.js'
 import NpcPanel from '../components/NpcPanel.js'
 import QuestPanel from '../components/QuestPanel.js'
 import PvpPanel from '../components/PvpPanel.js'
+import GuildQuestPanel from '../components/GuildQuestPanel.js'
 import CraftingPanel from '../components/CraftingPanel.js'
 import PlayerMarketPanel from '../components/PlayerMarketPanel.js'
 import ChatPanel from '../components/ChatPanel.js'
@@ -258,7 +259,7 @@ export default function GamePage() {
           />
         )}
         {activeTab === 'npc'     && <NpcPanel />}
-        {activeTab === 'quest'   && <QuestPanel />}
+        {activeTab === 'quest'   && <GuildQuestPanel />}
         {activeTab === 'market'  && <MarketPanel />}
         {activeTab === 'playerMarket' && <PlayerMarketPanel />}
         {activeTab === 'storage'      && <StoragePanel />}

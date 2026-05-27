@@ -454,7 +454,38 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     return reply.send(await craftItem(char.id, body.data.recipeId))
   })
 
-  // ---- クエスト ----
+  // ---- ギルドクエスト ----
+
+  app.get('/api/game/guild/quests', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+
+    const { getGuildsInVillage, getDailyQuestsForCharacter } = await import('../quest/guildQuestService.js')
+    const guilds = await getGuildsInVillage(char.villageId)
+
+    if (guilds.length === 0) {
+      return reply.send({ success: true, guilds: [], message: 'この村にギルドはありません。' })
+    }
+
+    const result = await Promise.all(guilds.map(async g => ({
+      guildId: g.id,
+      guildName: g.name,
+      guildType: g.guildType,
+      quests: await getDailyQuestsForCharacter(g.id, char.id),
+    })))
+
+    return reply.send({ success: true, guilds: result })
+  })
+
+  app.post('/api/game/guild/complete', async (request, reply) => {
+    const body = z.object({ questId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+
+    const { completeGuildQuest } = await import('../quest/guildQuestService.js')
+    return reply.send(await completeGuildQuest(body.data.questId, char.id))
+  })
 
   app.get('/api/game/quests', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
