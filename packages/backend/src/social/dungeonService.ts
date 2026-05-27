@@ -27,8 +27,8 @@ export async function completeDungeonFloor(
   floor: number = 1
 ): Promise<string> {
   // 1. キャラクターのステータス取得
-  const charRows = await sql<{ health: number; healthMax: number; mana: number; manaMax: number; level: number }[]>`
-    SELECT health, health_max, mana, mana_max, level FROM characters WHERE id = ${characterId} LIMIT 1
+  const charRows = await sql<{ health: number; healthMax: number; mp: number; mpMax: number; level: number }[]>`
+    SELECT health, health_max, mp, mp_max, level FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!charRows[0]) return 'キャラクターが見つかりません。'
   let { health, healthMax, level } = charRows[0]
