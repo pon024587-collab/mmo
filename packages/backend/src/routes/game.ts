@@ -22,7 +22,7 @@ import { getLifeRecords, visitGrave } from '../character/lifeRecordService.js'
 import { createWill } from '../social/willService.js'
 import { propose } from '../social/marriageService.js'
 import { runForMayor, petition } from '../social/politicsService.js'
-import { joinGuild, createGuild, getPlayerGuilds } from '../social/guildService.js'
+import { joinGuild, createGuild, getPlayerGuilds, applyToGuild, getMyGuildDetails, manageGuildApplication, kickGuildMember, leaveGuild } from '../social/guildService.js'
 import { getGlobalLogs } from '../social/logService.js'
 import {
   getActiveRaidBoss, attackRaidBoss, getRaidGuildRanking,
@@ -685,16 +685,56 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/game/guild/player-guilds', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
-    const guilds = await getPlayerGuilds()
+    const guilds = await getPlayerGuilds(char.id)
     return reply.send({ success: true, guilds })
   })
 
   app.post('/api/game/guild/create', async (request, reply) => {
-    const body = z.object({ name: z.string().min(1).max(20) }).safeParse(request.body)
+    const body = z.object({ name: z.string().min(1).max(20), requiresApproval: z.boolean().default(false) }).safeParse(request.body)
     if (!body.success) return reply.status(400).send({ success: false })
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
-    return reply.send(await createGuild(char.id, body.data.name))
+    return reply.send(await createGuild(char.id, body.data.name, body.data.requiresApproval))
+  })
+
+  app.post('/api/game/guild/apply', async (request, reply) => {
+    const body = z.object({ guildId: z.string(), message: z.string().max(100).default('') }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await applyToGuild(char.id, body.data.guildId, body.data.message))
+  })
+
+  app.get('/api/game/guild/my-guild', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const details = await getMyGuildDetails(char.id)
+    if (!details) return reply.send({ success: true, guild: null })
+    return reply.send({ success: true, guild: details })
+  })
+
+  app.post('/api/game/guild/manage-application', async (request, reply) => {
+    const body = z.object({ applicationId: z.string(), approve: z.boolean() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await manageGuildApplication(char.id, body.data.applicationId, body.data.approve))
+  })
+
+  app.post('/api/game/guild/kick', async (request, reply) => {
+    const body = z.object({ guildId: z.string(), characterId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await kickGuildMember(char.id, body.data.guildId, body.data.characterId))
+  })
+
+  app.post('/api/game/guild/leave', async (request, reply) => {
+    const body = z.object({ guildId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await leaveGuild(char.id, body.data.guildId))
   })
 
 
