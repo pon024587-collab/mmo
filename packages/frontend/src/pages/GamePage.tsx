@@ -24,6 +24,7 @@ import StoragePanel from '../components/StoragePanel.js'
 import GlobalTicker from '../components/GlobalTicker.js'
 import RaidPanel from '../components/RaidPanel.js'
 import MailboxPanel from '../components/MailboxPanel.js'
+import PlayerGuildPanel from '../components/PlayerGuildPanel.js'
 
 interface CharacterStatus {
   name: string
@@ -49,7 +50,7 @@ interface Result {
   completedAt: string
 }
 
-type Tab = 'status' | 'action' | 'village' | 'map' | 'npc' | 'quest' | 'market' | 'playerMarket' | 'storage' | 'inventory' | 'craft' | 'magic' | 'pvp' | 'raid' | 'mailbox' | 'chat' | 'log' | 'records'
+type Tab = 'status' | 'action' | 'village' | 'map' | 'npc' | 'quest' | 'market' | 'playerMarket' | 'storage' | 'inventory' | 'craft' | 'magic' | 'pvp' | 'guild' | 'raid' | 'mailbox' | 'chat' | 'log' | 'records'
 
 const TAB_LABELS: Record<Tab, string> = {
   status:  '状態',
@@ -65,6 +66,7 @@ const TAB_LABELS: Record<Tab, string> = {
   craft:     'クラフト',
   magic:     '魔法',
   pvp:     'PvP',
+  guild:   '🛡️ギルド',
   raid:    '🐲レイド',
   mailbox: '📬メール',
   chat:    'チャット',
@@ -276,6 +278,7 @@ export default function GamePage() {
         {activeTab === 'craft'     && <CraftingPanel />}
         {activeTab === 'magic'     && <MagicPanel />}
         {activeTab === 'pvp'     && <PvpPanel />}
+        {activeTab === 'guild'   && <PlayerGuildPanel />}
         {activeTab === 'raid'    && <RaidPanel />}
         {activeTab === 'mailbox' && <MailboxPanel />}
         {activeTab === 'chat'    && <ChatPanel />}

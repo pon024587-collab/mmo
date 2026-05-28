@@ -107,7 +107,7 @@ export async function attackRaidBoss(
            c.equipped_weapon_id, c.equipped_armor_id,
            gm.guild_id
     FROM characters c
-    LEFT JOIN guild_members gm ON c.id = gm.character_id
+    LEFT JOIN guild_memberships gm ON c.id = gm.character_id
     WHERE c.id = ${characterId} LIMIT 1
   `
   if (!char[0]) return { success: false, message: 'キャラクターが見つかりません。' }
@@ -241,7 +241,7 @@ async function checkAndGrantMilestones(raidId: string, guildId: string, bossName
 
   // ギルドメンバー取得
   const members = await sql<{ characterId: string }[]>`
-    SELECT character_id FROM guild_members WHERE guild_id = ${guildId}
+    SELECT character_id FROM guild_memberships WHERE guild_id = ${guildId}
   `
 
   for (const milestone of RAID_MILESTONES) {

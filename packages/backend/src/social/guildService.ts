@@ -3,7 +3,7 @@
  */
 import { sql } from '../db/client.js'
 
-export type GuildType = 'ADVENTURER' | 'FARMER' | 'MERCHANT' | 'MAGE'
+export type GuildType = 'ADVENTURER' | 'FARMER' | 'MERCHANT' | 'MAGE' | 'PLAYER'
 
 /** ギルドに加入申請する */
 export async function joinGuild(
@@ -62,5 +62,60 @@ export async function getGuildMembers(guildId: string): Promise<{ name: string; 
     SELECT c.name, c.status FROM guild_memberships gm
     JOIN characters c ON gm.character_id = c.id
     WHERE gm.guild_id = ${guildId} AND c.status != 'INACTIVE'
+  `
+}
+
+/** プレイヤーギルドを設立する */
+export async function createGuild(
+  characterId: string,
+  name: string
+): Promise<{ success: boolean; message?: string }> {
+  // プレイヤーが既に他のプレイヤーギルドに所属しているかチェック
+  const existing = await sql<{ guildId: string }[]>`
+    SELECT gm.guild_id FROM guild_memberships gm
+    JOIN guilds g ON gm.guild_id = g.id
+    WHERE gm.character_id = ${characterId} AND g.guild_type = 'PLAYER'
+    LIMIT 1
+  `
+  if (existing[0]) return { success: false, message: 'すでにプレイヤーギルドに所属しています。' }
+
+  // ギルド名重複チェック
+  const nameCheck = await sql<{ id: string }[]>`SELECT id FROM guilds WHERE name = ${name} LIMIT 1`
+  if (nameCheck[0]) return { success: false, message: 'その名前のギルドはすでに存在します。' }
+
+  // 所持金チェック (設立費用1万Gとする)
+  const char = await sql<{ gold: number }[]>`SELECT gold FROM characters WHERE id = ${characterId} LIMIT 1`
+  if ((char[0]?.gold ?? 0) < 10000) return { success: false, message: 'ギルド設立には10,000G必要です。' }
+
+  await sql.begin(async (tx) => {
+    // 資金消費
+    await tx`UPDATE characters SET gold = gold - 10000 WHERE id = ${characterId}`
+    // ギルド設立
+    const g = await tx<{ id: string }[]>`
+      INSERT INTO guilds (name, guild_type, description)
+      VALUES (${name}, 'PLAYER', 'プレイヤー設立ギルド')
+      RETURNING id
+    `
+    // 加入
+    if (g[0]) {
+      await tx`
+        INSERT INTO guild_memberships (guild_id, character_id)
+        VALUES (${g[0].id}, ${characterId})
+      `
+    }
+  })
+
+  return { success: true, message: `ギルド【${name}】を設立しました！` }
+}
+
+/** プレイヤーギルド一覧を取得 */
+export async function getPlayerGuilds() {
+  return await sql<{ id: string; name: string; memberCount: number }[]>`
+    SELECT g.id, g.name, COUNT(gm.character_id)::int as member_count
+    FROM guilds g
+    LEFT JOIN guild_memberships gm ON g.id = gm.guild_id
+    WHERE g.guild_type = 'PLAYER'
+    GROUP BY g.id, g.name
+    ORDER BY member_count DESC, g.name ASC
   `
 }

@@ -22,7 +22,7 @@ import { getLifeRecords, visitGrave } from '../character/lifeRecordService.js'
 import { createWill } from '../social/willService.js'
 import { propose } from '../social/marriageService.js'
 import { runForMayor, petition } from '../social/politicsService.js'
-import { joinGuild } from '../social/guildService.js'
+import { joinGuild, createGuild, getPlayerGuilds } from '../social/guildService.js'
 import { getGlobalLogs } from '../social/logService.js'
 import {
   getActiveRaidBoss, attackRaidBoss, getRaidGuildRanking,
@@ -631,7 +631,7 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
     if (!char) return reply.status(404).send({ success: false })
     const boss = await getActiveRaidBoss()
     const bossElement = boss?.element ?? 'FIRE'
-    const guildRow = await sql<{ guildId: string }[]>`SELECT guild_id FROM guild_members WHERE character_id = ${char.id} LIMIT 1`
+    const guildRow = await sql<{ guildId: string }[]>`SELECT guild_id FROM guild_memberships WHERE character_id = ${char.id} LIMIT 1`
     const guildId = guildRow[0]?.guildId
     if (!guildId) return reply.send({ success: false, message: 'ギルドに加入していません。' })
     const result = await drawRaidGacha(char.id, guildId, bossElement)
@@ -641,7 +641,7 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/game/raid/gacha/tickets', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
-    const guildRow = await sql<{ guildId: string }[]>`SELECT guild_id FROM guild_members WHERE character_id = ${char.id} LIMIT 1`
+    const guildRow = await sql<{ guildId: string }[]>`SELECT guild_id FROM guild_memberships WHERE character_id = ${char.id} LIMIT 1`
     const guildId = guildRow[0]?.guildId
     if (!guildId) return reply.send({ success: true, tickets: 0 })
     const contrib = await sql<{ raidGachaTickets: number }[]>`
@@ -673,11 +673,28 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/game/guild/contributions', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
     if (!char) return reply.status(404).send({ success: false })
-    const guildRow = await sql<{ guildId: string }[]>`SELECT guild_id FROM guild_members WHERE character_id = ${char.id} LIMIT 1`
+    const guildRow = await sql<{ guildId: string }[]>`SELECT guild_id FROM guild_memberships WHERE character_id = ${char.id} LIMIT 1`
     const guildId = guildRow[0]?.guildId
     if (!guildId) return reply.send({ success: true, contributions: [] })
     const contributions = await getGuildContributions(guildId)
     return reply.send({ success: true, contributions })
+  })
+
+  // ---- プレイヤーギルド管理 ----
+
+  app.get('/api/game/guild/player-guilds', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const guilds = await getPlayerGuilds()
+    return reply.send({ success: true, guilds })
+  })
+
+  app.post('/api/game/guild/create', async (request, reply) => {
+    const body = z.object({ name: z.string().min(1).max(20) }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await createGuild(char.id, body.data.name))
   })
 
 
