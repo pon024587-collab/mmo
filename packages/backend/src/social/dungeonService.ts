@@ -40,10 +40,11 @@ export async function completeDungeonFloor(
   let battleCount = 0
   let log = ''
   for (let i = 0; i < 3; i++) {
-    // 敵のステータス (階層依存)
-    const enemyHp = 100 + Math.pow(floor, 1.5) * 50 + (stats.level * 10)
-    const enemyAtk = 20 + Math.pow(floor, 1.5) * 15
-    const enemyDef = 10 + Math.pow(floor, 1.3) * 10
+    // 敵のステータス (階層依存・2乗スケーリングで難易度急増)
+    // 1F: HP800 DEF60 ATK90  /  3F: HP4700 DEF280 ATK380  /  5F: HP11000 DEF660 ATK960
+    const enemyHp  = floor * 600 + Math.pow(floor, 2) * 400 + (stats.level * 10)
+    const enemyAtk = floor * 40  + Math.pow(floor, 2) * 35
+    const enemyDef = floor * 30  + Math.pow(floor, 2) * 30
 
     // プレイヤーのダメージ計算 (クリティカル・貫通考慮)
     const actualDef = Math.max(0, enemyDef - Math.max(stats.physPen, stats.magPen))
@@ -79,16 +80,23 @@ export async function completeDungeonFloor(
   `
   if (templates[0]) {
     // ランダムなサブパラメータを生成
-    const bonusTypes = ['ATK', 'DEF', 'HP', 'MP', 'FIRE_RES', 'WATER_RES', 'ATK_PERCENT', 'DEF_PERCENT']
-    const selectedBonus = bonusTypes[Math.floor(Math.random() * bonusTypes.length)]!
-    
-    // 階層が高いほど数値が高い
-    let bonusValue = (Math.floor(Math.random() * 5) + 1) * floor
-    let label = `+${bonusValue}`
-    if (selectedBonus.endsWith('_PERCENT')) {
-      // 割合増加は強力なので数値を控えめに (階層によって 1%〜5% 程度)
-      bonusValue = Math.max(1, Math.floor(Math.random() * floor) + 1)
+    // 通常ステータス系 vs %系を分けて抽選（%系は稀レア扱い）
+    const flatTypes    = ['ATK', 'DEF', 'HP', 'MP', 'FIRE_RES', 'WATER_RES']
+    const percentTypes = ['ATK_PERCENT', 'DEF_PERCENT', 'CRIT_RATE']
+    const isPercent = Math.random() < 0.3 // 30%の確率で%系
+    const pool = isPercent ? percentTypes : flatTypes
+    const selectedBonus = pool[Math.floor(Math.random() * pool.length)]!
+
+    // 固定値: 1F=50〜150, 2F=100〜300, 3F=150〜450, 4F=200〜600, 5F=250〜750
+    // %値  : 1F=2〜6%,  2F=4〜12%, 3F=6〜18%, 4F=8〜24%, 5F=10〜30%
+    let bonusValue: number
+    let label: string
+    if (isPercent) {
+      bonusValue = Math.floor(Math.random() * floor * 4) + floor * 2
       label = `+${bonusValue}%`
+    } else {
+      bonusValue = Math.floor(Math.random() * floor * 100) + floor * 50
+      label = `+${bonusValue}`
     }
 
     const metadata = { bonus: { [selectedBonus]: bonusValue } }
