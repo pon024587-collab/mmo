@@ -21,6 +21,9 @@ import PlayerMarketPanel from '../components/PlayerMarketPanel.js'
 import ChatPanel from '../components/ChatPanel.js'
 import MagicPanel from '../components/MagicPanel.js'
 import StoragePanel from '../components/StoragePanel.js'
+import GlobalTicker from '../components/GlobalTicker.js'
+import RaidPanel from '../components/RaidPanel.js'
+import MailboxPanel from '../components/MailboxPanel.js'
 
 interface CharacterStatus {
   name: string
@@ -46,7 +49,7 @@ interface Result {
   completedAt: string
 }
 
-type Tab = 'status' | 'action' | 'village' | 'map' | 'npc' | 'quest' | 'market' | 'playerMarket' | 'storage' | 'inventory' | 'craft' | 'magic' | 'pvp' | 'chat' | 'log' | 'records'
+type Tab = 'status' | 'action' | 'village' | 'map' | 'npc' | 'quest' | 'market' | 'playerMarket' | 'storage' | 'inventory' | 'craft' | 'magic' | 'pvp' | 'raid' | 'mailbox' | 'chat' | 'log' | 'records'
 
 const TAB_LABELS: Record<Tab, string> = {
   status:  '状態',
@@ -62,6 +65,8 @@ const TAB_LABELS: Record<Tab, string> = {
   craft:     'クラフト',
   magic:     '魔法',
   pvp:     'PvP',
+  raid:    '🐲レイド',
+  mailbox: '📬メール',
   chat:    'チャット',
   log:     '記録',
   records: '人生',
@@ -222,6 +227,9 @@ export default function GamePage() {
         </div>
       )}
 
+      {/* グローバルテロップ */}
+      <GlobalTicker />
+
       {/* タブナビ */}
       <nav className="flex border-b border-stone-800 bg-stone-950 sticky top-[49px] z-10 overflow-x-auto">
         {(Object.keys(TAB_LABELS) as Tab[]).map(tab => (
@@ -268,6 +276,8 @@ export default function GamePage() {
         {activeTab === 'craft'     && <CraftingPanel />}
         {activeTab === 'magic'     && <MagicPanel />}
         {activeTab === 'pvp'     && <PvpPanel />}
+        {activeTab === 'raid'    && <RaidPanel />}
+        {activeTab === 'mailbox' && <MailboxPanel />}
         {activeTab === 'chat'    && <ChatPanel />}
         {activeTab === 'log'     && <ResultLog results={results} />}
         {activeTab === 'records' && <LifeRecordPanel />}

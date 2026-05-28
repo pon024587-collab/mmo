@@ -23,6 +23,11 @@ import { createWill } from '../social/willService.js'
 import { propose } from '../social/marriageService.js'
 import { runForMayor, petition } from '../social/politicsService.js'
 import { joinGuild } from '../social/guildService.js'
+import { getGlobalLogs } from '../social/logService.js'
+import {
+  getActiveRaidBoss, attackRaidBoss, getRaidGuildRanking,
+  drawRaidGacha, getMailbox, claimMailReward, getGuildContributions
+} from '../social/raidService.js'
 import { cook, buyLivestock, exploreDungeon } from '../social/dungeonService.js'
 import { getRumorsForVillage } from '../world/rumorService.js'
 import { getRecipes, craftItem as doCraftItem } from '../crafting/craftingService.js'
@@ -592,6 +597,89 @@ export async function gameRoutes(app: FastifyInstance): Promise<void> {
       return reply.send({ success: false, message: `${npcs[0].name}への盗みに失敗した。目撃されてしまった。` })
     }
   })
+
+  app.get('/api/game/global-logs', async (request, reply) => {
+    const logs = await getGlobalLogs(10)
+    return reply.send({ success: true, logs })
+  })
+
+  // ---- レイドボス ----
+
+  app.get('/api/game/raid', async (request, reply) => {
+    const boss = await getActiveRaidBoss()
+    return reply.send({ success: true, boss })
+  })
+
+  app.get('/api/game/raid/ranking', async (request, reply) => {
+    const boss = await getActiveRaidBoss()
+    if (!boss) return reply.send({ success: true, ranking: [] })
+    const ranking = await getRaidGuildRanking(boss.id)
+    return reply.send({ success: true, ranking })
+  })
+
+  app.post('/api/game/raid/attack', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const boss = await getActiveRaidBoss()
+    if (!boss) return reply.status(400).send({ success: false, message: 'レイドボスが存在しません。' })
+    const result = await attackRaidBoss(char.id, boss.id)
+    return reply.send(result)
+  })
+
+  app.post('/api/game/raid/gacha', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const boss = await getActiveRaidBoss()
+    const bossElement = boss?.element ?? 'FIRE'
+    const guildRow = await sql<{ guildId: string }[]>`SELECT guild_id FROM guild_members WHERE character_id = ${char.id} LIMIT 1`
+    const guildId = guildRow[0]?.guildId
+    if (!guildId) return reply.send({ success: false, message: 'ギルドに加入していません。' })
+    const result = await drawRaidGacha(char.id, guildId, bossElement)
+    return reply.send(result)
+  })
+
+  app.get('/api/game/raid/gacha/tickets', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const guildRow = await sql<{ guildId: string }[]>`SELECT guild_id FROM guild_members WHERE character_id = ${char.id} LIMIT 1`
+    const guildId = guildRow[0]?.guildId
+    if (!guildId) return reply.send({ success: true, tickets: 0 })
+    const contrib = await sql<{ raidGachaTickets: number }[]>`
+      SELECT raid_gacha_tickets FROM guild_contributions
+      WHERE character_id = ${char.id} AND guild_id = ${guildId} LIMIT 1
+    `
+    return reply.send({ success: true, tickets: contrib[0]?.raidGachaTickets ?? 0 })
+  })
+
+  // ---- メールボックス ----
+
+  app.get('/api/game/mailbox', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const mails = await getMailbox(char.id)
+    return reply.send({ success: true, mails })
+  })
+
+  app.post('/api/game/mailbox/claim', async (request, reply) => {
+    const body = z.object({ mailId: z.string() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    return reply.send(await claimMailReward(char.id, body.data.mailId))
+  })
+
+  // ---- ギルド貢献度 ----
+
+  app.get('/api/game/guild/contributions', async (request, reply) => {
+    const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
+    if (!char) return reply.status(404).send({ success: false })
+    const guildRow = await sql<{ guildId: string }[]>`SELECT guild_id FROM guild_members WHERE character_id = ${char.id} LIMIT 1`
+    const guildId = guildRow[0]?.guildId
+    if (!guildId) return reply.send({ success: true, contributions: [] })
+    const contributions = await getGuildContributions(guildId)
+    return reply.send({ success: true, contributions })
+  })
+
 
   app.get('/api/game/inventory', async (request, reply) => {
     const char = await getActiveCharacter((request.user as { playerId: string }).playerId)
