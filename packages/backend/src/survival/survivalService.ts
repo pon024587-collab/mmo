@@ -3,6 +3,8 @@
  * Hunger・Thirst・Fatigue・Body_Temperature・Stress の管理
  */
 import { sql } from '../db/client.js'
+import { registerAction } from '../action/actionService.js'
+import type { RegisterActionResult } from '../action/actionService.js'
 
 /** 生存状態テキストを取得 */
 export async function getSurvivalStatus(characterId: string): Promise<{
