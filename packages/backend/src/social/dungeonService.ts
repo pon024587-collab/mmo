@@ -5,6 +5,7 @@ import { sql } from '../db/client.js'
 import { registerAction } from '../action/actionService.js'
 import type { RegisterActionResult } from '../action/actionService.js'
 import { giveItem } from '../character/itemService.js'
+import { getPlayerCombatPower } from '../combat/combatHelper.js'
 
 // ---- ダンジョン探索 ----
 
@@ -27,25 +28,30 @@ export async function completeDungeonFloor(
   floor: number = 1
 ): Promise<string> {
   // 1. キャラクターのステータス取得
-  const charRows = await sql<{ health: number; healthMax: number; mp: number; mpMax: number; level: number }[]>`
-    SELECT health, health_max, mp, mp_max, level FROM characters WHERE id = ${characterId} LIMIT 1
+  const charRows = await sql<{ health: number; level: number }[]>`
+    SELECT health, level FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!charRows[0]) return 'キャラクターが見つかりません。'
-  let { health, healthMax, level } = charRows[0]
+  
+  const stats = await getPlayerCombatPower(characterId)
+  let health = charRows[0].health
 
-  // 2. 簡易戦闘シミュレーション（3回）
+  // 2. 本格的な戦闘シミュレーション（3回）
   let battleCount = 0
+  let log = ''
   for (let i = 0; i < 3; i++) {
-    // 敵の強さは階層(floor)に大きく依存
-    const enemyHp = 50 + (floor * 30) + (level * 5)
-    const enemyAtk = 10 + (floor * 5)
-    
-    // プレイヤーの簡易火力
-    const playerAtk = 15 + (level * 2)
+    // 敵の強さは階層(floor)に大きく依存 (階層が進むと指数関数的に強くなる)
+    const enemyHp = 100 + Math.pow(floor, 1.5) * 50 + (stats.level * 10)
+    const enemyAtk = 20 + Math.pow(floor, 1.5) * 15
 
-    // お互いに攻撃し合う簡易計算（何ターンで倒せるか）
-    const turnsToKill = Math.ceil(enemyHp / playerAtk)
-    const damageTaken = turnsToKill * enemyAtk
+    // お互いに攻撃し合う計算（何ターンで倒せるか）
+    // プレイヤーの攻撃力が1未満にならないように保証
+    const pDmg = Math.max(1, stats.attack)
+    const turnsToKill = Math.ceil(enemyHp / pDmg)
+    
+    // 敵からのダメージ（防御力で軽減）
+    const rawEnemyDmg = Math.max(1, enemyAtk - (stats.defense * 0.5))
+    const damageTaken = turnsToKill * rawEnemyDmg
 
     health -= damageTaken
     if (health <= 0) {
