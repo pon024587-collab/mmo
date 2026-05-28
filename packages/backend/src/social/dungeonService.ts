@@ -40,18 +40,24 @@ export async function completeDungeonFloor(
   let battleCount = 0
   let log = ''
   for (let i = 0; i < 3; i++) {
-    // 敵の強さは階層(floor)に大きく依存 (階層が進むと指数関数的に強くなる)
+    // 敵のステータス (階層依存)
     const enemyHp = 100 + Math.pow(floor, 1.5) * 50 + (stats.level * 10)
     const enemyAtk = 20 + Math.pow(floor, 1.5) * 15
+    const enemyDef = 10 + Math.pow(floor, 1.3) * 10
 
-    // お互いに攻撃し合う計算（何ターンで倒せるか）
-    // プレイヤーの攻撃力が1未満にならないように保証
-    const pDmg = Math.max(1, stats.attack)
+    // プレイヤーのダメージ計算 (クリティカル・貫通考慮)
+    const actualDef = Math.max(0, enemyDef - Math.max(stats.physPen, stats.magPen))
+    let baseDmg = Math.max(1, stats.attack - actualDef)
+    const isCrit = Math.random() < (stats.crit / 100)
+    const pDmg = Math.floor(isCrit ? baseDmg * 1.5 : baseDmg)
+
+    // 何ターンで倒せるか
     const turnsToKill = Math.ceil(enemyHp / pDmg)
     
     // 敵からのダメージ（防御力で軽減）
     const rawEnemyDmg = Math.max(1, enemyAtk - (stats.defense * 0.5))
-    const damageTaken = turnsToKill * rawEnemyDmg
+    // 自分が先に倒す場合、受けるダメージの回数は (turnsToKill - 1)
+    const damageTaken = Math.max(0, turnsToKill - 1) * rawEnemyDmg
 
     health -= damageTaken
     if (health <= 0) {

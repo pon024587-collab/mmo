@@ -1,10 +1,10 @@
 import { sql } from '../db/client.js'
 
 export async function getPlayerCombatPower(characterId: string) {
-  const char = await sql<{ level: number; fatigueInternal: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null }[]>`
-    SELECT level, fatigue_internal, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ level: number; fatigueInternal: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null; physPenetration: number; magPenetration: number; critRate: number }[]>`
+    SELECT level, fatigue_internal, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id, phys_penetration, mag_penetration, crit_rate FROM characters WHERE id = ${characterId} LIMIT 1
   `
-  if (!char[0]) return { attack: 10, defense: 10, maxHp: 100 }
+  if (!char[0]) return { attack: 10, defense: 10, maxHp: 100, level: 1, physPen: 0, magPen: 0, crit: 0 }
 
   const fatigue = Math.max(0, Math.min(100, char[0].fatigueInternal))
   const fatigueMultiplier = 1.0 - (fatigue * 0.5 / 100)
@@ -89,5 +89,13 @@ export async function getPlayerCombatPower(characterId: string) {
   const finalAttack = ((skillAtk + weaponAtk + skillBonus) * atkMultiplier)
   const finalDefense = (defBonus * 1.5 * defMultiplier)
 
-  return { attack: finalAttack, defense: finalDefense, maxHp: actualHealthMax, level: char[0].level }
+  return { 
+    attack: finalAttack, 
+    defense: finalDefense, 
+    maxHp: actualHealthMax, 
+    level: char[0].level,
+    physPen: char[0].physPenetration,
+    magPen: char[0].magPenetration,
+    crit: char[0].critRate
+  }
 }

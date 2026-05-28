@@ -147,8 +147,8 @@ export async function completeCombat(
   eliteMultiplier: number = 1,
   eliteLabel: string = ''
 ): Promise<{ resultText: string; victory: boolean; canSkin: boolean }> {
-  const char = await sql<{ level: number; skillCombatGrowth: number; fatigueInternal: number; health: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null }[]>`
-    SELECT level, skill_combat_growth, fatigue_internal, health, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id FROM characters WHERE id = ${characterId} LIMIT 1
+  const char = await sql<{ level: number; skillCombatGrowth: number; fatigueInternal: number; health: number; healthMax: number; equippedWeaponId: string | null; equippedArmorId: string | null; equippedAccessoryId: string | null; physPenetration: number; magPenetration: number; critRate: number }[]>`
+    SELECT level, skill_combat_growth, fatigue_internal, health, health_max, equipped_weapon_id, equipped_armor_id, equipped_accessory_id, phys_penetration, mag_penetration, crit_rate FROM characters WHERE id = ${characterId} LIMIT 1
   `
   if (!char[0]) return { resultText: '戦闘結果を処理できませんでした。', victory: false, canSkin: false }
 
@@ -321,30 +321,52 @@ export async function completeCombat(
     elementalResMsg = `\n🛡️ 装飾品の属性耐性が機能！ 【${elementNames[randomElement]}耐性】でダメージを ${Math.floor((1 - elementalResMultiplier) * 100)}% 軽減！`
   }
 
-  // 勝敗判定（基礎力 + 武器攻撃力/魔法力 + 防御力ボーナス + スキル補正 + 属性ボーナス）
+  // ===== 新戦闘システム (ターンシミュレーション) =====
+  const baseMonsterPower = monster.basePower * eliteMultiplier
+  const monsterHp = baseMonsterPower * 10 * count
+  const monsterPhysDef = Math.floor(baseMonsterPower * 1.5)
+  const monsterMagDef = Math.floor(baseMonsterPower * 1.5)
+  const monsterAtk = Math.floor(baseMonsterPower * 1.2 * count)
+
   const atkMultiplier = 1 + (atkPercent / 100)
   const defMultiplier = 1 + (defPercent / 100)
-  const playerPower = ((skill + weaponAtk + weaponMag + skillBonus) * atkMultiplier * elementalAtkMultiplier) + (defBonus * 1.5 * defMultiplier) + Math.random() * 30
-  const monsterPower = totalPower + Math.random() * 10
 
-  // Tierに応じて必要な戦力比率を変える
-  // Tier1(〜15): 0.4倍あれば勝てる（初心者向け）
-  // Tier2(〜35): 0.6倍必要
-  // Tier3(〜300): 0.75倍必要（装備必須）
-  // Tier4(〜1200): 0.85倍必要（強化装備必須）
-  // Tier5(3750〜): 0.95倍必要（最強装備+スキル必須）
-  let requiredRatio: number
-  const basePower = monster.basePower * eliteMultiplier
-  if (basePower <= 15)        requiredRatio = 0.40
-  else if (basePower <= 35)   requiredRatio = 0.60
-  else if (basePower <= 300)  requiredRatio = 0.75
-  else if (basePower <= 1200) requiredRatio = 0.85
-  else                        requiredRatio = 0.95
+  // プレイヤー攻撃力
+  const playerPhysAtk = (weaponAtk + skill + skillBonus) * atkMultiplier
+  const playerMagAtk = (weaponMag + skill + skillBonus) * atkMultiplier
+  const playerDef = defBonus * defMultiplier
 
-  const victory = playerPower >= monsterPower * requiredRatio
+  // 貫通計算
+  const actualPhysDef = Math.max(0, monsterPhysDef - char[0].physPenetration)
+  const actualMagDef = Math.max(0, monsterMagDef - char[0].magPenetration)
+
+  let physDmg = playerPhysAtk - actualPhysDef
+  let magDmg = playerMagAtk - actualMagDef
+  // 武器を持たず素手の場合、最低でも少しはダメージが入るようにする
+  if (physDmg < 1 && magDmg < 1) physDmg = 1
+
+  let baseDmg = Math.max(1, physDmg) + Math.max(0, magDmg)
+  baseDmg = baseDmg * elementalAtkMultiplier
+
+  // クリティカル判定
+  const isCrit = Math.random() < (char[0].critRate / 100)
+  const finalPlayerDmgPerTurn = Math.floor(isCrit ? baseDmg * 1.5 : baseDmg)
+
+  // 敵のダメージ
+  let monsterDmgPerTurn = Math.max(1, monsterAtk - playerDef)
+  monsterDmgPerTurn = Math.max(1, Math.floor(monsterDmgPerTurn * elementalResMultiplier))
+
+  // シミュレーション
+  const turnsToKill = Math.ceil(monsterHp / finalPlayerDmgPerTurn)
+  let damageTaken = monsterDmgPerTurn * Math.max(0, turnsToKill - 1)
+  
+  // 乱数によるブレ (±10%)
+  damageTaken = Math.floor(damageTaken * (0.9 + Math.random() * 0.2))
+
+  const victory = char[0].health > damageTaken || turnsToKill <= 1
+
   const elStr = randomElement && elementNames[randomElement] ? `「${elementNames[randomElement]}属性」` : ''
   const countText = count > 1 ? `${count}体の` : ''
-  // 強化種・超強化種の名前プレフィックス
   const elitePrefix = eliteLabel === 'SUPER_ELITE' ? '⚡超強化種⚡ ' : eliteLabel === 'ELITE' ? '🔴強化種 ' : ''
   const mName = `${elitePrefix}${elStr}${countText}${monster.name}`
   let battleLog = `》戦闘開始《 ${mName}が現れた！`
@@ -352,55 +374,50 @@ export async function completeCombat(
   else if (eliteLabel === 'ELITE') battleLog += '\n🔴 この魔物は強化種！通常の２倍強い！その分素材が多く手に入る！'
   battleLog += '\n'
 
-  let damageTaken = 0
   let fatigueGained = 10
 
-  if (playerPower > monsterPower * 1.5) {
-    battleLog += `▶ あなたの先制攻撃！ 圧倒的な力で一掃した！\n`
+  if (turnsToKill <= 1) {
+    battleLog += `▶ あなたの先制攻撃！ `
+    if (isCrit) battleLog += `💥クリティカルヒット！ `
+    battleLog += `${finalPlayerDmgPerTurn}のダメージを与え、圧倒的な力で一掃した！\n`
     fatigueGained = 5
+    damageTaken = 0
   } else {
     battleLog += `▶ あなたの攻撃！ ${weaponCategory !== 'WEAPON_UNARMED' ? '武器の鋭い一撃！' : '素手による強烈な打撃！'}\n`
     if (elementalAtkMsg) battleLog += elementalAtkMsg + '\n'
-    if (monsterPower > playerPower * 0.7) {
-      // 敵が強い場合はダメージ計算 (防御力も加味して係数0.8)
-      let rawDamage = Math.floor(monsterPower - (playerPower * 0.8))
-      if (rawDamage < 1) rawDamage = 1
-      // 属性耐性でダメージを割合軽減
-      damageTaken = Math.max(1, Math.floor(rawDamage * elementalResMultiplier))
-      if (elementalResMsg) battleLog += elementalResMsg + '\n'
-      battleLog += `▶ ${monster.name}の反撃！ ${damageTaken}のダメージを受けた！\n`
-      fatigueGained = 20
-    } else {
-      battleLog += `▶ ${monster.name}の反撃！ しかしあなたは間一髪で回避した！\n`
-      fatigueGained = 15
-    }
-    battleLog += `▶ あなたの追撃！ 魔法と技が交差する！\n`
+    if (isCrit) battleLog += `💥 クリティカルヒット！\n`
+    battleLog += `▶ ${mName}に毎ターン ${finalPlayerDmgPerTurn} のダメージを与えた！\n`
+
+    if (elementalResMsg) battleLog += elementalResMsg + '\n'
+    battleLog += `▶ ${mName}の激しい反撃！ ${turnsToKill - 1}ターンに渡り、合計 ${damageTaken} のダメージを受けた！\n`
+    fatigueGained = 15 + Math.min(10, turnsToKill)
   }
 
   if (victory) {
-    // ===== EXP効率計算（強すぎると弱い敵からは成長しない）=====
-    const ratio = playerPower / Math.max(monsterPower, 1)
+    // ===== EXP効率計算 =====
+    // 敵HPと自分の与ダメの比率で評価
+    const ratio = finalPlayerDmgPerTurn / Math.max(monsterHp, 1)
     let expEfficiency: number
     let efficiencyMsg = ''
 
     if (ratio >= 4) {
       expEfficiency = 0
       efficiencyMsg = '\n⚠️ 弱すぎてスキルは全く鍛えられない。'
-    } else if (ratio >= 3) {
+    } else if (ratio >= 2) {
       expEfficiency = 0.1
       efficiencyMsg = '\n💤 相手が弱すぎる。成長効率: 10%'
-    } else if (ratio >= 2) {
+    } else if (ratio >= 1) {
       expEfficiency = 0.3
       efficiencyMsg = '\n💤 相手が弱い。成長効率: 30%'
-    } else if (ratio >= 1.5) {
+    } else if (ratio >= 0.5) {
       expEfficiency = 0.6
       efficiencyMsg = '\n⚡ 少し物足りない相手。成長効率: 60%'
-    } else if (ratio >= 1.0) {
+    } else if (ratio >= 0.2) {
       expEfficiency = 1.0
       efficiencyMsg = '\n⭐ 良い訓練相手。成長効率: 100%'
     } else {
       expEfficiency = 1.3
-      efficiencyMsg = '\n🔥 危険な相手で負けにくい！成長効率: 130%'
+      efficiencyMsg = '\n🔥 危険な死闘だった！成長効率: 130%'
     }
     battleLog += efficiencyMsg
 
