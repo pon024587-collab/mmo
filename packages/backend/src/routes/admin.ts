@@ -6,6 +6,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { sql } from '../db/client.js'
 import { giveItem } from '../character/itemService.js'
+import { spawnRaidBoss } from '../social/raidService.js'
 
 const ADMIN_SECRET = process.env['ADMIN_SECRET'] ?? 'admin-secret-change-this'
 
@@ -211,5 +212,45 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       await sql`UPDATE characters SET status = 'INACTIVE' WHERE player_id = ${body.data.playerId}`
     }
     return reply.send({ success: true, message: body.data.ban ? 'プレイヤーをBANしました。' : 'プレイヤーデータを削除（非アクティブ化）しました。' })
+  })
+
+  // ---- レイドボス管理 ----
+
+  app.post('/api/admin/raid/spawn', async (request, reply) => {
+    const body = z.object({
+      name: z.string(),
+      element: z.enum(['FIRE', 'WATER', 'WIND', 'EARTH', 'THUNDER', 'ICE', 'LIGHT', 'DARK', 'POISON']),
+      maxHp: z.number().min(1000).default(1000000),
+      physDef: z.number().min(0).default(500),
+      magDef: z.number().min(0).default(500),
+      durationHours: z.number().min(1).max(168).default(72),
+    }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false, message: 'パラメータエラー' })
+
+    const result = await spawnRaidBoss(
+      body.data.name,
+      body.data.element,
+      BigInt(body.data.maxHp),
+      body.data.physDef,
+      body.data.magDef,
+      body.data.durationHours
+    )
+    return reply.send(result)
+  })
+
+  app.post('/api/admin/raid/terminate', async (_req, reply) => {
+    await sql`UPDATE raid_bosses SET is_active = false WHERE is_active = true`
+    return reply.send({ success: true, message: 'レイドボスを強制終了しました。' })
+  })
+
+  app.get('/api/admin/raid/status', async (_req, reply) => {
+    const boss = await sql<{
+      id: string; name: string; element: string; currentHp: number; maxHp: number
+      physDef: number; magDef: number; isActive: boolean; endsAt: Date
+    }[]>`
+      SELECT id, name, element, current_hp, max_hp, phys_def, mag_def, is_active, ends_at
+      FROM raid_bosses ORDER BY spawned_at DESC LIMIT 5
+    `
+    return reply.send({ success: true, bosses: boss })
   })
 }

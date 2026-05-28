@@ -20,7 +20,7 @@ async function adminFetch<T>(path: string, method = 'GET', body?: unknown, secre
 export default function AdminPage() {
   const [secret, setSecret] = useState('')
   const [authed, setAuthed] = useState(false)
-  const [tab, setTab] = useState<'players' | 'items' | 'actions'>('players')
+  const [tab, setTab] = useState<'players' | 'items' | 'actions' | 'raid'>('players')
   const [players, setPlayers] = useState<Player[]>([])
   const [characters, setCharacters] = useState<Character[]>([])
   const [items, setItems] = useState<Item[]>([])
@@ -36,6 +36,14 @@ export default function AdminPage() {
   const [setGold, setSetGold] = useState('')
   const [setCombat, setSetCombat] = useState('')
   const [setFarming, setSetFarming] = useState('')
+
+  // レイド召喚フォーム
+  const [raidName, setRaidName] = useState('古の魔竜')
+  const [raidElement, setRaidElement] = useState('FIRE')
+  const [raidMaxHp, setRaidMaxHp] = useState('1000000')
+  const [raidPhysDef, setRaidPhysDef] = useState('500')
+  const [raidMagDef, setRaidMagDef] = useState('500')
+  const [raidDuration, setRaidDuration] = useState('72')
 
   const handleAuth = async () => {
     const res = await adminFetch<{ success: boolean }>('/admin/players', 'GET', undefined, secret)
@@ -104,6 +112,24 @@ export default function AdminPage() {
     if (res.success) loadData()
   }
 
+  const handleSpawnRaid = async () => {
+    const res = await adminFetch<{ success: boolean; message?: string }>('/admin/raid/spawn', 'POST', {
+      name: raidName,
+      element: raidElement,
+      maxHp: parseInt(raidMaxHp) || 1000000,
+      physDef: parseInt(raidPhysDef) || 500,
+      magDef: parseInt(raidMagDef) || 500,
+      durationHours: parseInt(raidDuration) || 72
+    }, secret)
+    setMessage(res.message ?? (res.success ? 'レイドボスを召喚しました！' : 'エラーが発生しました。'))
+  }
+
+  const handleTerminateRaid = async () => {
+    if (!window.confirm('現在のレイドボスを強制終了させますか？')) return
+    const res = await adminFetch<{ success: boolean; message?: string }>('/admin/raid/terminate', 'POST', undefined, secret)
+    setMessage(res.message ?? '')
+  }
+
   if (!authed) {
     return (
       <div className="min-h-screen bg-stone-950 flex items-center justify-center">
@@ -163,10 +189,10 @@ export default function AdminPage() {
 
         {/* タブ */}
         <div className="flex gap-2 mb-4">
-          {(['players', 'items', 'actions'] as const).map(t => (
+          {(['players', 'items', 'actions', 'raid'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2 rounded text-sm ${tab === t ? 'bg-amber-700 text-white' : 'bg-stone-800 text-stone-400'}`}>
-              {t === 'players' ? 'プレイヤー一覧' : t === 'items' ? 'アイテム付与' : '操作'}
+              {t === 'players' ? 'プレイヤー一覧' : t === 'items' ? 'アイテム付与' : t === 'raid' ? 'レイド管理' : '操作'}
             </button>
           ))}
         </div>
@@ -277,6 +303,61 @@ export default function AdminPage() {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* レイド管理 */}
+        {tab === 'raid' && (
+          <div className="space-y-4">
+            <div className="bg-stone-900 border border-stone-700 rounded-lg p-4">
+              <h3 className="text-amber-400 font-bold mb-3">🐲 レイドボス召喚</h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="text-stone-400 text-xs block mb-1">ボス名</label>
+                  <input type="text" value={raidName} onChange={e => setRaidName(e.target.value)}
+                    className="w-full bg-stone-800 border border-stone-600 rounded px-3 py-2 text-stone-100 text-sm" />
+                </div>
+                <div>
+                  <label className="text-stone-400 text-xs block mb-1">属性</label>
+                  <select value={raidElement} onChange={e => setRaidElement(e.target.value)}
+                    className="w-full bg-stone-800 border border-stone-600 rounded px-3 py-2 text-stone-100 text-sm">
+                    {['FIRE', 'WATER', 'WIND', 'EARTH', 'THUNDER', 'ICE', 'LIGHT', 'DARK', 'POISON'].map(el => (
+                      <option key={el} value={el}>{el}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-stone-400 text-xs block mb-1">最大HP</label>
+                  <input type="number" value={raidMaxHp} onChange={e => setRaidMaxHp(e.target.value)}
+                    className="w-full bg-stone-800 border border-stone-600 rounded px-3 py-2 text-stone-100 text-sm" />
+                </div>
+                <div>
+                  <label className="text-stone-400 text-xs block mb-1">出現時間（時間）</label>
+                  <input type="number" value={raidDuration} onChange={e => setRaidDuration(e.target.value)}
+                    className="w-full bg-stone-800 border border-stone-600 rounded px-3 py-2 text-stone-100 text-sm" />
+                </div>
+                <div>
+                  <label className="text-stone-400 text-xs block mb-1">物理防御力</label>
+                  <input type="number" value={raidPhysDef} onChange={e => setRaidPhysDef(e.target.value)}
+                    className="w-full bg-stone-800 border border-stone-600 rounded px-3 py-2 text-stone-100 text-sm" />
+                </div>
+                <div>
+                  <label className="text-stone-400 text-xs block mb-1">魔法防御力</label>
+                  <input type="number" value={raidMagDef} onChange={e => setRaidMagDef(e.target.value)}
+                    className="w-full bg-stone-800 border border-stone-600 rounded px-3 py-2 text-stone-100 text-sm" />
+                </div>
+              </div>
+              <button onClick={handleSpawnRaid} className="w-full py-2 bg-red-700 hover:bg-red-600 text-white font-bold rounded">
+                ボスを世界に放つ
+              </button>
+            </div>
+
+            <div className="bg-stone-900 border border-stone-700 rounded-lg p-4">
+              <h3 className="text-stone-300 font-medium mb-3">⚠️ 危険な操作</h3>
+              <button onClick={handleTerminateRaid} className="w-full py-2 bg-stone-800 hover:bg-red-900 text-red-400 border border-red-900 hover:border-red-600 rounded">
+                出現中のレイドボスを強制終了（HP0扱いにはなりません）
+              </button>
             </div>
           </div>
         )}
