@@ -3,8 +3,6 @@
  * Hunger・Thirst・Fatigue・Body_Temperature・Stress の管理
  */
 import { sql } from '../db/client.js'
-import { registerAction } from '../action/actionService.js'
-import type { RegisterActionResult } from '../action/actionService.js'
 
 /** 生存状態テキストを取得 */
 export async function getSurvivalStatus(characterId: string): Promise<{
@@ -36,44 +34,40 @@ export async function getSurvivalStatus(characterId: string): Promise<{
   }
 }
 
-/** 食事行動 */
-export async function eat(characterId: string, foodItemId: string): Promise<RegisterActionResult> {
-  const item = await sql<{ id: string; itemTemplateId: string }[]>`
-    SELECT id, item_template_id FROM items
+/** 食事行動（即時処理） */
+export async function eat(characterId: string, foodItemId: string): Promise<{ success: boolean; message?: string }> {
+  const item = await sql<{ id: string; itemTemplateId: string; quantity: number }[]>`
+    SELECT id, item_template_id, quantity FROM items
     WHERE id = ${foodItemId} AND owner_character_id = ${characterId} LIMIT 1
   `
-  if (!item[0]) return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '食料がありません。' }
+  if (!item[0]) return { success: false, message: '食料がありません。' }
 
-  return registerAction({ characterId, actionType: 'EAT', parameters: { itemId: foodItemId } })
+  // 即時でアイテム消費・Hunger回復
+  const result = await completeEat(characterId, foodItemId)
+  return { success: true, message: result }
 }
 
-/** 飲水行動 */
-export async function drink(characterId: string, hasWaterSource: boolean, itemId?: string): Promise<RegisterActionResult> {
+/** 飲水行動（即時処理） */
+export async function drink(characterId: string, hasWaterSource: boolean, itemId?: string): Promise<{ success: boolean; message?: string }> {
   let consumeItemId = itemId
 
   if (consumeItemId) {
-    // インベントリから明示的に選択した水アイテムを消費（スタック対応）
     const waterItem = await sql<{ quantity: number }[]>`
       SELECT quantity FROM items WHERE id = ${consumeItemId} AND owner_character_id = ${characterId} LIMIT 1
     `
-    if (!waterItem[0]) {
-      return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '水アイテムが見つかりません。' }
-    }
+    if (!waterItem[0]) return { success: false, message: '水アイテムが見つかりません。' }
     if (waterItem[0].quantity > 1) {
       await sql`UPDATE items SET quantity = quantity - 1 WHERE id = ${consumeItemId}`
     } else {
       await sql`DELETE FROM items WHERE id = ${consumeItemId}`
     }
   } else if (!hasWaterSource) {
-    // 水アイテムを自動検索して消費
     const waterItem = await sql<{ id: string; quantity: number }[]>`
       SELECT i.id, i.quantity FROM items i
       JOIN item_templates it ON i.item_template_id = it.id
       WHERE i.owner_character_id = ${characterId} AND (it.name = 'WATER' OR it.name = '水') LIMIT 1
     `
-    if (!waterItem[0]) {
-      return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '近くに水源がなく、水も持っていません。' }
-    }
+    if (!waterItem[0]) return { success: false, message: '近くに水源がなく、水も持っていません。' }
     consumeItemId = waterItem[0].id
     if (waterItem[0].quantity > 1) {
       await sql`UPDATE items SET quantity = quantity - 1 WHERE id = ${consumeItemId}`
@@ -82,7 +76,9 @@ export async function drink(characterId: string, hasWaterSource: boolean, itemId
     }
   }
 
-  return registerAction({ characterId, actionType: 'DRINK', parameters: consumeItemId ? { itemId: consumeItemId } : undefined })
+  // 即時でThirst回復
+  const result = await completeDrink(characterId, consumeItemId)
+  return { success: true, message: result }
 }
 
 /** 睡眠行動 */
