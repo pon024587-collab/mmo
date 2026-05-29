@@ -241,7 +241,7 @@ async function getVillageHint(itemName: string): Promise<string | null> {
 
 export async function completeGuildQuest(questId: string, characterId: string): Promise<{ success: boolean; message?: string; rewardGold?: number }> {
   const quest = await sql<{ id: string; itemName: string; requiredQuantity: number; rewardGold: number; questDate: string }[]>`
-    SELECT id, item_name, required_quantity, reward_gold, quest_date
+    SELECT id, item_name, required_quantity, reward_gold, quest_date::text as quest_date
     FROM guild_daily_quests WHERE id = ${questId} AND is_active = true LIMIT 1
   `
   if (!quest[0]) return { success: false, message: 'クエストが見つかりません。' }
