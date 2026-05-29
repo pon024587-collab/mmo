@@ -39,7 +39,7 @@ export async function listPlayerItem(characterId: string, villageId: string, ite
   const housing = await sql<{ id: string }[]>`
     SELECT h.id FROM housings h
     JOIN lands l ON h.land_id = l.id
-    WHERE h.owner_character_id = ${characterId} AND l.village_id = ${villageId}
+    WHERE h.character_id = ${characterId} AND l.village_id = ${villageId}
   `
   if (housing.length === 0) {
     return { success: false, message: 'この村に家を持っていないため露店を開けません。' }
