@@ -43,7 +43,7 @@ export async function seekTreatment(characterId: string): Promise<RegisterAction
     return { success: false, errorCode: 'MISSING_PREREQUISITE', message: 'この村に医師がいません。' }
   }
 
-  return registerAction({ characterId, actionType: 'TREAT', durationOverrideMinutes: 120 })
+  return registerAction({ characterId, actionType: 'TREAT', durationOverrideMinutes: 60 })
 }
 
 /** 治療完了時の処理 */

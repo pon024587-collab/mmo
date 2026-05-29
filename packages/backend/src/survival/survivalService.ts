@@ -85,12 +85,12 @@ export async function drink(characterId: string, hasWaterSource: boolean, itemId
 
 /** 睡眠行動 */
 export async function sleep(characterId: string): Promise<RegisterActionResult> {
-  return registerAction({ characterId, actionType: 'SLEEP', durationOverrideMinutes: 420 })
+  return registerAction({ characterId, actionType: 'SLEEP', durationOverrideMinutes: 210 })
 }
 
 /** 仮眠行動 */
 export async function nap(characterId: string): Promise<RegisterActionResult> {
-  return registerAction({ characterId, actionType: 'NAP', durationOverrideMinutes: 90 })
+  return registerAction({ characterId, actionType: 'NAP', durationOverrideMinutes: 45 })
 }
 
 /** 焚き火行動 */

@@ -70,7 +70,7 @@ export async function buildBridge(
     characterId,
     actionType: 'BUILD_BRIDGE',
     parameters: { villageId, structureType: 'BRIDGE' },
-    durationOverrideMinutes: 720,
+    durationOverrideMinutes: 360,
   })
 }
 
@@ -92,7 +92,7 @@ export async function buildWell(
     characterId,
     actionType: 'BUILD_HOUSE',
     parameters: { villageId, structureType: 'WELL' },
-    durationOverrideMinutes: 240,
+    durationOverrideMinutes: 120,
   })
 }
 

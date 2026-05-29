@@ -94,7 +94,7 @@ export async function receiveTraining(
     characterId: apprenticeId,
     actionType: 'MENTOR_LEARN',
     parameters: { skillType, tuitionFee, mentorCharacterId: rel[0].mentorCharacterId },
-    durationOverrideMinutes: 120,
+    durationOverrideMinutes: 60,
   })
 }
 

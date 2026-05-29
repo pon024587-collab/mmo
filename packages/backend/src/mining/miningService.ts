@@ -9,10 +9,10 @@ import { giveItem } from '../character/itemService.js'
 export type GatherType = 'MINE' | 'CHOP_WOOD' | 'GATHER_HERBS' | 'FISH'
 
 const GATHER_YIELDS: Record<GatherType, { itemName: string; baseDuration: number }> = {
-  MINE:         { itemName: '鉄鉱石', baseDuration: 120 },
-  CHOP_WOOD:    { itemName: '木材',     baseDuration: 90  },
-  GATHER_HERBS: { itemName: '薬草',     baseDuration: 60  },
-  FISH:         { itemName: '肉',       baseDuration: 90  },
+  MINE:         { itemName: '鉄鉱石', baseDuration: 60 },
+  CHOP_WOOD:    { itemName: '木材',     baseDuration: 45  },
+  GATHER_HERBS: { itemName: '薬草',     baseDuration: 30  },
+  FISH:         { itemName: '肉',       baseDuration: 45  },
 }
 
 /** 採集行動を開始する */

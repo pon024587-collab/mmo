@@ -154,7 +154,7 @@ export async function cook(
     characterId,
     actionType: 'COOK',
     parameters: { recipeType },
-    durationOverrideMinutes: 60,
+    durationOverrideMinutes: 30,
   })
 }
 

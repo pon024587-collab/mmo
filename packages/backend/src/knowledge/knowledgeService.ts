@@ -31,7 +31,7 @@ export async function writeBook(characterId: string): Promise<RegisterActionResu
   if (parseInt(knowledge[0]?.count ?? '0') < 5) {
     return { success: false, errorCode: 'MISSING_PREREQUISITE', message: 'まだ書けるほどの知識がありません。もっと経験を積んでください。' }
   }
-  return registerAction({ characterId, actionType: 'WRITE_BOOK', durationOverrideMinutes: 240 })
+  return registerAction({ characterId, actionType: 'WRITE_BOOK', durationOverrideMinutes: 120 })
 }
 
 /** 本の執筆完了 */
@@ -63,7 +63,7 @@ export async function makeMap(characterId: string): Promise<RegisterActionResult
   if (parseInt(regions[0]?.count ?? '0') < 3) {
     return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '地図を作るには、もっと多くの場所を訪れる必要があります。' }
   }
-  return registerAction({ characterId, actionType: 'MAKE_MAP', durationOverrideMinutes: 120 })
+  return registerAction({ characterId, actionType: 'MAKE_MAP', durationOverrideMinutes: 60 })
 }
 
 // ---- 伝説・神話 ----
@@ -141,7 +141,7 @@ export async function attendFestival(characterId: string): Promise<RegisterActio
     return { success: false, errorCode: 'MISSING_PREREQUISITE', message: '村の状況が悪く、祭りは中止になっている。' }
   }
 
-  return registerAction({ characterId, actionType: 'PRAY', parameters: { festival: true }, durationOverrideMinutes: 120 })
+  return registerAction({ characterId, actionType: 'PRAY', parameters: { festival: true }, durationOverrideMinutes: 60 })
 }
 
 /** 祭り参加完了時の処理 */
