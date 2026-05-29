@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import AdminMonsterPage from './AdminMonsterPage.js'
+import AdminItemPage from './AdminItemPage.js'
 
 const API_BASE = (import.meta.env['VITE_API_URL'] as string | undefined)
   ? `${import.meta.env['VITE_API_URL']}/api`
@@ -20,7 +22,7 @@ async function adminFetch<T>(path: string, method = 'GET', body?: unknown, secre
 export default function AdminPage() {
   const [secret, setSecret] = useState('')
   const [authed, setAuthed] = useState(false)
-  const [tab, setTab] = useState<'players' | 'items' | 'actions' | 'raid'>('players')
+  const [tab, setTab] = useState<'players' | 'items' | 'actions' | 'raid' | 'monsters' | 'customItems'>('players')
   const [players, setPlayers] = useState<Player[]>([])
   const [characters, setCharacters] = useState<Character[]>([])
   const [items, setItems] = useState<Item[]>([])
@@ -188,14 +190,20 @@ export default function AdminPage() {
         </div>
 
         {/* タブ */}
-        <div className="flex gap-2 mb-4">
-          {(['players', 'items', 'actions', 'raid'] as const).map(t => (
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {(['players', 'items', 'actions', 'raid', 'monsters', 'customItems'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded text-sm ${tab === t ? 'bg-amber-700 text-white' : 'bg-stone-800 text-stone-400'}`}>
-              {t === 'players' ? 'プレイヤー一覧' : t === 'items' ? 'アイテム付与' : t === 'raid' ? 'レイド管理' : '操作'}
+              className={`px-3 py-2 rounded text-sm ${tab === t ? 'bg-amber-700 text-white' : 'bg-stone-800 text-stone-400'}`}>
+              {t === 'players' ? 'プレイヤー' : t === 'items' ? 'アイテム付与' : t === 'raid' ? 'レイド' : t === 'monsters' ? '👹カスタム魔物' : t === 'customItems' ? '⚔️カスタムアイテム' : '操作'}
             </button>
           ))}
         </div>
+
+        {/* カスタム魔物 */}
+        {tab === 'monsters' && <AdminMonsterPage secret={secret} />}
+
+        {/* カスタムアイテム */}
+        {tab === 'customItems' && <AdminItemPage secret={secret} />}
 
         {/* プレイヤー一覧 */}
         {tab === 'players' && (

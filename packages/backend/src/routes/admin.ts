@@ -170,7 +170,114 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ success: true, items })
   })
 
-  // ---- キャラクター検索 ----
+  // ---- カスタム魔物管理 ----
+
+  app.get('/api/admin/monsters/custom', async (_req, reply) => {
+    const monsters = await sql<{
+      id: string; name: string; basePower: number; minCount: number; maxCount: number
+      elements: string[]; terrains: string[]; dropMaterials: unknown; dropItems: unknown
+      spawnVillageId: string | null; spawnStartHour: number | null; spawnEndHour: number | null
+      isActive: boolean
+    }[]>`
+      SELECT id, name, base_power, min_count, max_count, elements, terrains,
+             drop_materials, drop_items, spawn_village_id, spawn_start_hour, spawn_end_hour, is_active
+      FROM custom_monsters ORDER BY created_at DESC
+    `
+    return reply.send({ success: true, monsters })
+  })
+
+  app.post('/api/admin/monsters/custom', async (request, reply) => {
+    const body = z.object({
+      name: z.string().min(1).max(50),
+      basePower: z.number().min(1).max(99999),
+      minCount: z.number().min(1).max(20).default(1),
+      maxCount: z.number().min(1).max(20).default(1),
+      elements: z.array(z.string()).default([]),
+      terrains: z.array(z.string()).default(['PLAIN']),
+      dropMaterials: z.array(z.string()).default([]),
+      dropItems: z.array(z.string()).default([]),
+      spawnVillageId: z.string().optional(),
+      spawnStartHour: z.number().min(0).max(23).optional(),
+      spawnEndHour: z.number().min(0).max(23).optional(),
+    }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false, message: '入力が正しくありません。' })
+
+    const d = body.data
+    const [monster] = await sql<{ id: string }[]>`
+      INSERT INTO custom_monsters
+        (name, base_power, min_count, max_count, elements, terrains,
+         drop_materials, drop_items, spawn_village_id, spawn_start_hour, spawn_end_hour)
+      VALUES (
+        ${d.name}, ${d.basePower}, ${d.minCount}, ${d.maxCount},
+        ${d.elements}, ${d.terrains},
+        ${JSON.stringify(d.dropMaterials)}, ${JSON.stringify(d.dropItems)},
+        ${d.spawnVillageId ?? null}, ${d.spawnStartHour ?? null}, ${d.spawnEndHour ?? null}
+      )
+      RETURNING id
+    `
+    return reply.send({ success: true, id: monster!.id, message: `${d.name}を作成しました。` })
+  })
+
+  app.patch('/api/admin/monsters/custom/:id', async (request, reply) => {
+    const { id } = request.params as { id: string }
+    const body = z.object({ isActive: z.boolean() }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false })
+    await sql`UPDATE custom_monsters SET is_active = ${body.data.isActive} WHERE id = ${id}`
+    return reply.send({ success: true })
+  })
+
+  app.delete('/api/admin/monsters/custom/:id', async (request, reply) => {
+    const { id } = request.params as { id: string }
+    await sql`DELETE FROM custom_monsters WHERE id = ${id}`
+    return reply.send({ success: true, message: '削除しました。' })
+  })
+
+  // ---- カスタムアイテム管理 ----
+
+  app.post('/api/admin/items/custom', async (request, reply) => {
+    const body = z.object({
+      name: z.string().min(1).max(100),
+      category: z.enum(['WEAPON', 'ARMOR', 'MATERIAL', 'CONSUMABLE', 'MAGIC_TOOL', 'BOOK', 'CROP']),
+      basePrice: z.number().min(0).default(100),
+      itemWeight: z.number().min(0).default(1),
+      attackPower: z.number().min(0).default(0),
+      defensePower: z.number().min(0).default(0),
+      magicPower: z.number().min(0).default(0),
+      requiredStrength: z.number().min(0).default(0),
+      requiredDexterity: z.number().min(0).default(0),
+      description: z.string().default(''),
+    }).safeParse(request.body)
+    if (!body.success) return reply.status(400).send({ success: false, message: '入力が正しくありません。' })
+
+    const d = body.data
+    const [item] = await sql<{ id: string }[]>`
+      INSERT INTO item_templates
+        (name, category, base_price, item_weight, attack_power, defense_power, magic_power,
+         required_strength, required_dexterity, description, is_custom, created_by_admin)
+      VALUES (
+        ${d.name}, ${d.category}, ${d.basePrice}, ${d.itemWeight},
+        ${d.attackPower}, ${d.defensePower}, ${d.magicPower},
+        ${d.requiredStrength}, ${d.requiredDexterity}, ${d.description},
+        true, true
+      )
+      RETURNING id
+    `
+    return reply.send({ success: true, id: item!.id, message: `${d.name}を作成しました。` })
+  })
+
+  app.get('/api/admin/items/custom', async (_req, reply) => {
+    const items = await sql<{ id: string; name: string; category: string; basePrice: number; attackPower: number; defensePower: number; magicPower: number }[]>`
+      SELECT id, name, category, base_price, attack_power, defense_power, magic_power
+      FROM item_templates WHERE is_custom = true ORDER BY created_at DESC
+    `
+    return reply.send({ success: true, items })
+  })
+
+  app.delete('/api/admin/items/custom/:id', async (request, reply) => {
+    const { id } = request.params as { id: string }
+    await sql`DELETE FROM item_templates WHERE id = ${id} AND is_custom = true`
+    return reply.send({ success: true, message: '削除しました。' })
+  })
   app.get('/api/admin/characters', async (_req, reply) => {
     const chars = await sql<{ id: string; name: string; status: string; gold: number; villageName: string }[]>`
       SELECT c.id, c.name, c.status, c.gold, v.name as village_name
