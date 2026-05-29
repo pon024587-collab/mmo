@@ -37,7 +37,7 @@ export async function getPlayerMarketListings(villageId: string) {
 export async function listPlayerItem(characterId: string, villageId: string, itemId: string, price: number, quantity: number = 1) {
   // Check if player has a house in this village
   const housing = await sql<{ id: string }[]>`
-    SELECT h.id FROM housing h
+    SELECT h.id FROM housings h
     JOIN lands l ON h.land_id = l.id
     WHERE h.owner_character_id = ${characterId} AND l.village_id = ${villageId}
   `

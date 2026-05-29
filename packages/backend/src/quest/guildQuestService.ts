@@ -149,7 +149,7 @@ const DELIVERY_QUEST_TEMPLATES = [
 ]
 
 export async function getOrCreateDailyQuests(guildId: string) {
-  const today = new Date().toISOString().split('T')[0]!
+  const today = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split('T')[0]!
   const existing = await sql<{ id: string; title: string; description: string; itemName: string; requiredQuantity: number; rewardGold: number }[]>`
     SELECT id, title, description, item_name, required_quantity, reward_gold
     FROM guild_daily_quests
@@ -246,7 +246,9 @@ export async function completeGuildQuest(questId: string, characterId: string): 
   `
   if (!quest[0]) return { success: false, message: 'クエストが見つかりません。' }
 
-  const today = new Date().toISOString().split('T')[0]!
+  // JST (UTC+9) で今日の日付を取得
+  const jstNow = new Date(Date.now() + 9 * 60 * 60 * 1000)
+  const today = jstNow.toISOString().split('T')[0]!
   if (quest[0].questDate !== today) return { success: false, message: 'このクエストは期限切れです。' }
 
   const alreadyDone = await sql<{ id: string }[]>`
